@@ -1,0 +1,22 @@
+# Other stuff
+
+exp/
+data/
+
+# Build stuff
+
+build/
+*.o
+*.obj
+
+# Image stuff
+
+*.png
+*.jpg
+*.jpeg
+
+# Python stuff
+
+python/__pycache__/
+python/data/
+python/venv/
