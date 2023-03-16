@@ -1,5 +1,4 @@
-#ifndef SPHERE_SDF
-#define SPHERE_SDF
+#pragma once
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -21,5 +20,3 @@ private:
     int m_SDFYRes;
     int m_SDFZRes;
 };
-
-#endif // SPHERE_SDF

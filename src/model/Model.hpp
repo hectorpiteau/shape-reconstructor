@@ -1,6 +1,4 @@
-#ifndef MODEL_H
-#define MODEL_H
-
+#pragma once
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <GL/glew.h>
@@ -9,7 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <stb_image.h>
+#include "../../include/stb_image.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -283,4 +281,3 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
 
     return textureID;
 }
-#endif

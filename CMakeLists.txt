@@ -36,7 +36,17 @@ set(CMAKE_CUDA_ARCHITECTURES "61")
 
 
 # add the executable
-cuda_add_executable(DRTMCVFX main.cpp ShaderPipeline.cpp Camera.cpp UnitCube.cpp Grid.cpp SkyBox.cpp OverlayPlane.cpp interop.c src/cuda/assert_cuda.c ${CUDA_SOURCE_FILES})
+cuda_add_executable(DRTMCVFX 
+    src/main.cpp 
+    src/model/ShaderPipeline.cpp 
+    src/model/Camera.cpp 
+    src/view/UnitCube.cpp 
+    src/view/Grid.cpp 
+    src/view/SkyBox.cpp 
+    src/view/OverlayPlane.cpp 
+    src/cuda/assert_cuda.c 
+    # interop.c 
+    ${CUDA_SOURCE_FILES})
 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 include_directories("include/")

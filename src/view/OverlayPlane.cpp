@@ -1,9 +1,9 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
-#include "OverlayPlane.hpp"
 #include <memory>
-#include "ShaderPipeline.hpp"
-#include "Texture2D.hpp"
+#include "OverlayPlane.hpp"
+#include "../model/ShaderPipeline.hpp"
+#include "../model/Texture2D.hpp"
 
 OverlayPlane::OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline) : m_pipeline(pipeline)
 {
@@ -15,9 +15,6 @@ OverlayPlane::OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline) : m_pipelin
 
     glGenVertexArrays(1, &m_VAO);
     glBindVertexArray(m_VAO);
-
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-    // glEnableVertexAttribArray(0);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -44,11 +41,6 @@ void OverlayPlane::Render(bool useTex, GLuint tex)
         glBindTexture(GL_TEXTURE_2D, m_texture0->GetID());
     }
     
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, m_vertices);
-    // glEnableVertexAttribArray(1);
-    // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)(m_vertices+ sizeof(float) * 3));
-
     glBindVertexArray(m_VAO);
     glDrawArrays(GL_TRIANGLES, 0, 1 * 6 * 3);
 }

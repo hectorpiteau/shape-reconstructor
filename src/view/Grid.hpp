@@ -3,7 +3,7 @@
 #include <GL/gl.h>
 #include <glm/glm.hpp>
 #include <memory>
-#include "ShaderPipeline.hpp"
+#include "../model/ShaderPipeline.hpp"
 
 class Grid
 {

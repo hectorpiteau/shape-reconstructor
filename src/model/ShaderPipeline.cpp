@@ -4,7 +4,7 @@
 #include <string.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include "FileUtils.hpp"
+#include "../utils/FileUtils.hpp"
 #include "ShaderPipeline.hpp"
 
 ShaderPipeline::ShaderPipeline(std::string vertexShaderFilename, std::string fragmentShaderFilename)

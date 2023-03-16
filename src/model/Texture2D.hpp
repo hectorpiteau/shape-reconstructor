@@ -7,7 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <iostream>
-#include "Utils.hpp"
+#include "../utils/Utils.hpp"
 
 class Texture2D
 {

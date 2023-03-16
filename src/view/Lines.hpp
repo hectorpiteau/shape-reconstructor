@@ -5,7 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 #include <memory>
-#include "ShaderPipeline.hpp"
+#include "../model/ShaderPipeline.hpp"
 
 class Lines
 {
@@ -30,7 +30,7 @@ public:
         m_model = glm::translate(m_model, glm::vec3(0.0, 0.5, 0.0));
     }
 
-    Lines(){
+    Lines():  m_pipeline("../src/shaders/v_lines.glsl", "../src/shaders/f_lines.glsl"){
         m_mvpLocation = m_pipeline.AddUniform("mvp");
     }
 

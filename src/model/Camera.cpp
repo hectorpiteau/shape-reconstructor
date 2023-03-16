@@ -4,8 +4,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
-#include "MMath.hpp"
-#include "Utils.hpp"
+#include "../maths/MMath.hpp"
+#include "../utils/Utils.hpp"
 #include "Camera.hpp"
 #include <memory>
 

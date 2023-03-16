@@ -1,9 +1,10 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <memory>
+#include "../utils/Utils.hpp"
 #include "Grid.hpp"
-#include "Utils.hpp"
 #include <iostream>
+
 Grid::Grid(std::shared_ptr<ShaderPipeline> pipeline){
     m_pipeline = pipeline;
     // mVBO = Utils::CreateVertexBuffer(mVertices);

@@ -3,7 +3,7 @@
 #include <GL/gl.h>
 #include <glm/glm.hpp>
 #include <memory>
-#include "ShaderPipeline.hpp"
+#include "../model/ShaderPipeline.hpp"
 
 class UnitCube
 {
@@ -40,9 +40,6 @@ private:
     unsigned int m_VAO;
 
     /** Uniforms */
-    // GLint m_scaleLocation;
-    // GLint m_dimensionLocation;
-    // GLint m_mvpLocation;
     GLint m_modelLocation;
     GLint m_viewLocation;
     GLint m_projectionLocation;

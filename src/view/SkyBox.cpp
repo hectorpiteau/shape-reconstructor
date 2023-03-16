@@ -3,13 +3,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
-#include "SkyBox.hpp"
-#include "Utils.hpp"
 #include <string>
 #include <vector>
-#include <stb_image.h>
 #include <iostream>
-#include "ShaderPipeline.hpp"
+#include "../../include/stb_image.h"
+#include "../utils/Utils.hpp"
+#include "../model/ShaderPipeline.hpp"
+#include "SkyBox.hpp"
 
 SkyBox::SkyBox(std::shared_ptr<ShaderPipeline> pipeline, const std::vector<std::string> &faces)
 {

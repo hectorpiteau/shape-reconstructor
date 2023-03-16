@@ -4,21 +4,15 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include "UnitCube.hpp"
-#include "Utils.hpp"
+#include "../utils/Utils.hpp"
 
 UnitCube::UnitCube(std::shared_ptr<ShaderPipeline> pipeline){
     m_pipeline = pipeline;
     glEnable(GL_CULL_FACE);
-    // glFrontFace(GL_CW);
-    // m_VBO = Utils::CreateVertexBuffer(m_vertices);
-    // m_VAO = Utils::CreateObjectBuffer();
 
-    // m_scaleLocation = m_pipeline->AddUniform("scale");
     m_modelLocation = m_pipeline->AddUniform("model");
     m_viewLocation = m_pipeline->AddUniform("view");
     m_projectionLocation = m_pipeline->AddUniform("projection");
-    // mDimensionLocation = m_pipeline->AddUniform("dims");
-    // mMvpLocation = m_pipeline->AddUniform("mvp");
 
     m_cameraPos = m_pipeline->AddUniform("viewPos");
 

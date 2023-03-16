@@ -1,8 +1,8 @@
 #ifndef OVERLAY_PLANE_H
 #define OVERLAY_PLANE_H
 #include <memory>
-#include "ShaderPipeline.hpp"
-#include "Texture2D.hpp"
+#include "../model/ShaderPipeline.hpp"
+#include "../model/Texture2D.hpp"
 
 class OverlayPlane
 {

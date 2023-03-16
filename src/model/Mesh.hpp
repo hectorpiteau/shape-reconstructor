@@ -1,5 +1,5 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
+
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
@@ -140,5 +140,3 @@ private:
         // glBindVertexArray(0);
     }
 };
-
-#endif // MESH_H

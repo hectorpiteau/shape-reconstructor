@@ -13,18 +13,18 @@
 #include <cuda_gl_interop.h>
 
 #include <sstream>
-#include "Camera.hpp"
-#include "MMath.hpp"
-#include "FileUtils.hpp"
-#include "ShaderPipeline.hpp"
-#include "Utils.hpp"
-#include "UnitCube.hpp"
-#include "Grid.hpp"
-#include "Model.hpp"
-#include "SkyBox.hpp"
-#include "OverlayPlane.hpp"
-#include "CudaTexture.hpp"
-#include "Lines.hpp"
+#include "model/Camera.hpp"
+#include "model/ShaderPipeline.hpp"
+#include "model/Model.hpp"
+#include "model/CudaTexture.hpp"
+#include "maths/MMath.hpp"
+#include "utils/FileUtils.hpp"
+#include "utils/Utils.hpp"
+#include "view/UnitCube.hpp"
+#include "view/Grid.hpp"
+#include "view/SkyBox.hpp"
+#include "view/OverlayPlane.hpp"
+#include "view/Lines.hpp"
 
 using namespace cv;
 

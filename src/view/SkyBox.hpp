@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <vector>
-#include "ShaderPipeline.hpp"
+#include "../model/ShaderPipeline.hpp"
 
 class SkyBox
 {
