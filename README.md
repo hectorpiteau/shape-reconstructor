@@ -1,6 +1,6 @@
 # shape-reconstructor
 
-![screen1.png](screen1.png)
+![](screen1.png?raw=true)
 
 Viewer3D, Volumetric renderer, Differential rendering, tool to experiment with 3D and shapes.
 
