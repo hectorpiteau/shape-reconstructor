@@ -398,7 +398,9 @@ int main(void)
         /** ImGUI */
         // render your GUI
         ImGui::Begin("Demo window");
-        ImGui::Button("Hello!");
+        ImGui::Button("Import Image Set");
+        bool check = true;
+        ImGui::Checkbox("Images uses same camera", &check);
         ImGui::Text(
             (std::string("Camera Mode: ") + std::string(sceneSettings->GetCameraModel() == CameraMovementModel::ARCBALL ? "ArcBall" : "Fps")).c_str());
         ImGui::Text(
