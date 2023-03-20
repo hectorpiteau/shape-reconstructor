@@ -9,7 +9,6 @@
 #include <opencv2/opencv.hpp>
 
 #include <cuda_runtime.h>
-// #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
 
 #include <sstream>
@@ -25,6 +24,12 @@
 #include "view/SkyBox.hpp"
 #include "view/OverlayPlane.hpp"
 #include "view/Lines.hpp"
+#include "view/Gizmo.hpp"
+#include "utils/SceneSettings.hpp"
+
+#include "../include/imgui/imgui.h"
+#include "../include/imgui/backends/imgui_impl_glfw.h"
+#include "../include/imgui/backends/imgui_impl_opengl3.h"
 
 using namespace cv;
 
@@ -37,6 +42,8 @@ using namespace glm;
 float FOV = 90.0f;
 float NEAR = 1.0f;
 float FAR = 10.0f;
+
+std::shared_ptr<SceneSettings> sceneSettings = std::make_shared<SceneSettings>(1080, 720);
 
 static void pxl_glfw_fps(GLFWwindow *window)
 {
@@ -80,36 +87,102 @@ static void error_callback(int error, const char *description)
     fputs(description, stderr);
 }
 
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+    sceneSettings->Scroll(xoffset, yoffset);
+}
+
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
+{
+    if (action == GLFW_PRESS)
+    {
+        switch (button)
+        {
+        case GLFW_MOUSE_BUTTON_LEFT:
+            sceneSettings->SetMouseLeftClick(true);
+            break;
+        case GLFW_MOUSE_BUTTON_RIGHT:
+            sceneSettings->SetMouseRightClick(true);
+            break;
+        }
+    }
+    else if (action == GLFW_RELEASE)
+    {
+        switch (button)
+        {
+        case GLFW_MOUSE_BUTTON_LEFT:
+            sceneSettings->SetMouseLeftClick(false);
+            break;
+        case GLFW_MOUSE_BUTTON_RIGHT:
+            sceneSettings->SetMouseRightClick(false);
+            break;
+        }
+    }
+}
+
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
+
+    if (action == GLFW_PRESS)
+    {
+        switch (key)
+        {
+        case GLFW_KEY_Q: // A key on AZERTY
+            /** ArcBall camera. */
+            sceneSettings->SetCameraModel(CameraMovementModel::ARCBALL);
+            break;
+        case GLFW_KEY_F:
+            /** FPS camera. */
+            sceneSettings->SetCameraModel(CameraMovementModel::FPS);
+            break;
+        case GLFW_KEY_LEFT_SHIFT:
+        case GLFW_KEY_RIGHT_SHIFT:
+            sceneSettings->SetShiftKey(true);
+            break;
+        case GLFW_KEY_LEFT_CONTROL:
+        case GLFW_KEY_RIGHT_CONTROL:
+            sceneSettings->SetCtrlKey(true);
+            break;
+        case GLFW_KEY_LEFT_ALT:
+        case GLFW_KEY_RIGHT_ALT:
+            sceneSettings->SetAltKey(true);
+            break;
+        }
+    }
+
+    if (action == GLFW_RELEASE)
+    {
+        switch (key)
+        {
+        case GLFW_KEY_LEFT_SHIFT:
+        case GLFW_KEY_RIGHT_SHIFT:
+            sceneSettings->SetShiftKey(false);
+            break;
+        case GLFW_KEY_LEFT_CONTROL:
+        case GLFW_KEY_RIGHT_CONTROL:
+            sceneSettings->SetCtrlKey(false);
+            break;
+        case GLFW_KEY_LEFT_ALT:
+        case GLFW_KEY_RIGHT_ALT:
+            sceneSettings->SetAltKey(false);
+            break;
+        }
+    }
 }
 
-int main(void)
+void Statistics()
 {
-    struct ScreenInfos screenInfos = {.width = WINDOW_WIDTH, .height = WINDOW_HEIGHT};
+    GLfloat lineWidthRange[2] = {0.0f, 0.0f};
+    glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
+    std::cout << "Max line width supported: " << lineWidthRange[1] << std::endl;
+}
 
-    // float dimensions[2] = {WINDOW_WIDTH, WINDOW_HEIGHT};
-
-    // VideoCapture cap(0);
-
-    // if (!cap.isOpened())
-    // {
-    //     std::cout << "cannot open camera" << std::endl;
-    // }
-    // else
-    // {
-    //     std::cout << "camera opened!" << std::endl;
-    //     Mat image ;
-    //     while(true){
-    //         cap >> image;
-    //         imshow("Display window", image);
-    //         waitKey(25);
-    //     }
-    // }
+GLFWwindow *GLFWInitialization()
+{
 
     glfwSetErrorCallback(error_callback);
 
@@ -129,32 +202,20 @@ int main(void)
     glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
 
     /** Create and get the window's pointer. */
-    GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "DRTMCVFX 3D", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(sceneSettings->GetViewportWidth(), sceneSettings->GetViewportHeight(), "DRTMCVFX 3D", NULL, NULL);
 
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-        return -1;
+        exit(-1);
     }
-
-    /** Create the camera object. */
-    Camera camera(window, screenInfos);
 
     glfwMakeContextCurrent(window);
 
-    /** Init Glew. **/
-    glewExperimental = GL_TRUE;
-    GLenum ret = glewInit();
-
-    if (ret != GLEW_OK)
-    {
-        std::cerr << "Glew Init error: " << ret << std::endl;
-        return 1;
-    }
-
     // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+
     // Hide the mouse and enable unlimited mouvement
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -162,6 +223,76 @@ int main(void)
     glfwSetCursorPos(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
     glfwSetKeyCallback(window, key_callback);
+
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+
+    glfwSetScrollCallback(window, scroll_callback);
+
+    return window;
+}
+
+void GLEWInitialization()
+{
+    /** Init Glew. **/
+    glewExperimental = GL_TRUE;
+    GLenum ret = glewInit();
+
+    if (ret != GLEW_OK)
+    {
+        std::cerr << "Glew Init error: " << ret << std::endl;
+        exit(1);
+    }
+}
+
+void ImGUIInitialization(GLFWwindow *window)
+{
+    /** Setup Dear ImGui context */
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    /** Setup Platform/Renderer bindings */
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    const char *glsl_version = "#version 330";
+    ImGui_ImplOpenGL3_Init(glsl_version);
+    /** Setup Dear ImGui style */
+    ImGui::StyleColorsDark();
+}
+
+void OpenCVInitialization()
+{
+    // VideoCapture cap(0);
+
+    // if (!cap.isOpened())
+    // {
+    //     std::cout << "cannot open camera" << std::endl;
+    // }
+    // else
+    // {
+    //     std::cout << "camera opened!" << std::endl;
+    //     Mat image ;
+    //     while(true){
+    //         cap >> image;
+    //         imshow("Display window", image);
+    //         waitKey(25);
+    //     }
+    // }
+}
+
+int main(void)
+{
+    Statistics();
+
+    /** Initialize everything that matter GLFW. */
+    GLFWwindow *window = GLFWInitialization();
+
+    /** Create the camera object. */
+    Camera camera(window, sceneSettings);
+
+    /** Init GLEW. */
+    GLEWInitialization();
+
+    /** Init Dear ImGUI. */
+    ImGUIInitialization(window);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -174,7 +305,7 @@ int main(void)
     glEnable(GL_MULTISAMPLE);
 
     glEnable(GL_LINE_SMOOTH);
-    glHint(GL_LINE_SMOOTH_HINT,  GL_NICEST);
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
     // Set colors used when calling clear.
     GLclampf red = 0.2f, green = 0.2f, blue = 0.2f, alpha = 0.2f;
@@ -189,29 +320,28 @@ int main(void)
     auto gridPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_grid.glsl", "../src/shaders/f_grid.glsl");
     Grid grid(gridPipeline);
 
-    // auto meshPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_mesh.glsl", "../src/shaders/f_mesh.glsl");
+    auto meshPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_mesh.glsl", "../src/shaders/f_mesh.glsl");
     // Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/data/sphere.obj");
-    // Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/data/bust/marble_bust_01_4k.fbx");
+    Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/bust/marble_bust_01_4k.fbx");
 
     // auto skyboxPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_skybox.glsl", "../src/shaders/f_skybox.glsl");
 
     // std::vector<std::string> faces{
-    //     "/home/hepiteau/Work/DRTMCVFX/data/hdri_cm/1/px.jpg",
-    //     "/home/hepiteau/Work/DRTMCVFX/data/hdri_cm/1/nx.jpg",
-    //     "/home/hepiteau/Work/DRTMCVFX/data/hdri_cm/1/py.jpg",
-    //     "/home/hepiteau/Work/DRTMCVFX/data/hdri_cm/1/ny.jpg",
-    //     "/home/hepiteau/Work/DRTMCVFX/data/hdri_cm/1/pz.jpg",
-    //     "/home/hepiteau/Work/DRTMCVFX/data/hdri_cm/1/nz.jpg"};
+    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/px.jpg",
+    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/nx.jpg",
+    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/py.jpg",
+    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/ny.jpg",
+    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/pz.jpg",
+    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/nz.jpg"};
 
     // SkyBox skybox(skyboxPipeline, faces);
 
-    auto overlayPlanePipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl", "../src/shaders/f_overlay_plane.glsl");
-    OverlayPlane overlayPlane(overlayPlanePipeline);
-    CudaTexture cudaTex(1080, 720);
+    // auto overlayPlanePipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl", "../src/shaders/f_overlay_plane.glsl");
+    // OverlayPlane overlayPlane(overlayPlanePipeline);
+    // CudaTexture cudaTex(1080, 720);
 
-    
     // auto vertices = std::vector<glm::vec3>{
-    //     glm::vec3(0.0, 0.0, 0.0), 
+    //     glm::vec3(0.0, 0.0, 0.0),
     //     glm::vec3(1.0, 1.0, 0.0),
     //     glm::vec3(1.0, 1.0, 0.0),
     //     glm::vec3(2.0, 1.0, 0.0)
@@ -221,15 +351,18 @@ int main(void)
         0.0f, 0.0f, 0.0f,
         1.0f, 1.0f, 0.0f,
         1.0f, 1.0f, 0.0f,
-        2.0f, 1.0f, 0.0f
-    };
+        2.0f, 1.0f, 0.0f};
 
     Lines testLines(vertices2, 12);
+
+    Lines cameraLines(camera.GetWireframe(), 16 * 3);
+    cameraLines.SetColor(1.0, 0.0, 0.0, 0.5);
+    Gizmo cameraGizmo(camera.GetPosition(), camera.GetRight(), camera.GetUp(), camera.GetForward());
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    cudaTex.RunCUDA();
+    // cudaTex.RunCUDA();
 
     static float scale = 1.0f;
     while (!glfwWindowShouldClose(window))
@@ -237,6 +370,12 @@ int main(void)
         pxl_glfw_fps(window);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        /** ImGUI */
+        // feed inputs to dear imgui, start new frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
         /** MVP */
         camera.ComputeMatricesFromInputs();
@@ -246,19 +385,41 @@ int main(void)
         // cube.Render(projectionMatrix, viewMatrix, camera.GetPosition(), WINDOW_WIDTH, WINDOW_HEIGHT);
         // skybox.Render(projectionMatrix, viewMatrix);
 
-        grid.Render(projectionMatrix, viewMatrix, WINDOW_WIDTH, WINDOW_HEIGHT);
+        grid.Render(projectionMatrix, viewMatrix, sceneSettings);
 
-        // model.Render(projectionMatrix, viewMatrix);
-        
-        testLines.Render(projectionMatrix, viewMatrix);
+        model.Render(projectionMatrix, viewMatrix);
+
+        // testLines.Render(projectionMatrix, viewMatrix);
+        cameraLines.Render(projectionMatrix, viewMatrix);
+        cameraGizmo.Render(projectionMatrix, viewMatrix);
 
         // overlayPlane.Render(true, cudaTex.GetTex());
 
-        // cudaTex.Render(overlayPlanePipeline);
+        /** ImGUI */
+        // render your GUI
+        ImGui::Begin("Demo window");
+        ImGui::Button("Hello!");
+        ImGui::Text(
+            (std::string("Camera Mode: ") + std::string(sceneSettings->GetCameraModel() == CameraMovementModel::ARCBALL ? "ArcBall" : "Fps")).c_str());
+        ImGui::Text(
+            (std::string("Mouse Left: ") + std::string(sceneSettings->GetMouseLeftClick() ? "Pressed" : "Released")).c_str());
+        ImGui::Text(
+            (std::string("Mouse Right: ") + std::string(sceneSettings->GetMouseRightClick() ? "Pressed" : "Released")).c_str());
+        ImGui::Text(
+            (std::string("Scroll offsets: ") + std::to_string(sceneSettings->GetScrollOffsets().x)+ std::string(", ") + std::to_string(sceneSettings->GetScrollOffsets().y)).c_str());
+        ImGui::End();
+
+        // Render dear imgui into screen
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
 

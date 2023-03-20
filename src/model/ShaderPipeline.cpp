@@ -67,8 +67,8 @@ void ShaderPipeline::CompileShader()
         std::cerr << "Invalid shader program: " << errorLog << std::endl;
         exit(1);
     }else{
-        std::cout << "ShaderPipeline: Sucess loading sharder: " << m_vertexShaderFilename << std::endl;
-        std::cout << "ShaderPipeline: Sucess loading sharder: " << m_fragmentShaderFilename << std::endl;
+        std::cout << "ShaderPipeline: Success loading shader: " << m_vertexShaderFilename << std::endl;
+        std::cout << "ShaderPipeline: Success loading shader: " << m_fragmentShaderFilename << std::endl << "===" << std::endl;
     }
 
     glDetachShader(shaderProgram, vertexShaderID);

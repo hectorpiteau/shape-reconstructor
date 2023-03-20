@@ -18,21 +18,25 @@ SphereSDF::SphereSDF(int resolution) : m_SDFXRes(resolution), m_SDFYRes(resoluti
 
 
     /** CUDA surface */ 
-    surface<void, cudaSurfaceType3D> mySurface;
-
     int width = resolution, height = resolution, depth = resolution;
-    cudaArray* cuArray;
+
     cudaExtent extent = make_cudaExtent(width, height, depth);
-    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<uchar4>();
-    cudaMalloc3DArray(&cuArray, &channelDesc, extent);
+    // cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<uchar4>();
+    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float4>();
+    cudaMalloc3DArray(&m_cuArray, &channelDesc, extent);
 
-    cudaBindSurfaceToArray(mySurface, cuArray, channelDesc);
+    cudaBindSurfaceToArray(m_surface, m_cuArray, channelDesc);
 
-    uchar4* h_data = new uchar4[width * height * depth];
-    // Fill h_data with your data
+    // m_data = new uchar4[width * height * depth];
+    m_dataf = new float4[width * height * depth];
+    
+    /** Fill data */
+    Compute(m_dataf, resolution, resolution, resolution, 0.8f);
+    
     cudaMemcpy3DParms memcpyParams = {0};
-    memcpyParams.srcPtr = make_cudaPitchedPtr(h_data, width*sizeof(uchar4), width, height);
-    memcpyParams.dstArray = cuArray;
+    // memcpyParams.srcPtr = make_cudaPitchedPtr(m_data, width*sizeof(uchar4), width, height);
+    memcpyParams.srcPtr = make_cudaPitchedPtr(m_dataf, width*sizeof(float4), width, height);
+    memcpyParams.dstArray = m_cuArray;
     memcpyParams.extent = extent;
     memcpyParams.kind = cudaMemcpyHostToDevice;
     cudaMemcpy3D(&memcpyParams);
@@ -41,26 +45,33 @@ SphereSDF::SphereSDF(int resolution) : m_SDFXRes(resolution), m_SDFYRes(resoluti
     glGenTextures(1, &m_textureID);
     glBindTexture(GL_TEXTURE_2D, m_textureID);
 
-    int c = resolution / 2;
-    int radius = c * 0.8f;
-    glm::vec3 center = glm::vec3(c, c, c);
+};
 
-    for (int i = 0; i < m_SDFXRes; i++)
+
+void SphereSDF::Compute(float* target, int resX, int resY, int resZ, float radius){
+    float half = ((float)resX) / 2.0f;
+    float rad = half * radius;
+
+    /** Compute the center as the volume exact center. */
+    glm::vec3 center = glm::vec3(half, half, half);
+
+    for (int i = 0; i < resX; i++)
     {
-        for (int j = 0; j < m_SDFYRes; j++)
+        for (int j = 0; j < resY; j++)
         {
-            for (int k = 0; k < m_SDFZRes; k++)
+            for (int k = 0; k < resZ; k++)
             {
                 glm::vec3 tmp = glm::vec3(i, j, k);
-                m_SDFData[i * resolution * resolution + j * resolution + k] = glm::length(tmp - center) - radius;
+                target[i * resY * resZ + j * resZ + k] = glm::length(tmp - center) - radius;
             }
         }
     }
-};
+}
 
 SphereSDF::~SphereSDF()
 {
     delete[] m_SDFData;
+    delete[] m_dataf;
 }
 
 const float *SphereSDF::GetData()

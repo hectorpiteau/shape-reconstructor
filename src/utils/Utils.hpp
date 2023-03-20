@@ -6,6 +6,9 @@
 #include <glm/glm.hpp>
 #include <string>
 
+#define WRITE_VEC3(array, index, vec3) (array)[index] = (vec3).x; (array)[index+1] = (vec3).y; (array)[index+2] = (vec3).z; 
+
+
 struct ScreenInfos
 {
     int width;
@@ -15,6 +18,11 @@ struct ScreenInfos
 class Utils
 {
 public:
+    template <typename T> 
+    static int Sign(T val) {
+        return (T(0) < val) - (val < T(0));
+    }
+
     static unsigned int CreateVertexBuffer(const float *vertices)
     {
         unsigned int VBO;

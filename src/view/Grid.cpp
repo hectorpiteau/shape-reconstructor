@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include "../utils/Utils.hpp"
+#include "../utils/SceneSettings.hpp"
 #include "Grid.hpp"
 #include <iostream>
 
@@ -31,16 +32,16 @@ void Grid::SetShaderPipeline(std::shared_ptr<ShaderPipeline> pipeline){
     m_pipeline = pipeline;
 }
 
-void Grid::Render(glm::mat4& projectionMatrix, glm::mat4& viewMatrix, float windowWidth, float windowHeight){
-    m_pipeline->UseShader();
 
+void Grid::Render(const glm::mat4& projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene){
+    m_pipeline->UseShader();
     
     glm::mat4 ModelMatrix = glm::mat4(1.0);
-    glm::mat4 MVP = projectionMatrix * viewMatrix * ModelMatrix;
+    glm::mat4 MVP = projection * view * ModelMatrix;
 
     
     glUniform1f(m_scaleLocation, 4.0f);
-    glUniform2f(m_dimensionLocation, windowWidth, windowHeight);
+    glUniform2f(m_dimensionLocation, scene->GetViewportWidth(), scene->GetViewportHeight());
     // glUniformMatrix4fv(mProjLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
     // glUniformMatrix4fv(mViewLocation, 1, GL_FALSE, &viewMatrix[0][0]);
     glUniformMatrix4fv(m_mvpLocation, 1, GL_FALSE, &MVP[0][0]);

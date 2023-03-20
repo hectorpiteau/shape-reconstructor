@@ -4,8 +4,9 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include "../model/ShaderPipeline.hpp"
+#include "Renderable/Renderable.hpp"
 
-class Grid
+class Grid : Renderable
 {
 public:
     /**
@@ -14,6 +15,8 @@ public:
      * @param pipeline 
      */
     Grid(std::shared_ptr<ShaderPipeline> pipeline);
+    
+    /** Remove copy constructor. */
     Grid(const Grid&) = delete;
 
     /**
@@ -26,12 +29,13 @@ public:
     /**
      * @brief Render the Unit Cube in the scene.
      * 
-     * @param projectionMatrix 
-     * @param viewMatrix 
+     * @param projection
+     * @param view 
+     * @param scene
      * @return true 
      * @return false 
      */
-    void Render(glm::mat4& projectionMatrix, glm::mat4& viewMatrix, float windowWidth, float windowHeight);
+    void Render(const glm::mat4& projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
 
 private:
     std::shared_ptr<ShaderPipeline> m_pipeline;
@@ -45,13 +49,6 @@ private:
     GLint m_viewLocation;
     GLint m_projLocation;
 
-    /** Uniforms */
-    // GLint mProjLocation;
-    // GLint mViewLocation;
-    // GLint mModelLocation;
-    // GLint mMVPLocation;
-    // GLint mDimsLocation;
-    
     float m_vertices[6*6*6] = {
         // -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, // right
         // 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # set the project name
-project(DRTMCVFX VERSION 0.1 LANGUAGES CXX CUDA)
+project(DRTMCS VERSION 0.1 LANGUAGES CXX CUDA)
 
 # Cpp standards
 set(CMAKE_CXX_STANDARD 11)
@@ -36,20 +36,36 @@ set(CMAKE_CUDA_ARCHITECTURES "61")
 
 
 # add the executable
-cuda_add_executable(DRTMCVFX 
+cuda_add_executable(DRTMCS 
     src/main.cpp 
+    
+    include/imgui/imgui.cpp
+    include/imgui/imgui_widgets.cpp
+    include/imgui/imgui_draw.cpp
+    include/imgui/imgui_demo.cpp
+    include/imgui/imgui_tables.cpp
+    include/imgui/backends/imgui_impl_glfw.cpp
+    include/imgui/backends/imgui_impl_opengl3.cpp
+
+
     src/model/ShaderPipeline.cpp 
     src/model/Camera.cpp 
+    # src/model/SphereSDF.cpp 
+
     src/view/UnitCube.cpp 
     src/view/Grid.cpp 
     src/view/SkyBox.cpp 
     src/view/OverlayPlane.cpp 
+    src/view/Gizmo.cpp 
+
     src/cuda/assert_cuda.c 
     # interop.c 
     ${CUDA_SOURCE_FILES})
 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 include_directories("include/")
+include_directories("include/imgui")
+include_directories("include/imgui/backends")
 include_directories("src/cuda/")
 
 
@@ -58,4 +74,4 @@ message(${CUDA_INCLUDE_DIRS})
 
 include_directories(${CUDA_INCLUDE_DIRS})
 
-target_link_libraries(DRTMCVFX OpenGL::GL GLEW::GLEW glfw assimp OpenEXR::OpenEXR ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
+target_link_libraries(DRTMCS OpenGL::GL GLEW::GLEW glfw assimp OpenEXR::OpenEXR ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
