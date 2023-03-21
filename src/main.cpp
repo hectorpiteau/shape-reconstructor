@@ -34,6 +34,9 @@
 #include "../include/imgui/backends/imgui_impl_glfw.h"
 #include "../include/imgui/backends/imgui_impl_opengl3.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../../include/stb_image.h"
+
 using namespace cv;
 
 using namespace glm;
@@ -347,28 +350,46 @@ int main(void)
     //     glm::vec3(2.0, 1.0, 0.0)
     // };
     glm::mat4 ext = glm::mat4(camera.GetViewMatrix());
+
+    Utils::to_string(ext);
+
     glm::mat3 R = glm::mat3(ext);
     
     glm::vec3 center = glm::vec3(ext[0][3], ext[1][3], ext[2][3]);
     
     glm::mat3x3 RT = glm::transpose(R);
     
-    glm::vec3 res = RT * glm::vec3(2.0, 2.0, 0.0); + center;
     glm::vec3 pos = camera.GetPosition();
+    
+    glm::vec3 cameraCoords = glm::vec3(0.0, 0.0, 0.0) + camera.GetForward()+ camera.GetRight()*0.1f;
 
-    std::cout << "Point coordinates in world space: " << RT[0][0]  << std::endl;
+    glm::vec3 res = RT * cameraCoords - RT*center + pos;
+
+    glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(1.0, 0.0, 0.0, 1.0), ext);
 
     float vertices2[6] = {
+        // 0.0
         pos.x, pos.y, pos.z,
         // pos.x + 2, pos.y, pos.z
         res.x, res.y, res.z
+        // res1.x, res1.y, res1.z
     };
+    // WRITE_VEC3(vertices2, 0, pos);
+    // WRITE_VEC3(vertices2, 3, Projection::CameraToWorld(glm::vec4(1.0, 0.0, 0.0, 1.0), ext));
+
+    // WRITE_VEC3(vertices2, 6, Projection::CameraToWorld(glm::vec4(1.0, 0.0, 0.0, 1.0), ext));
+    // WRITE_VEC3(vertices2, 9, Projection::CameraToWorld(glm::vec4(1.0, 0.0, 1.0, 1.0), ext));
+    
+    // WRITE_VEC3(vertices2, 12, Projection::CameraToWorld(glm::vec4(1.0, 0.0, 1.0, 1.0), ext));
+    // WRITE_VEC3(vertices2, 15, Projection::CameraToWorld(glm::vec4(0.0, 0.0, 1.0, 1.0), ext));
 
     Lines testLines(vertices2, 6);
 
     Lines cameraLines(camera.GetWireframe(), 16 * 3);
     cameraLines.SetColor(1.0, 0.0, 0.0, 0.5);
-    Gizmo cameraGizmo(camera.GetPosition(), camera.GetRight(), camera.GetUp(), camera.GetForward());
+
+
+    Gizmo cameraGizmo(camera.GetPosition(), camera.GetRight(), camera.GetRealUp(), camera.GetForward());
 
     Volume3D volume;
 
@@ -378,6 +399,8 @@ int main(void)
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // cudaTex.RunCUDA();
+
+    Texture2D testImage("/home/hpiteau/work/shape-reconstructor/fiducial.png");
 
     static float scale = 1.0f;
     while (!glfwWindowShouldClose(window))
@@ -426,6 +449,14 @@ int main(void)
             (std::string("Mouse Right: ") + std::string(sceneSettings->GetMouseRightClick() ? "Pressed" : "Released")).c_str());
         ImGui::Text(
             (std::string("Scroll offsets: ") + std::to_string(sceneSettings->GetScrollOffsets().x)+ std::string(", ") + std::to_string(sceneSettings->GetScrollOffsets().y)).c_str());
+        
+        // ImGui::Image((void*)(intptr_t)testImage.GetID(), ImVec2(testImage.GetWidth(), testImage.GetHeight()));
+        ImGui::Separator();
+        ImGui::Image((void*)(intptr_t)testImage.GetID(), ImVec2(256, 256), ImVec2(0, 0), ImVec2(1, 1));
+        const char* items = "Image1\0Image2\0";
+        int current = -1;
+        // ImGui::Combo(items, &current);
+        ImGui::Separator();
         ImGui::End();
 
         // Render dear imgui into screen

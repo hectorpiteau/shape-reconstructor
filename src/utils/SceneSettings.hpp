@@ -46,6 +46,8 @@ public:
     int GetViewportWidth(){return m_viewportWidth;}
     int GetViewportHeight(){return m_viewportHeight;}
 
+    float GetViewportRatio(){ return ((float)(m_viewportWidth))/((float)(m_viewportHeight));}
+
 private:
 
     /** Viewport informations */

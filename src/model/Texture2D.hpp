@@ -1,5 +1,4 @@
-#ifndef TEXTURE2D_H
-#define TEXTURE2D_H
+#pragma once
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -7,7 +6,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <iostream>
+#include "../../include/stb_image.h"
 #include "../utils/Utils.hpp"
+
 
 class Texture2D
 {
@@ -17,10 +18,10 @@ private:
     int m_channels;
     short m_bytesPerItem;
     GLenum m_textureID;
-    
+    GLuint m_ID;
 
     /** Data owned by this class, responsible for allocation and deletion. */
-    char *m_data;
+    unsigned char *m_data;
     /** Data length in byte. */
     size_t m_dataLength;
 
@@ -40,8 +41,9 @@ public:
         glGenTextures(1, &m_textureID);
         glBindTexture(GL_TEXTURE_2D, m_textureID);
 
-        m_data = (char*) malloc(sizeof(char) * m_dataLength);
-        if(m_data == nullptr){
+        m_data = (unsigned char *)malloc(sizeof(unsigned char) * m_dataLength);
+        if (m_data == nullptr)
+        {
             std::cerr << "Texture2D : Error allocating memory for data of length: " << m_dataLength << " bytes." << std::endl;
             return;
         }
@@ -51,30 +53,70 @@ public:
         UpdateMemData();
     };
 
-    void InitData(){
+    /**
+     * @brief Construct a new Texture 2D from an image file.
+     *
+     * @param path
+     */
+    Texture2D(const std::string &path)
+    {
+        m_data = nullptr;
+        m_refData = nullptr;
+        m_useRefData = false;
+
+
+        unsigned char *data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, 0);
+        if (data != nullptr)
+        {
+            m_data = data;
+
+            GLenum format;
+            if (m_channels == 1)
+                format = GL_RED;
+            else if (m_channels == 3)
+                format = GL_RGB;
+            else if (m_channels == 4)
+                format = GL_RGBA;
+
+            glGenTextures(1, &m_ID);
+            glBindTexture(GL_TEXTURE_2D, m_ID);
+
+            // Setup filtering parameters for display
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
+            
+            glTexImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, m_data);
+            stbi_image_free(data);
+        }
+    }
+
+    void InitData()
+    {
         memset(m_data, 0, m_dataLength);
 
-        float centerX = ((float)m_width)/2.0f;
-        float centerY = ((float)m_height)/2.0f;
-        
+        float centerX = ((float)m_width) / 2.0f;
+        float centerY = ((float)m_height) / 2.0f;
 
-        for(int i=0; i < m_height; i += 1){
-            for(int j=0; j < m_width; j += 1){
-                float res = sqrt(( ((float)j)-centerX)*(((float)j)-centerX) + (((float)i)-centerY) * (((float)i)-centerY));
-                
-                m_data[i* m_channels * m_width + j*m_channels] = (char)res;
-                m_data[i* m_channels * m_width + j*m_channels + 1] = (char)res;
-                m_data[i* m_channels * m_width + j*m_channels + 2] = (char)res;
-                m_data[i* m_channels * m_width + j*m_channels + 3] = (char)255;
+        for (int i = 0; i < m_height; i += 1)
+        {
+            for (int j = 0; j < m_width; j += 1)
+            {
+                float res = sqrt((((float)j) - centerX) * (((float)j) - centerX) + (((float)i) - centerY) * (((float)i) - centerY));
+
+                m_data[i * m_channels * m_width + j * m_channels] = (char)res;
+                m_data[i * m_channels * m_width + j * m_channels + 1] = (char)res;
+                m_data[i * m_channels * m_width + j * m_channels + 2] = (char)res;
+                m_data[i * m_channels * m_width + j * m_channels + 3] = (char)255;
             }
         }
     }
 
     void UpdateMemData()
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_useRefData ? m_refData : m_data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_useRefData ? m_refData : m_data);
+        // glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     bool SetDataByCopy(const char *data, size_t length)
@@ -84,6 +126,7 @@ public:
             std::cerr << "Texture2D: SetDataByCopy, input data is too big for this texture. Need to reallocate." << std::endl;
             return false;
         }
+
         m_useRefData = false;
         memcpy(m_data, data, length);
 
@@ -96,7 +139,10 @@ public:
         m_refData = data;
     }
 
-    GLenum GetID() { return m_textureID; }
+    GLenum GetID() { return m_ID; }
+
+    int GetWidth() { return m_width; }
+    int GetHeight() { return m_height; }
 
     ~Texture2D()
     {
@@ -104,5 +150,3 @@ public:
             delete[] m_data;
     };
 };
-
-#endif // TEXTURE2D_H

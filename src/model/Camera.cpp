@@ -15,9 +15,16 @@ Camera::Camera(GLFWwindow *window, std::shared_ptr<SceneSettings> sceneSettings)
 {
     m_window = window;
     m_pos = glm::vec3(2.0f, 2.0f, 2.0f);
-    m_target = glm::vec3(0.0f, 0.0f, 1.0f);
+    m_target = glm::vec3(0.0f, 0.0f, 0.0f);
     m_up = glm::vec3(0.0f, 1.0f, 0.0f);
+    m_projectionMatrix = glm::perspective(
+        glm::radians(m_initialFoV), 
+        m_sceneSettings->GetViewportRatio(), 
+        0.01f, 
+        100.0f
+    );
 
+    m_viewMatrix = glm::lookAt( m_pos, m_target, m_up);
     m_previousCursorPos = glm::vec2(m_sceneSettings->GetViewportWidth() / 2, m_sceneSettings->GetViewportHeight() / 2);
 }
 
@@ -41,10 +48,6 @@ void Camera::SetPosition(float x, float y, float z)
     m_pos.x = x;
     m_pos.y = y;
     m_pos.z = z;
-}
-
-void Camera::OnKeyboard(unsigned char Key)
-{
 }
 
 glm::mat4 Camera::GetViewMatrix()
@@ -98,19 +101,16 @@ void Camera::ComputeMatricesFromInputs()
         if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
         {
             m_pos += direction * deltaTime * m_speed;
-            // std::cout << "forward" << std::endl;
         }
         // Move backward
         if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
         {
             m_pos -= direction * deltaTime * m_speed;
-            // std::cout << "backward" << std::endl;
         }
         // Strafe right
         if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
         {
             m_pos += right * deltaTime * m_speed;
-            // std::cout << "right" << std::endl;
         }
         // Strafe left
         if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
@@ -118,11 +118,9 @@ void Camera::ComputeMatricesFromInputs()
             m_pos -= right * deltaTime * m_speed;
         }
 
-        float FoV = m_initialFoV; // - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
-
         // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
         // (intrinsics)
-        m_projectionMatrix = glm::perspective(glm::radians(FoV), 4.0f / 3.0f, 0.1f, 100.0f);
+        // m_projectionMatrix = glm::perspective(glm::radians(m_initialFoV), m_sceneSettings->GetViewportRatio(), 0.1f, 100.0f);
 
         // Camera matrix
         // (extrinsics)
@@ -223,37 +221,44 @@ void Camera::ComputeMatricesFromInputs()
 
 glm::vec3 Camera::GetRight()
 {
-    return glm::vec3(sin(m_horizontalAngle - 3.14f / 2.0f), 0, cos(m_horizontalAngle - 3.14f / 2.0f));
+    // return glm::vec3(sin(m_horizontalAngle - 3.14f / 2.0f), 0, cos(m_horizontalAngle - 3.14f / 2.0f));
+    return glm::cross(GetForward(), GetUp());
 }
 
+glm::vec3 Camera::GetRealUp(){
+    return glm::cross(GetRight(), GetForward());
+}
 glm::vec3 Camera::GetUp()
 {
-    return glm::cross(GetRight(), GetForward());
+    return m_up;
 }
 
 glm::vec3 Camera::GetForward()
 {
-    return glm::vec3(
-        cos(m_verticalAngle) * sin(m_horizontalAngle),
-        sin(m_verticalAngle),
-        cos(m_verticalAngle) * cos(m_horizontalAngle));
+    // return glm::vec3(
+    //     cos(m_verticalAngle) * sin(m_horizontalAngle),
+    //     sin(m_verticalAngle),
+    //     cos(m_verticalAngle) * cos(m_horizontalAngle));
+
+    return - glm::normalize(m_pos - m_target);
 }
 
 const float *Camera::GetWireframe()
 {
-    glm::vec3 up = GetUp();
+    glm::vec3 up = GetRealUp();
     glm::vec3 forward = GetForward();
     glm::vec3 right = GetRight();
 
     float length = 1.0f;
+    float ratio = m_sceneSettings->GetViewportRatio();
 
     glm::vec3 camera_origin = m_pos;
 
-    glm::vec3 corner_top_left = m_pos + forward * length + up - right;
-    glm::vec3 corner_top_right = m_pos + forward * length + up + right;
+    glm::vec3 corner_top_left = m_pos + forward * length + up - right*ratio;
+    glm::vec3 corner_top_right = m_pos + forward * length + up + right*ratio;
 
-    glm::vec3 corner_bot_left = m_pos + forward * length - up - right;
-    glm::vec3 corner_bot_right = m_pos + forward * length - up + right;
+    glm::vec3 corner_bot_left = m_pos + forward * length - up - right*ratio;
+    glm::vec3 corner_bot_right = m_pos + forward * length - up + right*ratio;
 
     WRITE_VEC3(m_wireframeVertices, 0, corner_top_left);
     WRITE_VEC3(m_wireframeVertices, 3, corner_top_right);

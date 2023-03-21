@@ -1,13 +1,13 @@
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
+
 #include <GL/glew.h>
 #include <stdlib.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <string>
+#include <iostream>
 
 #define WRITE_VEC3(array, index, vec3) (array)[(index)] = (vec3).x; (array)[((index)+1)] = (vec3).y; (array)[((index)+2)] = (vec3).z; 
-
 
 struct ScreenInfos
 {
@@ -22,6 +22,12 @@ public:
     static int Sign(T val) {
         return (T(0) < val) - (val < T(0));
     }
+
+    static void to_string(const glm::mat4 &mat){
+        for(int i=0; i<4; ++i)
+        std::cout << mat[i][0] << ",\t" << mat[i][1] << ",\t" << mat[i][2] << ",\t" << mat[i][3] << std::endl;
+    }  
+
 
     static unsigned int CreateVertexBuffer(const float *vertices)
     {
@@ -89,5 +95,3 @@ public:
         return target;
     }
 };
-
-#endif // UTILS_H

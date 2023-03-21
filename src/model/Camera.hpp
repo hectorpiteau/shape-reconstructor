@@ -20,10 +20,9 @@ public:
     glm::vec3 GetPosition();
     
     glm::vec3 GetRight();
+    glm::vec3 GetRealUp();
     glm::vec3 GetUp();
     glm::vec3 GetForward();
-
-    void OnKeyboard(unsigned char key);
     
     void ComputeMatricesFromInputs();
 
@@ -53,6 +52,8 @@ private:
     glm::mat4 m_intrinsics; /** Projection of points from camera-space to image-space. */
 
     struct ScreenInfos m_screenInfos;
+
+    float m_scroll = 0.0f;
 
     float m_speed = 3.0f;
     float m_horizontalAngle = 3.14f*1.25f;
