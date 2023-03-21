@@ -151,8 +151,8 @@ void Camera::ComputeMatricesFromInputs()
         if (m_sceneSettings->GetShiftKey())
         {
 
-            float deltaX = 8.0f / m_sceneSettings->GetViewportWidth();
-            float deltaY = 8.0f / m_sceneSettings->GetViewportHeight();
+            float deltaX = 4.0f / m_sceneSettings->GetViewportWidth();
+            float deltaY = 4.0f / m_sceneSettings->GetViewportHeight();
 
             float xDisplacement = (m_previousCursorPos.x - xpos) * deltaX;
             float yDisplacement = (m_previousCursorPos.y - ypos) * deltaY;
