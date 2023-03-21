@@ -48,6 +48,4 @@ void Grid::Render(const glm::mat4& projection, const glm::mat4 &view, std::share
 
     glBindVertexArray(m_VAO);
     glDrawArrays(GL_TRIANGLES, 0, 1*6*3);
-
-    
 }

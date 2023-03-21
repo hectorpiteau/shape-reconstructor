@@ -51,7 +51,7 @@ public:
         m_pipeline->UseShader();
 
         glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(0.0, 1.0, 0.0));
+        // model = glm::translate(model, glm::vec3(0.0, 1.0, 0.0));
         model = glm::rotate(model, -glm::pi<float>()/2.0f, glm::vec3(1.0, 0.0, 0.0)); // where x, y, z is axis of rotation (e.g. 0 1 0)
         model = glm::scale(model, glm::vec3(2.0,2.0,2.0));
 

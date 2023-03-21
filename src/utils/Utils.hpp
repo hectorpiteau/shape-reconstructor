@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include <string>
 
-#define WRITE_VEC3(array, index, vec3) (array)[index] = (vec3).x; (array)[index+1] = (vec3).y; (array)[index+2] = (vec3).z; 
+#define WRITE_VEC3(array, index, vec3) (array)[(index)] = (vec3).x; (array)[((index)+1)] = (vec3).y; (array)[((index)+2)] = (vec3).z; 
 
 
 struct ScreenInfos

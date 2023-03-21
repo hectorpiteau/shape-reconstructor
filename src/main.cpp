@@ -25,6 +25,8 @@
 #include "view/OverlayPlane.hpp"
 #include "view/Lines.hpp"
 #include "view/Gizmo.hpp"
+#include "view/Volume3D.hpp"
+#include "view/LineGrid.hpp"
 #include "utils/SceneSettings.hpp"
 
 #include "../include/imgui/imgui.h"
@@ -359,6 +361,10 @@ int main(void)
     cameraLines.SetColor(1.0, 0.0, 0.0, 0.5);
     Gizmo cameraGizmo(camera.GetPosition(), camera.GetRight(), camera.GetUp(), camera.GetForward());
 
+    Volume3D volume;
+
+    LineGrid lineGrid;
+
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -385,7 +391,7 @@ int main(void)
         // cube.Render(projectionMatrix, viewMatrix, camera.GetPosition(), WINDOW_WIDTH, WINDOW_HEIGHT);
         // skybox.Render(projectionMatrix, viewMatrix);
 
-        grid.Render(projectionMatrix, viewMatrix, sceneSettings);
+        // grid.Render(projectionMatrix, viewMatrix, sceneSettings);
 
         model.Render(projectionMatrix, viewMatrix);
 
@@ -395,9 +401,13 @@ int main(void)
 
         // overlayPlane.Render(true, cudaTex.GetTex());
 
+        volume.RenderWireframe(projectionMatrix, viewMatrix, sceneSettings);
+        
+        lineGrid.RenderWireframe(projectionMatrix, viewMatrix, sceneSettings);
+
         /** ImGUI */
         // render your GUI
-        ImGui::Begin("Demo window");
+        ImGui::Begin("Main Settings");
         ImGui::Button("Import Image Set");
         bool check = true;
         ImGui::Checkbox("Images uses same camera", &check);

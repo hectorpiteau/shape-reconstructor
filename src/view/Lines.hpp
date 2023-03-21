@@ -99,7 +99,7 @@ public:
      * @param projectionMatrix : The current camera projection matrix.
      * @param viewMatrix : The current camera view matrix.
      */
-    void Render(glm::mat4 &projectionMatrix, glm::mat4 &viewMatrix)
+    void Render(const glm::mat4 &projectionMatrix, const glm::mat4 &viewMatrix)
     {   
         if(!m_ready) return;
 
