@@ -115,5 +115,57 @@ namespace Projection
     glm::vec2 GetPixelSizeVec(int width, int height, double sensorWidth, double sensorHeight){
         return glm::vec2(sensorWidth/width, sensorHeight/height);
     }
+    
+    /**
+     * @brief Converts coordinates expressed in (u,v) pixel space which is in 
+     * range u \in [0, height], v \in [0, width], into coordinates in Normalized 
+     * Device Coordinates space : [-1, 1] for both coordinates.
+     * 
+     * @param pixelCoords : The pixel coordinates in image space, the origin is top-left corner. 
+     * @param width : The amount of pixels in the width.
+     * @param height : The amount of pixels in the height.
+     * @return glm::vec2 : A vector in Normalized Device Coordinates ([-1, 1], [-1, 1])
+     */
+    glm::vec2 PixelToNDC(const glm::vec2 &pixelCoords, const glm::mat4 &intrinsics, int width, int height){
+        glm::vec2 tmp = (2.0f * pixelCoords / glm::vec2(intrinsics[0][0], intrinsics[1][1])) - glm::vec2(1.0f);
+        // Account for image aspect ratio
+        tmp.x *= (intrinsics[1][1] / intrinsics[0][0]); //TODO: division can be moved sooner in code.
+        return tmp;
+    }
+
+    /**
+     * @brief Converts coordinates expressed in (u,v) pixel space which is in 
+     * range u \in [0, height], v \in [0, width], into coordinates in Normalized 
+     * Device Coordinates space : [-1, 1] for both coordinates.
+     * 
+     * @param pixelCoords : The pixel coordinates in image space, the origin is top-left corner. 
+     * @param distortion : 
+     * @param width : The amount of pixels in the width.
+     * @param height : The amount of pixels in the height.
+     * @return glm::vec2 : A vector in Normalized Device Coordinates ([-1, 1], [-1, 1])
+     */
+    glm::vec2 PixelToNDC(const glm::vec2 &pixelCoords, const glm::mat4 &intrinsics, const glm::vec2 &distortion, int width, int height){
+        glm::vec2 tmp = (2.0f * pixelCoords / glm::vec2(intrinsics[0][0], intrinsics[1][1])) - glm::vec2(1.0f);
+        // Account for image aspect ratio
+        tmp.x *= (intrinsics[1][1] / intrinsics[0][0]); //TODO: division can be moved sooner in code.
+        return tmp;
+    }
+
+    /**
+     * @brief 
+     * 
+     * @param ndcCoords 
+     * @param intrinsics 
+     * @param width 
+     * @param height 
+     * @return glm::vec2 
+     */
+    glm::vec2 NDCToPixel(const glm::vec2 &ndcCoords, const glm::mat4 &intrinsics, int width, int height){
+        // Calculate pixel coordinates
+        return glm::vec2(
+            (ndcCoords.x + 1.0f) * (intrinsics[0][0] / 2.0f),
+            (ndcCoords.y + 1.0f) * (intrinsics[1][1] / 2.0f)
+        );
+    }
 
 };

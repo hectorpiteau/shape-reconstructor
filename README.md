@@ -1,4 +1,4 @@
-# shape-reconstructor
+# Shape Reconstruction Experiment Software  
 
 ![](screen1.png?raw=true)
 

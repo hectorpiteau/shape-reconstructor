@@ -28,6 +28,7 @@
 #include "view/Volume3D.hpp"
 #include "view/LineGrid.hpp"
 #include "utils/SceneSettings.hpp"
+#include "utils/Projection.hpp"
 
 #include "../include/imgui/imgui.h"
 #include "../include/imgui/backends/imgui_impl_glfw.h"
@@ -319,9 +320,6 @@ int main(void)
     auto cubePipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_shader.glsl", "../src/shaders/f_shader.glsl");
     UnitCube cube(cubePipeline);
 
-    auto gridPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_grid.glsl", "../src/shaders/f_grid.glsl");
-    Grid grid(gridPipeline);
-
     auto meshPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_mesh.glsl", "../src/shaders/f_mesh.glsl");
     // Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/data/sphere.obj");
     Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/bust/marble_bust_01_4k.fbx");
@@ -348,14 +346,25 @@ int main(void)
     //     glm::vec3(1.0, 1.0, 0.0),
     //     glm::vec3(2.0, 1.0, 0.0)
     // };
+    glm::mat4 ext = glm::mat4(camera.GetViewMatrix());
+    glm::mat3 R = glm::mat3(ext);
+    
+    glm::vec3 center = glm::vec3(ext[0][3], ext[1][3], ext[2][3]);
+    
+    glm::mat3x3 RT = glm::transpose(R);
+    
+    glm::vec3 res = RT * glm::vec3(2.0, 2.0, 0.0); + center;
+    glm::vec3 pos = camera.GetPosition();
 
-    float vertices2[12] = {
-        0.0f, 0.0f, 0.0f,
-        1.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f,
-        2.0f, 1.0f, 0.0f};
+    std::cout << "Point coordinates in world space: " << RT[0][0]  << std::endl;
 
-    Lines testLines(vertices2, 12);
+    float vertices2[6] = {
+        pos.x, pos.y, pos.z,
+        // pos.x + 2, pos.y, pos.z
+        res.x, res.y, res.z
+    };
+
+    Lines testLines(vertices2, 6);
 
     Lines cameraLines(camera.GetWireframe(), 16 * 3);
     cameraLines.SetColor(1.0, 0.0, 0.0, 0.5);
@@ -391,11 +400,9 @@ int main(void)
         // cube.Render(projectionMatrix, viewMatrix, camera.GetPosition(), WINDOW_WIDTH, WINDOW_HEIGHT);
         // skybox.Render(projectionMatrix, viewMatrix);
 
-        // grid.Render(projectionMatrix, viewMatrix, sceneSettings);
-
         model.Render(projectionMatrix, viewMatrix);
 
-        // testLines.Render(projectionMatrix, viewMatrix);
+        testLines.Render(projectionMatrix, viewMatrix);
         cameraLines.Render(projectionMatrix, viewMatrix);
         cameraGizmo.Render(projectionMatrix, viewMatrix);
 

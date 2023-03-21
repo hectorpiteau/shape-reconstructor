@@ -7,7 +7,7 @@
 
 ### Rendering
 
-- [ ] Create the Cuda Volume class with it's wireframe bouding box renderer.
+- [x] Create the Cuda Volume class with it's wireframe bouding box renderer.
 - [ ] Implement the sparse octree for storing volumetric data. 
 - [ ] Implement an Adam Optimizer in CUDA to optimize the volume colors. 
 - [ ] Create a list of elements present in the scene and a list in ImGUI to enable / disable the render of each elements.
