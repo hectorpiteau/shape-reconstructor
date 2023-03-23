@@ -10,6 +10,7 @@
 
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
+#include <tgmath.h>
 
 #include <sstream>
 #include "model/Camera.hpp"
@@ -349,45 +350,74 @@ int main(void)
     //     glm::vec3(1.0, 1.0, 0.0),
     //     glm::vec3(2.0, 1.0, 0.0)
     // };
-    glm::mat4 ext = glm::mat4(camera.GetViewMatrix());
+    glm::mat4 ext = camera.GetViewMatrix();
 
-    Utils::to_string(ext);
+    Utils::print(ext);
 
     glm::mat3 R = glm::mat3(ext);
-    
+
     glm::vec3 center = glm::vec3(ext[0][3], ext[1][3], ext[2][3]);
-    
-    glm::mat3x3 RT = glm::transpose(R);
-    
     glm::vec3 pos = camera.GetPosition();
-    
-    glm::vec3 cameraCoords = glm::vec3(0.0, 0.0, 0.0) + camera.GetForward()+ camera.GetRight()*0.1f;
 
-    glm::vec3 res = RT * cameraCoords - RT*center + pos;
+    std::cout << "Center: " << std::endl;
+    Utils::print(center);
+    std::cout << "Pos: " << std::endl;
+    Utils::print(pos);
 
-    glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(1.0, 0.0, 0.0, 1.0), ext);
+    glm::mat3x3 RT = glm::transpose(R);
 
-    float vertices2[6] = {
-        // 0.0
+    glm::vec3 cameraCoords = glm::vec3(-1.0 * sceneSettings->GetViewportRatio(), 1.0, -1.0);
+
+    glm::vec3 res = RT * cameraCoords - RT * center + pos;
+
+    // glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(cameraCoords, 1.0f), ext, pos);
+
+    int width = 1080/32;
+    int height = 720/32;
+    double wres = 1.0 / (double)width;
+    double hres = 1.0 / (double)height;
+
+    glm::vec3 wwMin = glm::vec3(-1.0 * sceneSettings->GetViewportRatio(), -1.0, -1.0);
+    glm::vec3 wwMax = glm::vec3(1.0 * sceneSettings->GetViewportRatio(), 1.0, -1.0);
+    glm::vec3 wwDelta = wwMax - wwMin;
+    glm::vec3 wwRes = wwDelta / (float)width;
+    glm::vec3 wwResD2 = wwDelta / 2.0f;
+
+    glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(wwMax.x, 0.0, -1.0, 1.0f), ext, pos);
+
+    glm::vec3 adj = glm::vec3(0.0, 0.0, 1.0);
+    glm::vec3 hypo = glm::vec3(pos.x - res1.x, pos.y - res1.y, pos.z - res1.z);
+
+    std::cout << "Angle: (FOV):  " << glm::length(adj) << " / " << glm::length(hypo) << " | " << (acos(glm::length(adj) /glm::length(hypo) )) << std::endl;
+
+    float *vertices2 = new float[6]{
         pos.x, pos.y, pos.z,
-        // pos.x + 2, pos.y, pos.z
-        res.x, res.y, res.z
-        // res1.x, res1.y, res1.z
+        res1.x, res1.y, res1.z
+
     };
-    // WRITE_VEC3(vertices2, 0, pos);
-    // WRITE_VEC3(vertices2, 3, Projection::CameraToWorld(glm::vec4(1.0, 0.0, 0.0, 1.0), ext));
+    // float *vertices2 = new float[6 * width * height]{0.0f};
 
-    // WRITE_VEC3(vertices2, 6, Projection::CameraToWorld(glm::vec4(1.0, 0.0, 0.0, 1.0), ext));
-    // WRITE_VEC3(vertices2, 9, Projection::CameraToWorld(glm::vec4(1.0, 0.0, 1.0, 1.0), ext));
-    
-    // WRITE_VEC3(vertices2, 12, Projection::CameraToWorld(glm::vec4(1.0, 0.0, 1.0, 1.0), ext));
-    // WRITE_VEC3(vertices2, 15, Projection::CameraToWorld(glm::vec4(0.0, 0.0, 1.0, 1.0), ext));
+    // int cpt = 0;
+    // for (int j = 0; j < height; ++j)
+    // {
+    //     for (int i = 0; i < width; ++i)
+    //     {
+    //         WRITE_VEC3(vertices2, cpt, pos);
+    //         cpt += 3;
+    //         glm::vec3 tmp = glm::vec3((-1.0 + i * 2 * wres + wres) * sceneSettings->GetViewportRatio(), -1.0 + j * 2 * hres, -1.0);
+    //         glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(tmp, 1.0f), ext, pos);
+    //         WRITE_VEC3(vertices2, cpt, res1);
+    //         cpt += 3;
+    //     }
+    // }
 
-    Lines testLines(vertices2, 6);
+    std::cout << "Initialize rays. " << std::endl;
+
+    Lines testLines(vertices2, 6 );
+    // Lines testLines(vertices2, 6 * width * height);
 
     Lines cameraLines(camera.GetWireframe(), 16 * 3);
     cameraLines.SetColor(1.0, 0.0, 0.0, 0.5);
-
 
     Gizmo cameraGizmo(camera.GetPosition(), camera.GetRight(), camera.GetRealUp(), camera.GetForward());
 
@@ -432,7 +462,7 @@ int main(void)
         // overlayPlane.Render(true, cudaTex.GetTex());
 
         volume.RenderWireframe(projectionMatrix, viewMatrix, sceneSettings);
-        
+
         lineGrid.RenderWireframe(projectionMatrix, viewMatrix, sceneSettings);
 
         /** ImGUI */
@@ -448,12 +478,12 @@ int main(void)
         ImGui::Text(
             (std::string("Mouse Right: ") + std::string(sceneSettings->GetMouseRightClick() ? "Pressed" : "Released")).c_str());
         ImGui::Text(
-            (std::string("Scroll offsets: ") + std::to_string(sceneSettings->GetScrollOffsets().x)+ std::string(", ") + std::to_string(sceneSettings->GetScrollOffsets().y)).c_str());
-        
+            (std::string("Scroll offsets: ") + std::to_string(sceneSettings->GetScrollOffsets().x) + std::string(", ") + std::to_string(sceneSettings->GetScrollOffsets().y)).c_str());
+
         // ImGui::Image((void*)(intptr_t)testImage.GetID(), ImVec2(testImage.GetWidth(), testImage.GetHeight()));
         ImGui::Separator();
-        ImGui::Image((void*)(intptr_t)testImage.GetID(), ImVec2(256, 256), ImVec2(0, 0), ImVec2(1, 1));
-        const char* items = "Image1\0Image2\0";
+        ImGui::Image((void *)(intptr_t)testImage.GetID(), ImVec2(256, 256), ImVec2(0, 0), ImVec2(1, 1));
+        const char *items = "Image1\0Image2\0";
         int current = -1;
         // ImGui::Combo(items, &current);
         ImGui::Separator();

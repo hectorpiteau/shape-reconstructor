@@ -7,11 +7,13 @@ namespace Projection
     /**
      * @brief Project camera (3D) coordinates in World coordinates (3D).
      * 
-     * @param vec 
-     * @param extrinsics 
-     * @return glm::vec4 
+     * @param vec : The point expressed in the camera coordinate system.
+     * @param extrinsics : The extrinsics matrix of the camera.
+     * @param cameraPosition : The position of the camera in world space.
+     * @return glm::vec4 : The same point as vec but expressed with respect 
+     * to the world space coordinates system.
      */
-    glm::vec4 CameraToWorld(glm::vec4 vec, glm::mat4 extrinsics)
+    glm::vec4 CameraToWorld(const glm::vec4 &vec, const glm::mat4 &extrinsics, const glm::vec3 &cameraPosition)
     {
         /** Pw = R^t @ Pc + T */
         /** PointWorld = Rotation^Transposed multiplied by PointCamera + (Translation from world to camera origins)  */
@@ -33,7 +35,7 @@ namespace Projection
         trans[1][3] = -extrinsics[1][3];
         trans[2][3] = -extrinsics[2][3];
 
-        return ext * trans * vec;
+        return ext * trans * vec + glm::vec4(cameraPosition, 1.0f);
     }
 
     /**

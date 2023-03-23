@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <vector>
 #include "../maths/MMath.hpp"
 #include "../utils/Utils.hpp"
@@ -25,6 +26,8 @@ Camera::Camera(GLFWwindow *window, std::shared_ptr<SceneSettings> sceneSettings)
     );
 
     m_viewMatrix = glm::lookAt( m_pos, m_target, m_up);
+    std::cout << "Constructing the ViewMatrix: " << std::endl;
+    Utils::print(m_viewMatrix);
     m_previousCursorPos = glm::vec2(m_sceneSettings->GetViewportWidth() / 2, m_sceneSettings->GetViewportHeight() / 2);
 }
 
@@ -222,11 +225,11 @@ void Camera::ComputeMatricesFromInputs()
 glm::vec3 Camera::GetRight()
 {
     // return glm::vec3(sin(m_horizontalAngle - 3.14f / 2.0f), 0, cos(m_horizontalAngle - 3.14f / 2.0f));
-    return glm::cross(GetForward(), GetUp());
+    return glm::normalize(glm::cross(GetForward(), GetUp()));
 }
 
 glm::vec3 Camera::GetRealUp(){
-    return glm::cross(GetRight(), GetForward());
+    return glm::normalize(glm::cross(GetRight(), GetForward()));
 }
 glm::vec3 Camera::GetUp()
 {
@@ -245,7 +248,7 @@ glm::vec3 Camera::GetForward()
 
 const float *Camera::GetWireframe()
 {
-    glm::vec3 up = GetRealUp();
+    glm::vec3 up = GetRealUp(); 
     glm::vec3 forward = GetForward();
     glm::vec3 right = GetRight();
 
