@@ -96,11 +96,23 @@ static void error_callback(int error, const char *description)
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
+    // don't pass mouse and keyboard presses further if an ImGui widget is active
+    auto& io = ImGui::GetIO();
+    if (io.WantCaptureMouse || io.WantCaptureKeyboard) {
+        return;
+    }
+
     sceneSettings->Scroll(xoffset, yoffset);
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
+    // don't pass mouse and keyboard presses further if an ImGui widget is active
+    auto& io = ImGui::GetIO();
+    if (io.WantCaptureMouse || io.WantCaptureKeyboard) {
+        return;
+    }
+
     if (action == GLFW_PRESS)
     {
         switch (button)
