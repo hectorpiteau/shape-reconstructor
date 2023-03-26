@@ -15,11 +15,11 @@
 #include <sstream>
 #include "model/Camera.hpp"
 #include "model/ShaderPipeline.hpp"
-#include "model/Model.hpp"
 #include "model/CudaTexture.hpp"
 #include "maths/MMath.hpp"
 #include "utils/FileUtils.hpp"
 #include "utils/Utils.hpp"
+#include "view/Model.hpp"
 #include "view/UnitCube.hpp"
 #include "view/Grid.hpp"
 #include "view/SkyBox.hpp"
@@ -36,19 +36,17 @@
 #include "../include/imgui/backends/imgui_impl_opengl3.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include "../../include/stb_image.h"
+#include "../../include/stb_image_write.h"
 
 using namespace cv;
-
 using namespace glm;
 
 #define GLSL(src) #src
 #define WINDOW_WIDTH 1080
 #define WINDOW_HEIGHT 720
-
-float FOV = 90.0f;
-float NEAR = 1.0f;
-float FAR = 10.0f;
 
 std::shared_ptr<SceneSettings> sceneSettings = std::make_shared<SceneSettings>(1080, 720);
 
@@ -97,8 +95,9 @@ static void error_callback(int error, const char *description)
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
     // don't pass mouse and keyboard presses further if an ImGui widget is active
-    auto& io = ImGui::GetIO();
-    if (io.WantCaptureMouse || io.WantCaptureKeyboard) {
+    auto &io = ImGui::GetIO();
+    if (io.WantCaptureMouse || io.WantCaptureKeyboard)
+    {
         return;
     }
 
@@ -108,8 +107,9 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     // don't pass mouse and keyboard presses further if an ImGui widget is active
-    auto& io = ImGui::GetIO();
-    if (io.WantCaptureMouse || io.WantCaptureKeyboard) {
+    auto &io = ImGui::GetIO();
+    if (io.WantCaptureMouse || io.WantCaptureKeyboard)
+    {
         return;
     }
 
@@ -169,6 +169,10 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_LEFT_ALT:
         case GLFW_KEY_RIGHT_ALT:
             sceneSettings->SetAltKey(true);
+            break;
+        case GLFW_KEY_P:
+            char path[64] = {"screen.png"};
+            Utils::SaveImage(path, window, sceneSettings->GetViewportWidth(), sceneSettings->GetViewportHeight());
             break;
         }
     }
@@ -384,8 +388,8 @@ int main(void)
 
     // glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(cameraCoords, 1.0f), ext, pos);
 
-    int width = 1080/32;
-    int height = 720/32;
+    int width = 1080 / 32;
+    int height = 720 / 32;
     double wres = 1.0 / (double)width;
     double hres = 1.0 / (double)height;
 
@@ -395,37 +399,35 @@ int main(void)
     glm::vec3 wwRes = wwDelta / (float)width;
     glm::vec3 wwResD2 = wwDelta / 2.0f;
 
-    glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(wwMax.x, 0.0, -1.0, 1.0f), ext, pos);
+    glm::mat4 intrinsics = camera.GetProjectionMatrix();
+
+    glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(wwMax.x, 0.0, -1.0, 1.0f), ext);
 
     glm::vec3 adj = glm::vec3(0.0, 0.0, 1.0);
     glm::vec3 hypo = glm::vec3(pos.x - res1.x, pos.y - res1.y, pos.z - res1.z);
 
-    std::cout << "Angle: (FOV):  " << glm::length(adj) << " / " << glm::length(hypo) << " | " << (acos(glm::length(adj) /glm::length(hypo) )) << std::endl;
+    std::cout << "Angle: (FOV):  " << glm::length(adj) << " / " << glm::length(hypo) << " | " << (acos(glm::length(adj) / glm::length(hypo))) << std::endl;
 
-    float *vertices2 = new float[6]{
-        pos.x, pos.y, pos.z,
-        res1.x, res1.y, res1.z
+    // float *vertices2 = new float[6]{
+    //     pos.x, pos.y, pos.z,
+    //     res1.x, res1.y, res1.z
+    // };
+
+    float *vertices2 = new float[6 * 3]{
+        0.0, 0.0, 0.0,
+        4.0, 0.0, 0.0,
+
+        4.0, 0.0, 0.0,
+        4.0, 0.0, 4.0,
+
+        4.0, 0.0, 4.0,
+        4.0, 4.0, 4.0
 
     };
-    // float *vertices2 = new float[6 * width * height]{0.0f};
-
-    // int cpt = 0;
-    // for (int j = 0; j < height; ++j)
-    // {
-    //     for (int i = 0; i < width; ++i)
-    //     {
-    //         WRITE_VEC3(vertices2, cpt, pos);
-    //         cpt += 3;
-    //         glm::vec3 tmp = glm::vec3((-1.0 + i * 2 * wres + wres) * sceneSettings->GetViewportRatio(), -1.0 + j * 2 * hres, -1.0);
-    //         glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(tmp, 1.0f), ext, pos);
-    //         WRITE_VEC3(vertices2, cpt, res1);
-    //         cpt += 3;
-    //     }
-    // }
 
     std::cout << "Initialize rays. " << std::endl;
 
-    Lines testLines(vertices2, 6 );
+    Lines testLines(vertices2, 6 * 3);
     // Lines testLines(vertices2, 6 * width * height);
 
     Lines cameraLines(camera.GetWireframe(), 16 * 3);
@@ -465,21 +467,89 @@ int main(void)
         // cube.Render(projectionMatrix, viewMatrix, camera.GetPosition(), WINDOW_WIDTH, WINDOW_HEIGHT);
         // skybox.Render(projectionMatrix, viewMatrix);
 
-        model.Render(projectionMatrix, viewMatrix);
+        model.Render(projectionMatrix, viewMatrix, sceneSettings);
 
-        testLines.Render(projectionMatrix, viewMatrix);
-        cameraLines.Render(projectionMatrix, viewMatrix);
-        cameraGizmo.Render(projectionMatrix, viewMatrix);
+        testLines.Render(projectionMatrix, viewMatrix, sceneSettings);
+        cameraLines.Render(projectionMatrix, viewMatrix, sceneSettings);
+        cameraGizmo.Render(projectionMatrix, viewMatrix, sceneSettings);
+
+        lineGrid.Render(projectionMatrix, viewMatrix, sceneSettings);
+
+        // auto started = std::chrono::high_resolution_clock::now();
+        // auto done = std::chrono::high_resolution_clock::now();
+        // std::cout << "Elapsed time: " << std::chrono::duration_cast<std::chrono::milliseconds>(done - started).count() << std::endl;
 
         // overlayPlane.Render(true, cudaTex.GetTex());
 
-        volume.RenderWireframe(projectionMatrix, viewMatrix, sceneSettings);
-
-        lineGrid.RenderWireframe(projectionMatrix, viewMatrix, sceneSettings);
+        volume.Render(projectionMatrix, viewMatrix, sceneSettings);
 
         /** ImGUI */
-        // render your GUI
+        ImGui::Begin("Objects");
+
+        ImGui::SeparatorText("Objects in Scene");
+        
+        static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
+        
+        if (ImGui::BeginTable("2ways", 2, flags))
+        {
+            // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
+            ImGui::TableSetupColumn("Active", ImGuiTableColumnFlags_NoHide);
+            ImGui::TableSetupColumn("Object Name", ImGuiTableColumnFlags_NoHide);
+            ImGui::TableHeadersRow();
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            bool test = true;
+            ImGui::Checkbox("", &test);
+            ImGui::TableNextColumn();
+            ImGui::Text(std::string("Camera 0 (main)").c_str());
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("", &test);
+            ImGui::TableNextColumn();
+            ImGui::Text(std::string("Volume 3D").c_str());
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("", &test);
+            ImGui::TableNextColumn();
+            ImGui::Text(std::string("Grid").c_str());
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("", &test);
+            ImGui::TableNextColumn();
+            ImGui::Text(std::string("Volumetric Renderer").c_str());
+
+
+
+            ImGui::EndTable();
+        }
+        ImGui::End();
+        
         ImGui::Begin("Main Settings");
+        if (ImGui::BeginMainMenuBar())
+        {
+            if (ImGui::BeginMenu("File"))
+            {
+                ImGui::MenuItem("Open calibration images");   
+                ImGui::Separator();
+                ImGui::MenuItem("Exit", "Esc");
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Setups"))
+            {
+                bool test;
+                ImGui::MenuItem("Setup for Simple Stereo");
+                ImGui::MenuItem("Setup for MultiView");
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMainMenuBar();
+        }
+
         ImGui::Button("Import Image Set");
         bool check = true;
         ImGui::Checkbox("Images uses same camera", &check);
@@ -491,6 +561,10 @@ int main(void)
             (std::string("Mouse Right: ") + std::string(sceneSettings->GetMouseRightClick() ? "Pressed" : "Released")).c_str());
         ImGui::Text(
             (std::string("Scroll offsets: ") + std::to_string(sceneSettings->GetScrollOffsets().x) + std::string(", ") + std::to_string(sceneSettings->GetScrollOffsets().y)).c_str());
+
+        float inf[3] = {camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z};
+        ImGui::InputFloat3("Camera position", inf);
+        camera.SetPosition(inf[0], inf[1], inf[2]);
 
         // ImGui::Image((void*)(intptr_t)testImage.GetID(), ImVec2(testImage.GetWidth(), testImage.GetHeight()));
         ImGui::Separator();

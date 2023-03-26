@@ -5,12 +5,14 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include "Lines.hpp"
+#include "Renderable/Renderable.hpp"
 
-class Gizmo {
+class Gizmo : Renderable {
 public:
     Gizmo(glm::vec3 origin, glm::vec3 x, glm::vec3 y, glm::vec3 z);
 
-    void Render(glm::mat4 &projectionMatrix, glm::mat4 &viewMatrix);
+    void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
+    
 private:
     float m_xLength;
     float m_yLength;

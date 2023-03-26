@@ -6,9 +6,16 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <iostream>
-#include <iomanip> 
+#include <iomanip>
+#include <vector>
 
-#define WRITE_VEC3(array, index, vec3) (array)[(index)] = (vec3).x; (array)[((index)+1)] = (vec3).y; (array)[((index)+2)] = (vec3).z; 
+#include "../../include/stb_image.h"
+#include "../../include/stb_image_write.h"
+
+#define WRITE_VEC3(array, index, vec3) \
+    (array)[(index)] = (vec3).x;       \
+    (array)[((index) + 1)] = (vec3).y; \
+    (array)[((index) + 2)] = (vec3).z;
 
 struct ScreenInfos
 {
@@ -19,27 +26,30 @@ struct ScreenInfos
 class Utils
 {
 public:
-    template <typename T> 
-    static int Sign(T val) {
+    template <typename T>
+    static int Sign(T val)
+    {
         return (T(0) < val) - (val < T(0));
     }
 
-    static void print(const glm::mat4 &mat){
+    static void print(const glm::mat4 &mat)
+    {
         std::cout.precision(5);
-        for(int i=0; i<4; ++i)
-        std::cout << std::fixed << mat[0][i] << ",\t" << mat[1][i] << ",\t" << mat[2][i] << ",\t" << mat[3][i] << std::endl;
-    }  
+        for (int i = 0; i < 4; ++i)
+            std::cout << std::fixed << mat[0][i] << ",\t" << mat[1][i] << ",\t" << mat[2][i] << ",\t" << mat[3][i] << std::endl;
+    }
 
-    static void print(const glm::vec3 &vec){
+    static void print(const glm::vec3 &vec)
+    {
         std::cout.precision(5);
         std::cout << std::fixed << "(" << vec[0] << ",\t" << vec[1] << ",\t" << vec[2] << ")" << std::endl;
-    }  
+    }
 
-    static void print(const glm::vec2 &vec){
+    static void print(const glm::vec2 &vec)
+    {
         std::cout.precision(5);
         std::cout << std::fixed << "(" << vec[0] << ",\t" << vec[1] << ")" << std::endl;
-    }  
-
+    }
 
     static unsigned int CreateVertexBuffer(const float *vertices)
     {
@@ -80,7 +90,6 @@ public:
         //     return 0;
         // }
 
-
         GLenum target = GL_TEXTURE_RECTANGLE_NV;
         // glGenTextures(2, imageTexture);
         // glBindTexture(target, imageTexture);
@@ -92,7 +101,7 @@ public:
         // glTexImage2D(target, 0, GL_FLOAT_RGBA16_NV, dim.x, dim.y, 0, GL_RGBA, GL_HALF_FLOAT_NV, pixelBuffer);
         // glActiveTextureARB(GL_TEXTURE0_ARB);
         // glBindTexture(target, imageTexture);
-        
+
         // glBegin(GL_QUADS);
         // glTexCoord2f(0.0, 0.0);
         // glVertex2f(0.0, 0.0);
@@ -105,5 +114,20 @@ public:
         // glEnd();
 
         return target;
+    }
+
+    static void SaveImage(char *filepath, GLFWwindow *w, int width, int height)
+    {
+        glfwGetFramebufferSize(w, &width, &height);
+        GLsizei nrChannels = 3;
+        GLsizei stride = nrChannels * width;
+        stride += (stride % 4) ? (4 - stride % 4) : 0;
+        GLsizei bufferSize = stride * height;
+        std::vector<char> buffer(bufferSize);
+        glPixelStorei(GL_PACK_ALIGNMENT, 4);
+        glReadBuffer(GL_FRONT);
+        glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer.data());
+        stbi_flip_vertically_on_write(true);
+        stbi_write_png(filepath, width, height, nrChannels, buffer.data(), stride);
     }
 };

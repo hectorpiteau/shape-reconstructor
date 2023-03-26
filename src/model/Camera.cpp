@@ -8,6 +8,7 @@
 #include "../maths/MMath.hpp"
 #include "../utils/Utils.hpp"
 #include "../utils/SceneSettings.hpp"
+#include "../utils/Projection.hpp"
 #include "Camera.hpp"
 #include <memory>
 
@@ -15,7 +16,7 @@ Camera::Camera(GLFWwindow *window, std::shared_ptr<SceneSettings> sceneSettings)
     : m_sceneSettings(sceneSettings)
 {
     m_window = window;
-    m_pos = glm::vec3(2.0f, 2.0f, 2.0f);
+    m_pos = glm::vec3(4.0f, 4.0f, 4.0f);
     m_target = glm::vec3(0.0f, 0.0f, 0.0f);
     m_up = glm::vec3(0.0f, 1.0f, 0.0f);
     m_projectionMatrix = glm::perspective(
@@ -26,8 +27,7 @@ Camera::Camera(GLFWwindow *window, std::shared_ptr<SceneSettings> sceneSettings)
     );
 
     m_viewMatrix = glm::lookAt( m_pos, m_target, m_up);
-    std::cout << "Constructing the ViewMatrix: " << std::endl;
-    Utils::print(m_viewMatrix);
+    
     m_previousCursorPos = glm::vec2(m_sceneSettings->GetViewportWidth() / 2, m_sceneSettings->GetViewportHeight() / 2);
 }
 
@@ -84,7 +84,6 @@ void Camera::ComputeMatricesFromInputs()
         // Compute new orientation
         m_horizontalAngle += m_mouseSpeed * float(m_sceneSettings->GetViewportWidth() / 2 - xpos);
         m_verticalAngle += m_mouseSpeed * float(m_sceneSettings->GetViewportHeight() / 2 - ypos);
-
         // Direction : Spherical coordinates to Cartesian coordinates conversion
         glm::vec3 direction(
             cos(m_verticalAngle) * sin(m_horizontalAngle),
@@ -205,9 +204,10 @@ void Camera::ComputeMatricesFromInputs()
         // Update the camera view (we keep the same lookat and the same up vector)
         m_pos = finalPosition;
 
+        // + viewDir * m_sceneSettings->GetScrollOffsets().y
         m_viewMatrix = glm::lookAt(
-            m_pos + viewDir * m_sceneSettings->GetScrollOffsets().y,
-            m_target + viewDir * m_sceneSettings->GetScrollOffsets().y,
+            m_pos ,
+            m_target,
             m_up);
     }
 
@@ -217,9 +217,10 @@ void Camera::ComputeMatricesFromInputs()
 
     // For the next frame, the "last time" will be "now"
     lastTime = currentTime;
+}
 
-    // glm::mat4 CameraTransformation = MMath::InitCameraTransform(m_pos, _target, _up);
-    // return CameraTransformation;
+glm::vec3 Camera::GetTarget(){
+    return m_target;
 }
 
 glm::vec3 Camera::GetRight()
@@ -243,25 +244,23 @@ glm::vec3 Camera::GetForward()
     //     sin(m_verticalAngle),
     //     cos(m_verticalAngle) * cos(m_horizontalAngle));
 
-    return - glm::normalize(m_pos - m_target);
+    return glm::normalize(m_pos - m_target);
 }
 
 const float *Camera::GetWireframe()
 {
-    glm::vec3 up = GetRealUp(); 
-    glm::vec3 forward = GetForward();
-    glm::vec3 right = GetRight();
-
-    float length = 1.0f;
-    float ratio = m_sceneSettings->GetViewportRatio();
-
-    glm::vec3 camera_origin = m_pos;
-
-    glm::vec3 corner_top_left = m_pos + forward * length + up - right*ratio;
-    glm::vec3 corner_top_right = m_pos + forward * length + up + right*ratio;
-
-    glm::vec3 corner_bot_left = m_pos + forward * length - up - right*ratio;
-    glm::vec3 corner_bot_right = m_pos + forward * length - up + right*ratio;
+    glm::vec3 corner_top_left_tmp = Projection::NDCToCamera(glm::vec2(-1.0, 1.0), m_projectionMatrix);
+    glm::vec3 corner_top_left = Projection::CameraToWorld(glm::vec4(corner_top_left_tmp, 1.0f), m_viewMatrix);
+    
+    glm::vec3 corner_top_right_tmp = Projection::NDCToCamera(glm::vec2(1.0, 1.0), m_projectionMatrix);
+    glm::vec3 corner_top_right = Projection::CameraToWorld(glm::vec4(corner_top_right_tmp, 1.0f), m_viewMatrix);
+    
+    glm::vec3 corner_bot_left_tmp = Projection::NDCToCamera(glm::vec2(-1.0, -1.0), m_projectionMatrix);
+    glm::vec3 corner_bot_left = Projection::CameraToWorld(glm::vec4(corner_bot_left_tmp, 1.0f), m_viewMatrix);
+    
+    glm::vec3 corner_bot_right_tmp = Projection::NDCToCamera(glm::vec2(1.0, -1.0), m_projectionMatrix);
+    glm::vec3 corner_bot_right = Projection::CameraToWorld(glm::vec4(corner_bot_right_tmp, 1.0f), m_viewMatrix);
+    
 
     WRITE_VEC3(m_wireframeVertices, 0, corner_top_left);
     WRITE_VEC3(m_wireframeVertices, 3, corner_top_right);
@@ -275,16 +274,16 @@ const float *Camera::GetWireframe()
     WRITE_VEC3(m_wireframeVertices, 18, corner_top_right);
     WRITE_VEC3(m_wireframeVertices, 21, corner_bot_right);
 
-    WRITE_VEC3(m_wireframeVertices, 24, camera_origin);
+    WRITE_VEC3(m_wireframeVertices, 24, m_pos);
     WRITE_VEC3(m_wireframeVertices, 27, corner_top_left);
 
-    WRITE_VEC3(m_wireframeVertices, 30, camera_origin);
+    WRITE_VEC3(m_wireframeVertices, 30, m_pos);
     WRITE_VEC3(m_wireframeVertices, 33, corner_top_right);
 
-    WRITE_VEC3(m_wireframeVertices, 36, camera_origin);
+    WRITE_VEC3(m_wireframeVertices, 36, m_pos);
     WRITE_VEC3(m_wireframeVertices, 39, corner_bot_left);
 
-    WRITE_VEC3(m_wireframeVertices, 42, camera_origin);
+    WRITE_VEC3(m_wireframeVertices, 42, m_pos);
     WRITE_VEC3(m_wireframeVertices, 45, corner_bot_right);
 
     return m_wireframeVertices;

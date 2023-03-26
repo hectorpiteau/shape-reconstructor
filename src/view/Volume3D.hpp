@@ -23,10 +23,11 @@ public:
     {
         /** nothing special here for now */
     }
-
-    void RenderWireframe(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene){
-        m_lines->Render(projection, view);
+    
+    void UpdateWireFrame(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene){
+        m_lines->Render(projection, view, scene);
     }
+
 
 private: 
     std::shared_ptr<Lines> m_lines;

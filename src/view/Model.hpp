@@ -19,11 +19,12 @@
 #include <vector>
 #include <memory>
 
-#include "Mesh.hpp"
+#include "../model/Mesh.hpp"
+#include "Renderable/Renderable.hpp"
 
 unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
 
-class Model
+class Model : Renderable
 {
 public:
     // model data
@@ -45,7 +46,7 @@ public:
     }
 
     // draws the model, and thus all its meshes
-    void Render(glm::mat4 &projectionMatrix, glm::mat4 &viewMatrix)
+    void Render(const glm::mat4 &projectionMatrix, const glm::mat4 &viewMatrix, std::shared_ptr<SceneSettings> scene)
     {
         m_pipeline->UseShader();
 

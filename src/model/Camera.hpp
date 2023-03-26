@@ -23,6 +23,7 @@ public:
     glm::vec3 GetRealUp();
     glm::vec3 GetUp();
     glm::vec3 GetForward();
+    glm::vec3 GetTarget();
     
     void ComputeMatricesFromInputs();
 
@@ -60,8 +61,7 @@ private:
     // Initial vertical angle : none
     float m_verticalAngle = -3.14f * 0.2f;
     // Initial Field of View
-    // float m_initialFoV = 35.0f;
-    float m_initialFoV = 65.0f;
+    float m_initialFoV = 90.0f;
 
     float m_mouseSpeed = 0.005f;
 

@@ -2,6 +2,7 @@
 
 #include "Lines.hpp"
 #include "Wireframe/Wireframe.hpp"
+#include "Renderable/Renderable.hpp"
 #include "../utils/Utils.hpp"
 #include <memory>
 #include <glm/glm.hpp>
@@ -11,7 +12,7 @@
  * @brief Draw a wireframe grid in the scene.
  * This object is using opengl lines.
  */
-class LineGrid : Wireframe
+class LineGrid : Wireframe, Renderable
 {
 public:
     LineGrid()
@@ -83,18 +84,6 @@ public:
             WRITE_VEC3(m_centerVertices, cpt, glm::vec3(w2, 0.0f, -w2 + (i+half_amount_of_lines+1)* m_xCellSize));
             cpt += 3;
         }
-            
-        // for (int i = half_amount_of_lines + 2; i < int(m_width / m_xCellSize); ++i)
-        // {
-        //     WRITE_VEC3(m_centerVertices, (i - 2) * 3, glm::vec3((m_width / 2.0f) + i*m_xCellSize, 0.0f, -m_width / 2.0f));
-        //     WRITE_VEC3(m_centerVertices, (i - 1)*3, glm::vec3((m_width / 2.0f) + i*m_xCellSize, 0.0f, m_width / 2.0f));
-        // }
-
-        // int jump_index = int(m_width/m_xCellSize) * 3;
-        // for(int i=1; i< int(m_width/m_zCellSize); ++i){
-        //     WRITE_VEC3(m_centerLines, (i-1)*3, glm::vec3(m_width / 2.0f, 0.0f, m_width / 2.0f));
-        //     WRITE_VEC3(m_centerLines, (i)*3, glm::vec3(m_width / 2.0f, 0.0f, m_width / 2.0f));
-        // }
 
         /** Allocates the lines renderers. */
         m_borderLines = std::make_shared<Lines>(m_borderVertices, m_borderVerticesLength);
@@ -120,7 +109,11 @@ public:
         LineGrid();
     };
 
-    void RenderWireframe(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene)
+    void UpdateWireFrame(const glm::mat4 &, const glm::mat4 &, std::shared_ptr<SceneSettings> scene){
+        /** Don't change over time. */
+    }
+
+    void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene)
     {
         m_xLine->Render(projection, view);
         m_zLine->Render(projection, view);

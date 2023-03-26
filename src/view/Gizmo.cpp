@@ -27,9 +27,9 @@ Gizmo::Gizmo(glm::vec3 origin, glm::vec3 x, glm::vec3 y, glm::vec3 z)
     m_zLines->SetColor(m_zColor);
 }
 
-void Gizmo::Render(glm::mat4 &projectionMatrix, glm::mat4 &viewMatrix)
+void Gizmo::Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene)
 {
-    m_xLines->Render(projectionMatrix, viewMatrix);
-    m_yLines->Render(projectionMatrix, viewMatrix);
-    m_zLines->Render(projectionMatrix, viewMatrix);
-}
+    m_xLines->Render(projection, view, scene);
+    m_yLines->Render(projection, view, scene);
+    m_zLines->Render(projection, view, scene);
+}   
