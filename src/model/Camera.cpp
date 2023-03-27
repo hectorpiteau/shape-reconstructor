@@ -15,7 +15,7 @@
 Camera::Camera(GLFWwindow *window, std::shared_ptr<SceneSettings> sceneSettings)
     : m_sceneSettings(sceneSettings)
 {
-    m_window = window;
+    window = window;
     m_pos = glm::vec3(4.0f, 4.0f, 4.0f);
     m_target = glm::vec3(0.0f, 0.0f, 0.0f);
     m_up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -41,9 +41,9 @@ glm::vec3 Camera::GetPosition()
     return m_pos;
 }
 
-void Camera::SetPosition(glm::vec3 pos)
+void Camera::SetPosition(const glm::vec3 &position)
 {
-    m_pos = pos;
+    m_pos = position;
 }
 
 void Camera::SetPosition(float x, float y, float z)
@@ -53,17 +53,17 @@ void Camera::SetPosition(float x, float y, float z)
     m_pos.z = z;
 }
 
-glm::mat4 Camera::GetViewMatrix()
+const glm::mat4& Camera::GetViewMatrix()
 {
     return m_viewMatrix;
 }
 
-glm::mat4 Camera::GetProjectionMatrix()
+const glm::mat4& Camera::GetProjectionMatrix()
 {
     return m_projectionMatrix;
 }
 
-void Camera::ComputeMatricesFromInputs()
+void Camera::ComputeMatricesFromInputs(GLFWwindow *window)
 {
 
     static double lastTime = glfwGetTime();
@@ -75,12 +75,12 @@ void Camera::ComputeMatricesFromInputs()
 
     // Get mouse position
     double xpos, ypos;
-    glfwGetCursorPos(m_window, &xpos, &ypos);
+    glfwGetCursorPos(window, &xpos, &ypos);
 
     // Reset mouse position for next frame
     if (m_sceneSettings->GetCameraModel() == CameraMovementModel::FPS)
     {
-        glfwSetCursorPos(m_window, m_sceneSettings->GetViewportWidth() / 2, m_sceneSettings->GetViewportHeight() / 2);
+        glfwSetCursorPos(window, m_sceneSettings->GetViewportWidth() / 2, m_sceneSettings->GetViewportHeight() / 2);
         // Compute new orientation
         m_horizontalAngle += m_mouseSpeed * float(m_sceneSettings->GetViewportWidth() / 2 - xpos);
         m_verticalAngle += m_mouseSpeed * float(m_sceneSettings->GetViewportHeight() / 2 - ypos);
@@ -100,22 +100,22 @@ void Camera::ComputeMatricesFromInputs()
         glm::vec3 up = glm::cross(right, direction);
 
         // Move forward
-        if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         {
             m_pos += direction * deltaTime * m_speed;
         }
         // Move backward
-        if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         {
             m_pos -= direction * deltaTime * m_speed;
         }
         // Strafe right
-        if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         {
             m_pos += right * deltaTime * m_speed;
         }
         // Strafe left
-        if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         {
             m_pos -= right * deltaTime * m_speed;
         }
@@ -131,8 +131,6 @@ void Camera::ComputeMatricesFromInputs()
             m_pos + direction, // and looks here : at the same position, plus "direction"
             m_up               // Head is up (set to 0,-1,0 to look upside-down)
         );
-
-        m_extrinsics = m_viewMatrix;
     }
     else
     {

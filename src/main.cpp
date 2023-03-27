@@ -460,7 +460,7 @@ int main(void)
         ImGui::NewFrame();
 
         /** MVP */
-        camera.ComputeMatricesFromInputs();
+        camera.ComputeMatricesFromInputs(window);
         glm::mat4 projectionMatrix = camera.GetProjectionMatrix();
         glm::mat4 viewMatrix = camera.GetViewMatrix();
 
@@ -534,6 +534,10 @@ int main(void)
             if (ImGui::BeginMenu("File"))
             {
                 ImGui::MenuItem("Open calibration images");   
+                ImGui::Separator();
+                static bool test = true;
+                ImGui::MenuItem("Enable v-sync.", NULL, &test);
+                // glfwSwapInterval(0);
                 ImGui::Separator();
                 ImGui::MenuItem("Exit", "Esc");
                 ImGui::EndMenu();
