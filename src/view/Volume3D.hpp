@@ -2,7 +2,10 @@
 #include "Renderable/Renderable.hpp"
 #include "Wireframe/Wireframe.hpp"
 #include "Lines.hpp"
+#include "SceneObject/SceneObject.hpp"
 #include <memory>
+
+#include <iostream>
 
 /**
  * @brief This class allows for the render of 3D volumetric data.
@@ -12,10 +15,11 @@
  * 
  * This class performs the rendering of the result of the CUDA kernel in a plane that overlay the view. 
  */
-class Volume3D : Renderable, Wireframe
+class Volume3D : public SceneObject, Wireframe
 {
 public:
-    Volume3D(){
+    Volume3D() : SceneObject{std::string("VOLUME3D")} {
+        std::cout <<"Volume3D: Initialize Lines object." << std::endl;
         m_lines = std::make_shared<Lines>(m_wireframeVertices, 12*2*3);
     }
 

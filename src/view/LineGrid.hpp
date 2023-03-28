@@ -4,6 +4,7 @@
 #include "Wireframe/Wireframe.hpp"
 #include "Renderable/Renderable.hpp"
 #include "../utils/Utils.hpp"
+#include "SceneObject/SceneObject.hpp"
 #include <memory>
 #include <glm/glm.hpp>
 #include <iostream>
@@ -12,10 +13,10 @@
  * @brief Draw a wireframe grid in the scene.
  * This object is using opengl lines.
  */
-class LineGrid : Wireframe, Renderable
+class LineGrid : public SceneObject, Wireframe
 {
 public:
-    LineGrid()
+    LineGrid() : SceneObject{std::string("LINEGRID")}
     {
         /** One line per cell in each direction, minus one for each axis (x-axis and z-axis). */
         // m_centerVerticesLength = (int(m_width / m_xCellSize) - 1 + int(m_width / m_zCellSize) - 1 - 2 - 2) * 3;

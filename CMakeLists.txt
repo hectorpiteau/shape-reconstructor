@@ -50,7 +50,15 @@ cuda_add_executable(DRTMCS
     include/imgui/imgui_tables.cpp
     include/imgui/backends/imgui_impl_glfw.cpp
     include/imgui/backends/imgui_impl_opengl3.cpp
+    
+    src/view/ImUI/ObjectListView.cpp
+    src/view/ImUI/ObjectListItem.cpp
 
+    src/interactors/ObjectListInteractor.cpp 
+    
+
+
+    src/controllers/Scene/Scene.cpp 
 
     src/model/ShaderPipeline.cpp 
     src/model/Camera.cpp 
@@ -61,6 +69,7 @@ cuda_add_executable(DRTMCS
     src/view/SkyBox.cpp 
     src/view/OverlayPlane.cpp 
     src/view/Gizmo.cpp 
+    src/view/Lines.cpp 
 
     ${CUDA_SOURCE_FILES})
 

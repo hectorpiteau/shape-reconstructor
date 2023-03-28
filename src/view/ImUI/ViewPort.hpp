@@ -6,4 +6,9 @@ public:
     ViewPort(){
         
     }
+
+
+    void Render(){
+        
+    }
 };
