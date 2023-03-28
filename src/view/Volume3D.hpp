@@ -1,11 +1,13 @@
-#pragma once
+#ifndef VOLUME_3D
+#define VOLUME_3D
+
+#include <memory>
+#include <iostream>
+
 #include "Renderable/Renderable.hpp"
 #include "Wireframe/Wireframe.hpp"
 #include "Lines.hpp"
 #include "SceneObject/SceneObject.hpp"
-#include <memory>
-
-#include <iostream>
 
 /**
  * @brief This class allows for the render of 3D volumetric data.
@@ -18,19 +20,11 @@
 class Volume3D : public SceneObject, Wireframe
 {
 public:
-    Volume3D() : SceneObject{std::string("VOLUME3D")} {
-        std::cout <<"Volume3D: Initialize Lines object." << std::endl;
-        m_lines = std::make_shared<Lines>(m_wireframeVertices, 12*2*3);
-    }
+    Volume3D();
 
-    void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene)
-    {
-        /** nothing special here for now */
-    }
+    void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
     
-    void UpdateWireFrame(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene){
-        m_lines->Render(projection, view, scene);
-    }
+    void UpdateWireFrame(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
 
 
 private: 
@@ -73,3 +67,6 @@ private:
          0.5f,  0.5f,  0.5f,
     };
 };
+
+
+#endif //VOLUME_3D

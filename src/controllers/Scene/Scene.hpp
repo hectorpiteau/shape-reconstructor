@@ -66,8 +66,6 @@ public:
 
     const std::vector<std::shared_ptr<SceneObject>>& GetSceneObjects();
 
-    void Init();
-
 private:
     /**
      * @brief Current Window.

@@ -33,7 +33,7 @@
 
 #include "controllers/Scene/Scene.hpp"
 
-#include "interactors/ObjectListInteractor.hpp"
+#include "controllers/AppController/AppController.hpp"
 
 #include "../include/imgui/imgui.h"
 #include "../include/imgui/backends/imgui_impl_glfw.h"
@@ -54,7 +54,10 @@ using namespace glm;
 #define WINDOW_WIDTH 1080
 #define WINDOW_HEIGHT 720
 
-std::shared_ptr<SceneSettings> sceneSettings = std::make_shared<SceneSettings>(1080, 720);
+/**
+ * @brief 
+ */
+std::shared_ptr<SceneSettings> sceneSettings = std::make_shared<SceneSettings>(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 static void pxl_glfw_fps(GLFWwindow *window)
 {
@@ -323,28 +326,8 @@ void OpenCVInitialization()
     // }
 }
 
-int main(void)
+void GLInitialization()
 {
-    Statistics();
-
-    /** Initialize everything that matter GLFW. */
-    GLFWwindow *window = GLFWInitialization();
-
-    /** Create the camera object. */
-
-    std::cout << "Scene initialization 1..." << std::endl;
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(sceneSettings, window);
-    std::cout << "Scene initialization 2..." << std::endl;
-    scene->Init();
-    std::cout << "Scene initialized." << std::endl;
-    std::shared_ptr<ObjectListInteractor> objectListInteractor = std::make_shared<ObjectListInteractor>(scene);
-
-    /** Init GLEW. */
-    GLEWInitialization();
-
-    /** Init Dear ImGUI. */
-    ImGUIInitialization(window);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -364,6 +347,29 @@ int main(void)
 
     // Cull triangles which normal is not towards the camera
     glEnable(GL_CULL_FACE);
+}
+
+int main(void)
+{
+    Statistics();
+
+    /** Initialize everything that matter GLFW. */
+    GLFWwindow *window = GLFWInitialization();
+
+    /** Init GLEW. */
+    GLEWInitialization();
+
+    /** Init Dear ImGUI. */
+    ImGUIInitialization(window);
+
+    /** Set gl variables. */
+    GLInitialization();
+
+    /** Create the camera object. */
+    std::shared_ptr<AppController> app = std::make_shared<AppController>(window, sceneSettings);
+
+    std::shared_ptr<Scene> scene = app->GetScene();
+
 
     auto cubePipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_shader.glsl", "../src/shaders/f_shader.glsl");
     UnitCube cube(cubePipeline);
@@ -463,9 +469,9 @@ int main(void)
 
     Gizmo cameraGizmo(scene->GetActiveCam()->GetPosition(), scene->GetActiveCam()->GetRight(), scene->GetActiveCam()->GetRealUp(), scene->GetActiveCam()->GetForward());
 
-    Volume3D volume;
+    // Volume3D volume;
 
-    LineGrid lineGrid;
+    // LineGrid lineGrid;
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -494,14 +500,15 @@ int main(void)
 
         // cube.Render(projectionMatrix, viewMatrix, camera.GetPosition(), WINDOW_WIDTH, WINDOW_HEIGHT);
         // skybox.Render(projectionMatrix, viewMatrix);
-
-        model.Render(projectionMatrix, viewMatrix, sceneSettings);
-
-        testLines.Render(projectionMatrix, viewMatrix, sceneSettings);
+        // model.Render(projectionMatrix, viewMatrix, sceneSettings);
+        // testLines.Render(projectionMatrix, viewMatrix, sceneSettings);
+    
         cameraLines.Render(projectionMatrix, viewMatrix, sceneSettings);
         cameraGizmo.Render(projectionMatrix, viewMatrix, sceneSettings);
 
-        lineGrid.Render(projectionMatrix, viewMatrix, sceneSettings);
+        app->Render();
+
+        // lineGrid.Render(projectionMatrix, viewMatrix, sceneSettings);
 
         // auto started = std::chrono::high_resolution_clock::now();
         // auto done = std::chrono::high_resolution_clock::now();
@@ -509,7 +516,7 @@ int main(void)
 
         // overlayPlane.Render(true, cudaTex.GetTex());
 
-        volume.Render(projectionMatrix, viewMatrix, sceneSettings);
+        // volume.Render(projectionMatrix, viewMatrix, sceneSettings);
 
         /** ImGUI */
         // bool closable = true;
@@ -558,8 +565,6 @@ int main(void)
         //     ImGui::EndTable();
         // }
         // ImGui::End();
-
-        objectListInteractor->Render();
 
         ImGui::Begin("Main Settings");
         if (ImGui::BeginMainMenuBar())

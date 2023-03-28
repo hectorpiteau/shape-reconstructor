@@ -12,12 +12,17 @@
 
 #include "ObjectListItem.hpp"
 
-ObjectListView::ObjectListView(std::shared_ptr<ObjectListInteractor> interactor) : m_interactor(interactor), m_items(10)
+ObjectListView::ObjectListView() : m_items()
 {
+}
+
+void ObjectListView::SetInteractor(ObjectListInteractor* interactor){
+    m_interactor = interactor;
 }
 
 void ObjectListView::AddItem(std::shared_ptr<ObjectListItem> item)
 {
+    std::cout << "List add item: " << item->m_name << std::endl;
     m_items.push_back(item);
 }
 
@@ -40,7 +45,7 @@ void ObjectListView::Render()
         // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
         ImGui::TableSetupColumn("Active", ImGuiTableColumnFlags_NoHide);
         ImGui::TableSetupColumn("Object Name", ImGuiTableColumnFlags_NoHide);
-        ImGui::TableSetupColumn("Settings", ImGuiTableColumnFlags_NoHide);
+        ImGui::TableSetupColumn(" ", ImGuiTableColumnFlags_NoHide);
         ImGui::TableHeadersRow();
 
         ImGui::TableNextRow();
@@ -51,10 +56,12 @@ void ObjectListView::Render()
         ImGui::EndDisabled();
         ImGui::TableNextColumn();
         ImGui::Text(std::string(ICON_FA_CAMERA " Camera 0 (main)").c_str());
+        ImGui::TableNextColumn();
+        ImGui::Button(std::string(" " ICON_FA_GEAR " ").c_str());
 
-        for (auto &item : m_items)
+        for (int i=0; i<m_items.size(); ++i)
         {
-            item->Render();
+            m_items[i]->Render();
         }
 
         ImGui::EndTable();

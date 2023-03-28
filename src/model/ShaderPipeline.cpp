@@ -9,7 +9,6 @@
 
 ShaderPipeline::ShaderPipeline(std::string vertexShaderFilename, std::string fragmentShaderFilename)
 {
-    std::cout << "ShaderPipeline: Initialize shader pipeline.. " << std::endl;
     m_vertexShaderFilename = vertexShaderFilename;
     m_fragmentShaderFilename = fragmentShaderFilename;
     m_programShader = 0;
@@ -23,20 +22,15 @@ ShaderPipeline::~ShaderPipeline()
 
 void ShaderPipeline::CompileShader()
 {
-    std::cout << "ShaderPipeline: Compile ... " << std::endl;
-
     std::string vertexShader, fragmentShader;
-    
-    std::cout << "ShaderPipeline: Compile 00 " << std::endl;
 
-    GLenum err = glGetError(); 
-    if (err != GL_NO_ERROR) 
-    { fprintf(stderr, "OpenGL error (at line scene.cpp:%d): %s\n", __LINE__, gluErrorString(err)); 
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR)
+    {
+        fprintf(stderr, "OpenGL error (at line scene.cpp:%d): %s\n", __LINE__, gluErrorString(err));
     }
 
     GLuint shaderProgram = glCreateProgram();
-
-    std::cout << "ShaderPipeline: Compile 0 " << std::endl;
 
     if (shaderProgram == 0)
     {
@@ -44,20 +38,13 @@ void ShaderPipeline::CompileShader()
         exit(1);
     }
 
-    std::cout << "ShaderPipeline: Compile 1 " << std::endl;
-
     if (!FileUtils::ReadFile(m_vertexShaderFilename.c_str(), vertexShader))
     {
         std::cerr << "ShaderPipeline: Error reading the vertex file." << std::endl;
         exit(1);
     }
 
-    std::cout << "ShaderPipeline: Compile 2 " << std::endl;
-
     GLuint vertexShaderID = AddShader(shaderProgram, vertexShader.c_str(), m_vertexShaderFilename, GL_VERTEX_SHADER);
-
-
-    std::cout << "ShaderPipeline: Compile 3 " << std::endl;
 
     if (!FileUtils::ReadFile(m_fragmentShaderFilename.c_str(), fragmentShader))
     {
@@ -65,19 +52,12 @@ void ShaderPipeline::CompileShader()
         exit(1);
     }
 
-    std::cout << "ShaderPipeline: Compile 4 " << std::endl;
-
     GLuint fragmentShaderID = AddShader(shaderProgram, fragmentShader.c_str(), m_fragmentShaderFilename, GL_FRAGMENT_SHADER);
-
-
-    std::cout << "ShaderPipeline: Compile 5 " << std::endl;
 
     GLint success = 0;
     GLchar errorLog[1024] = {0};
 
     glLinkProgram(shaderProgram);
-
-    std::cout << "ShaderPipeline: Program linked. " << std::endl;
 
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 
@@ -95,9 +75,12 @@ void ShaderPipeline::CompileShader()
         glGetProgramInfoLog(shaderProgram, sizeof(errorLog), NULL, errorLog);
         std::cerr << "Invalid shader program: " << errorLog << std::endl;
         exit(1);
-    }else{
+    }
+    else
+    {
         std::cout << "ShaderPipeline: Success loading shader: " << m_vertexShaderFilename << std::endl;
-        std::cout << "ShaderPipeline: Success loading shader: " << m_fragmentShaderFilename << std::endl << "===" << std::endl;
+        std::cout << "ShaderPipeline: Success loading shader: " << m_fragmentShaderFilename << std::endl
+                  << "===" << std::endl;
     }
 
     glDetachShader(shaderProgram, vertexShaderID);

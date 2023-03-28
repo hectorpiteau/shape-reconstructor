@@ -1,6 +1,8 @@
 #pragma once 
 #include "../Renderable/Renderable.hpp"
 #include <string>
+#include <iostream>
+
 
 class SceneObject : public Renderable{
 public:
@@ -35,7 +37,7 @@ public:
      * 
      * @param active : True to set this object as active and visible. False otherwise.
      */
-    void SetActive(bool active) { m_active = active; }
+    void SetActive(bool active) { m_active = active; std::cout << "SceneObject SetActive: " << active << std::endl; }
 
     /**
      * @brief Set this SceneObject's name.
@@ -67,7 +69,7 @@ public:
 
     SceneObject() : m_id(-1){}
 
-private:
+protected:
     /** A uniq-id that identify this SceneObject. */
     int m_id;
     /** True if the object is active in the scene (visible) or not. */

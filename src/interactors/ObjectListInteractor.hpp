@@ -4,11 +4,17 @@
 #include <memory>
 
 #include "../controllers/Scene/Scene.hpp"
-// #include "../view/ImUI/ObjectListView.hpp"
+#include "../view/ImUI/ObjectListView.hpp"
 
+class ObjectListView;
+
+/**
+ * @brief The interactor is 
+ * 
+ */
 class ObjectListInteractor {
 public:
-    ObjectListInteractor(std::shared_ptr<Scene> &scene);
+    ObjectListInteractor(std::shared_ptr<Scene> &scene, std::shared_ptr<ObjectListView> listView);
 
     /**
      * @brief Callback function.
@@ -41,7 +47,7 @@ private:
     /**
      * @brief A pointer to the main ObjectListView.
      */
-    // std::shared_ptr<ObjectListView> m_objectListView;
+    std::shared_ptr<ObjectListView> m_objectListView;
 
     
     std::shared_ptr<SceneObject> m_selectedObject;

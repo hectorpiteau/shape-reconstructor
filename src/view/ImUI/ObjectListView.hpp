@@ -13,24 +13,28 @@
 
 #include "ObjectListItem.hpp"
 
+class ObjectListInteractor;
+
 /**
  * @brief ImGui Window containing a list of all objects. 
  * Display also an Inspector for each object's type.
  */
 class ObjectListView {
 public:
-    ObjectListView(std::shared_ptr<ObjectListInteractor> interactor);
+    ObjectListView();
 
     void AddItem(std::shared_ptr<ObjectListItem> item);
 
     void SetSelected(int id, const std::string& name);
+
+    void SetInteractor(ObjectListInteractor* interactor);
 
     void Render();
 
 private:
     std::vector<std::shared_ptr<ObjectListItem>> m_items;
 
-    std::shared_ptr<ObjectListInteractor> m_interactor;
+    ObjectListInteractor* m_interactor;
 
     std::string m_selectedName;
     int m_selectedId;

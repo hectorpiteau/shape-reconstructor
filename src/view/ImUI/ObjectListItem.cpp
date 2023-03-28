@@ -7,7 +7,9 @@
 
 #include "ObjectListItem.hpp"
 
-ObjectListItem::ObjectListItem(const std::string &name, int id, std::shared_ptr<ObjectListInteractor> interactor) : m_name(name), m_id(id), m_interactor(interactor)
+#define ID_XX "##"
+
+ObjectListItem::ObjectListItem(const std::string &name, int id, bool checked, ObjectListInteractor* interactor) : m_name(name), m_id(id), m_checked(checked), m_interactor(interactor)
 {
 }
 
@@ -18,21 +20,21 @@ void ObjectListItem::SetChecked(bool checked)
 
 void ObjectListItem::Render()
 {
-    bool tmp, tmp2;
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
-    ImGui::Checkbox("", &tmp);
-    ImGui::TableNextColumn();
-    tmp2 = ImGui::Button(m_name.c_str());
 
-    if (tmp != m_checked)
-    {
-        m_checked = tmp;
-        m_interactor->SetActive(tmp, m_id);
+    std::string checkbox_id = std::string(ID_XX).append(m_name);
+
+    if(ImGui::Checkbox(checkbox_id.c_str(), &m_checked)){
+        std::cout << "Checkbox changed, id: " << m_id << std::endl;
+        m_interactor->SetActive(m_checked, m_id);
     }
 
-    if (tmp2)
-    {
+    ImGui::TableNextColumn();
+    
+    if(ImGui::Button(m_name.c_str())){
+        std::cout << "Button clicked, id: " << m_id << std::endl;
         m_interactor->Select(m_id);
     }
+    ImGui::TableNextColumn();
 }

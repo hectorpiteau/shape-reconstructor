@@ -8,23 +8,25 @@
 #include "../../../include/imgui/backends/imgui_impl_glfw.h"
 #include "../../../include/imgui/backends/imgui_impl_opengl3.h"
 
+class ObjectListInteractor;
+
 class ObjectListItem {
 public:
     
-    ObjectListItem(const std::string &name, int id, std::shared_ptr<ObjectListInteractor> interactor);
+    ObjectListItem(const std::string &name, int id, bool checked, ObjectListInteractor* interactor);
 
     void SetChecked(bool checked);
 
     void Render();
 
-private:
     const std::string& m_name;
+private:
 
     bool m_checked;
 
     int m_id;
 
-    std::shared_ptr<ObjectListInteractor> m_interactor;
+    ObjectListInteractor* m_interactor;
 };
 
 

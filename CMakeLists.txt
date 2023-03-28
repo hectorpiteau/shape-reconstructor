@@ -55,8 +55,6 @@ cuda_add_executable(DRTMCS
     src/view/ImUI/ObjectListItem.cpp
 
     src/interactors/ObjectListInteractor.cpp 
-    
-
 
     src/controllers/Scene/Scene.cpp 
 
@@ -70,6 +68,8 @@ cuda_add_executable(DRTMCS
     src/view/OverlayPlane.cpp 
     src/view/Gizmo.cpp 
     src/view/Lines.cpp 
+    src/view/Volume3D.cpp 
+    src/view/LineGrid.cpp 
 
     ${CUDA_SOURCE_FILES})
 

@@ -10,16 +10,11 @@
 #include "../../view/LineGrid.hpp"
 
 
-Scene::Scene(std::shared_ptr<SceneSettings> sceneSettings, GLFWwindow *window) : m_sceneSettings(sceneSettings), m_window(window), m_objects(16){
+Scene::Scene(std::shared_ptr<SceneSettings> sceneSettings, GLFWwindow *window) : m_sceneSettings(sceneSettings), m_window(window), m_objects(){
     m_uniqIdManager = std::make_shared<UniqId>(128);
 
     m_mainCamera = std::make_shared<Camera>(m_window, m_sceneSettings);
     m_activeCamera = m_mainCamera;
-}
-
-void Scene::Init(){
-    Add(std::make_shared<Volume3D>());
-    Add(std::make_shared<LineGrid>());
 }
 
 const std::vector<std::shared_ptr<SceneObject>>& Scene::GetSceneObjects() {
@@ -58,13 +53,17 @@ const std::shared_ptr<Camera>& Scene::GetActiveCam(){
 }
 
 std::shared_ptr<SceneObject> Scene::Get(int id){
-    if(m_uniqIdManager->IdExists(id) == false) return nullptr;
+    if(m_uniqIdManager->IdExists(id) == false){
+        std::cout << "SceneObject: " << id << " doest not exist." << std::endl;
+        return nullptr;
+    }
 
     auto iterator = m_objects.begin();
+
     for(int i=0; i<m_objects.size(); ++i){
         
-        if((*iterator)->GetID() == id) {
-            return (*iterator);
+        if(m_objects[i]->GetID() == id) {
+            return m_objects[i];
         }
     }
     return nullptr;
@@ -75,7 +74,7 @@ void Scene::RenderAll()
 {
     for(auto &obj : m_objects){
         /** Render only active objects. (The checkbox in the scene object's lists). */
-        if(obj->IsActive()){
+        if(obj != nullptr && obj->IsActive()){
             obj->Render(m_activeCamera->GetProjectionMatrix(), m_activeCamera->GetViewMatrix(), m_sceneSettings);
         }
     }

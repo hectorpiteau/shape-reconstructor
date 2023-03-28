@@ -3,11 +3,20 @@
 
 #include "../controllers/Scene/Scene.hpp"
 #include "../view/SceneObject/SceneObject.hpp"
+#include "../view/ImUI/ObjectListItem.hpp"
 
-ObjectListInteractor::ObjectListInteractor(std::shared_ptr<Scene>& scene) : m_scene(scene), m_selectedObject(nullptr)
+ObjectListInteractor::ObjectListInteractor(std::shared_ptr<Scene> &scene, std::shared_ptr<ObjectListView> listView)
+    : m_scene(scene), m_objectListView(listView), m_selectedObject(nullptr)
 {
-    for(const auto& sceneObject : m_scene->GetSceneObjects()){
-        
+    listView->SetInteractor(this);
+
+    for (const auto &sceneObject : m_scene->GetSceneObjects())
+    {
+        if(sceneObject != nullptr){
+            m_objectListView->AddItem(
+                std::make_shared<ObjectListItem>(sceneObject->GetName(), sceneObject->GetID(), sceneObject->IsActive(), this)
+            );
+        }
     }
 }
 
@@ -16,6 +25,9 @@ void ObjectListInteractor::SetActive(bool active, int id)
     std::shared_ptr<SceneObject> tmp = m_scene->Get(id);
     if (tmp != nullptr)
         tmp->SetActive(active);
+    else {
+        std::cout << "err" << std::endl;
+    }
 }
 
 void ObjectListInteractor::Select(int id)
@@ -25,6 +37,8 @@ void ObjectListInteractor::Select(int id)
         m_selectedObject = tmp;
 }
 
-void ObjectListInteractor::Render(){
-    
+void ObjectListInteractor::Render()
+{
+    m_scene->RenderAll();
+    m_objectListView->Render();
 }
