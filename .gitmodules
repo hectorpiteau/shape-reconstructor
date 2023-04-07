@@ -14,3 +14,6 @@
 [submodule "include/tinycudann"]
 	path = include/tinycudann
 	url = https://github.com/NVlabs/tiny-cuda-nn.git
+[submodule "include/nlohmann"]
+	path = include/nlohmann
+	url = https://github.com/nlohmann/json.git
