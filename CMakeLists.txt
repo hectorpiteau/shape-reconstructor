@@ -4,14 +4,21 @@ cmake_minimum_required(VERSION 3.10)
 project(DRTMCS VERSION 0.1 LANGUAGES CXX CUDA)
 
 # Cpp standards
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+# set(CMAKE_CXX_FLAGS "-std=c++14 -lstdc++fs" )
 
 # GLFW Settings 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
+# JSON
+# Typically you don't care so much for a third party library's tests to be run from your own project's code.
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+
+# Add subdirectories (gits)
+add_subdirectory(include/nlohmann)
 add_subdirectory(include/glfw)
 add_subdirectory(include/assimp)
 add_subdirectory(include/glm)
@@ -34,7 +41,7 @@ if(NOT DEFINED CMAKE_CUDA_STANDARD)
 endif()
 find_package(CUDA REQUIRED)
 enable_language(CUDA)
-set(CUDA_SOURCE_FILES src/cuda/kernel.cu)
+set(CUDA_SOURCE_FILES src/cuda/kernel.cu src/cuda/CudaSurface3D.cu src/cuda/VolumeRendering.cu)
 set(CUDA_ARCH "-arch=sm_61")
 set(CMAKE_CUDA_ARCHITECTURES "61")
 
@@ -60,7 +67,10 @@ cuda_add_executable(DRTMCS
 
     src/model/ShaderPipeline.cpp 
     src/model/Camera.cpp 
-    # src/model/SphereSDF.cpp 
+    # src/model/SphereSDF.cpp
+    src/model/DenseFloat32Volume.cpp
+
+    src/model/Dataset/NeRFDataset.cpp
 
     src/view/UnitCube.cpp 
     src/view/Grid.cpp 
@@ -70,6 +80,7 @@ cuda_add_executable(DRTMCS
     src/view/Lines.cpp 
     src/view/Volume3D.cpp 
     src/view/LineGrid.cpp 
+    src/view/ImageSet.cpp 
 
     ${CUDA_SOURCE_FILES})
 
@@ -87,4 +98,4 @@ message(${CUDA_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 
 # OpenEXR::OpenEXR
-target_link_libraries(DRTMCS OpenGL::GL GLEW::GLEW glfw glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
+target_link_libraries(DRTMCS nlohmann_json::nlohmann_json OpenGL::GL GLEW::GLEW glfw glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
