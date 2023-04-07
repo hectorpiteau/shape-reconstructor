@@ -67,7 +67,11 @@ void ObjectListView::Render()
         ImGui::EndTable();
     }
 
-    ImGui::SeparatorText("Inspector");
 
+    ImGui::End();
+    ImGui::Begin("Inspector");
+
+    ImGui::SeparatorText("Inspector");
+    
     ImGui::End();
 }

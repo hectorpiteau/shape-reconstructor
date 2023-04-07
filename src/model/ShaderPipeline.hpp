@@ -12,7 +12,7 @@ public:
      * @param vertexShaderFilename : The path to the vertex shader's file. 
      * @param fragmentShaderFilename : The path to the fragment shader's file.
      */
-    ShaderPipeline(std::string vertexShaderFilename, std::string fragmentShaderFilename);
+    ShaderPipeline(const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename);
 
     /** Delete copy constructor. */
     ShaderPipeline(const ShaderPipeline&) = delete;

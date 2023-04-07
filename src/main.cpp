@@ -47,6 +47,8 @@
 
 #include "../../include/icons/IconsFontAwesome6.h"
 
+#include "cuda/CudaSurface3D.cuh"
+
 using namespace cv;
 using namespace glm;
 
@@ -479,6 +481,8 @@ int main(void)
     // cudaTex.RunCUDA();
 
     Texture2D testImage("/home/hpiteau/work/shape-reconstructor/fiducial.png");
+
+    CudaSurface3D surface(100,100,100);
 
     static float scale = 1.0f;
     while (!glfwWindowShouldClose(window))

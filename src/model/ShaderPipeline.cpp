@@ -7,21 +7,18 @@
 #include "../utils/FileUtils.hpp"
 #include "ShaderPipeline.hpp"
 
-ShaderPipeline::ShaderPipeline(std::string vertexShaderFilename, std::string fragmentShaderFilename)
+ShaderPipeline::ShaderPipeline(const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
+: m_vertexShaderFilename(vertexShaderFilename), m_fragmentShaderFilename(fragmentShaderFilename), m_programShader(0)
 {
-    m_vertexShaderFilename = vertexShaderFilename;
-    m_fragmentShaderFilename = fragmentShaderFilename;
-    m_programShader = 0;
-
     CompileShader();
 }
 
 ShaderPipeline::~ShaderPipeline()
-{
-}
+{}
 
 void ShaderPipeline::CompileShader()
 {
+    /** Temporary containers used to store the stringified shaders. */
     std::string vertexShader, fragmentShader;
 
     GLenum err = glGetError();
@@ -134,7 +131,7 @@ GLuint ShaderPipeline::AddShader(GLuint shaderProgram, const char *shader_str, s
 
     const GLchar *p[1] = {shader_str};
 
-    GLint lengths[1] = {strlen(shader_str)};
+    GLint lengths[1] = {(int)strlen(shader_str)};
 
     glShaderSource(shaderObj, 1, p, lengths);
     glCompileShader(shaderObj);

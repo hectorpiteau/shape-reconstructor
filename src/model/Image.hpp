@@ -3,7 +3,7 @@
 
 #include <string>
 #include <iostream>
-#include <stb_image.h>
+#include "../../include/stb_image.h"
 
 class Image
 {
@@ -23,7 +23,7 @@ public:
         if(!linearF) { //no float data
             data = stbi_load(path.c_str(), &width, &height, &channels, 0);
         } else { //float data like hdr images
-            data = reinterpret_cast<const unsigned char*>(stbi_loadf(path.c_str(), &width, &height, &channels, 0));
+            data = reinterpret_cast<unsigned char*>(stbi_loadf(path.c_str(), &width, &height, &channels, 0));
             bits = 8 * sizeof(float);
         }
 
