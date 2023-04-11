@@ -12,7 +12,7 @@
 
 #include "../../include/icons/IconsFontAwesome6.h"
 
-LineGrid::LineGrid() : SceneObject{std::string("LINEGRID")}
+LineGrid::LineGrid() : SceneObject{std::string("LINEGRID"), SceneObjectTypes::LINEGRID}
 {
     SetName(std::string(ICON_FA_TABLE_CELLS " Grid"));
     /** One line per cell in each direction, minus one for each axis (x-axis and z-axis). */

@@ -13,7 +13,7 @@
 #include <tgmath.h>
 
 #include <sstream>
-#include "model/Camera.hpp"
+#include "model/Camera/Camera.hpp"
 #include "model/ShaderPipeline.hpp"
 #include "model/CudaTexture.hpp"
 #include "maths/MMath.hpp"
@@ -57,7 +57,7 @@ using namespace glm;
 #define WINDOW_HEIGHT 720
 
 /**
- * @brief 
+ * @brief
  */
 std::shared_ptr<SceneSettings> sceneSettings = std::make_shared<SceneSettings>(WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -372,7 +372,6 @@ int main(void)
 
     std::shared_ptr<Scene> scene = app->GetScene();
 
-
     auto cubePipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_shader.glsl", "../src/shaders/f_shader.glsl");
     UnitCube cube(cubePipeline);
 
@@ -480,9 +479,9 @@ int main(void)
 
     // cudaTex.RunCUDA();
 
-    Texture2D testImage("/home/hpiteau/work/shape-reconstructor/fiducial.png");
+    Texture2D testImage("../data/nerf/train/r_0.png");
 
-    CudaSurface3D surface(100,100,100);
+    CudaSurface3D surface(100, 100, 100);
 
     static float scale = 1.0f;
     while (!glfwWindowShouldClose(window))
@@ -506,7 +505,7 @@ int main(void)
         // skybox.Render(projectionMatrix, viewMatrix);
         // model.Render(projectionMatrix, viewMatrix, sceneSettings);
         // testLines.Render(projectionMatrix, viewMatrix, sceneSettings);
-    
+
         cameraLines.Render(projectionMatrix, viewMatrix, sceneSettings);
         cameraGizmo.Render(projectionMatrix, viewMatrix, sceneSettings);
 
@@ -611,12 +610,53 @@ int main(void)
         ImGui::InputFloat3("Camera position", inf);
         scene->GetActiveCam()->SetPosition(inf[0], inf[1], inf[2]);
 
-        // ImGui::Image((void*)(intptr_t)testImage.GetID(), ImVec2(testImage.GetWidth(), testImage.GetHeight()));
         ImGui::Separator();
-        ImGui::Image((void *)(intptr_t)testImage.GetID(), ImVec2(256, 256), ImVec2(0, 0), ImVec2(1, 1));
-        const char *items = "Image1\0Image2\0";
-        int current = -1;
-        // ImGui::Combo(items, &current);
+        ImGuiIO &io = ImGui::GetIO();
+
+        static float dispSize[2] = {800, 800};
+        static float dsize = 1.0;
+        ImGui::SliderFloat("Displayed Size", &dsize, 0.001f, 2.0f);
+        // ImGui::InputFloat2("Displayed Size", dispSize);
+
+        float my_tex_w = testImage.GetWidth() * dsize;
+        float my_tex_h = testImage.GetHeight() * dsize;
+
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        
+        ImGui::Image((void *)(intptr_t)testImage.GetID(), ImVec2(my_tex_w, my_tex_h), ImVec2(0, 0), ImVec2(1, 1));
+        
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            float region_sz = 64.0f;
+            float region_x = io.MousePos.x - pos.x - region_sz * 0.5f;
+            float region_y = io.MousePos.y - pos.y - region_sz * 0.5f;
+            float zoom = 4.0f;
+            if (region_x < 0.0f)
+            {
+                region_x = 0.0f;
+            }
+            else if (region_x > my_tex_w - region_sz)
+            {
+                region_x = my_tex_w - region_sz;
+            }
+            if (region_y < 0.0f)
+            {
+                region_y = 0.0f;
+            }
+            else if (region_y > my_tex_h - region_sz)
+            {
+                region_y = my_tex_h - region_sz;
+            }
+            
+            ImGui::Text("Min: (%.2f, %.2f)", region_x, region_y);
+            ImGui::Text("Max: (%.2f, %.2f)", region_x + region_sz, region_y + region_sz);
+            ImVec2 uv0 = ImVec2((region_x) / my_tex_w, (region_y) / my_tex_h);
+            ImVec2 uv1 = ImVec2((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
+            ImGui::Image((void *)(intptr_t)testImage.GetID(), ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1);
+            ImGui::EndTooltip();
+        }
+        
         ImGui::Separator();
         ImGui::End();
 

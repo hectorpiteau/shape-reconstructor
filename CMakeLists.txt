@@ -58,19 +58,24 @@ cuda_add_executable(DRTMCS
     include/imgui/backends/imgui_impl_glfw.cpp
     include/imgui/backends/imgui_impl_opengl3.cpp
     
-    src/view/ImUI/ObjectListView.cpp
     src/view/ImUI/ObjectListItem.cpp
+    src/view/ImUI/ObjectListView.cpp
+    src/view/ImUI/InspectorView.cpp
 
-    src/interactors/ObjectListInteractor.cpp 
+    src/interactors/ImageSetInteractor.cpp 
+    src/interactors/CameraInteractor.cpp 
+    src/interactors/ObjectListInteractor.cpp
+    src/interactors/SceneObjectInteractor.cpp
 
     src/controllers/Scene/Scene.cpp 
 
     src/model/ShaderPipeline.cpp 
-    src/model/Camera.cpp 
-    # src/model/SphereSDF.cpp
+    src/model/Camera/Camera.cpp
+    src/model/Camera/CameraSet.cpp
+    # src/model/SphereSDF.cp
     src/model/DenseFloat32Volume.cpp
-
     src/model/Dataset/NeRFDataset.cpp
+    src/model/ImageSet.cpp 
 
     src/view/UnitCube.cpp 
     src/view/Grid.cpp 
@@ -80,7 +85,6 @@ cuda_add_executable(DRTMCS
     src/view/Lines.cpp 
     src/view/Volume3D.cpp 
     src/view/LineGrid.cpp 
-    src/view/ImageSet.cpp 
 
     ${CUDA_SOURCE_FILES})
 

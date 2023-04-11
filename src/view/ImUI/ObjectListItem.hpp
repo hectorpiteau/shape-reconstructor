@@ -1,9 +1,10 @@
-#ifndef OBJECT_LIST_ITEM_H
-#define OBJECT_LIST_ITEM_H
+#pragma once
 
 #include <string>
 #include <memory>
+
 #include "../../interactors/ObjectListInteractor.hpp"
+
 #include "../../../include/imgui/imgui.h"
 #include "../../../include/imgui/backends/imgui_impl_glfw.h"
 #include "../../../include/imgui/backends/imgui_impl_opengl3.h"
@@ -19,6 +20,7 @@ public:
 
     void Render();
 
+    //TODO: move from here.
     const std::string& m_name;
 private:
 
@@ -28,6 +30,3 @@ private:
 
     ObjectListInteractor* m_interactor;
 };
-
-
-#endif //OBJECT_LIST_ITEM_H

@@ -5,15 +5,17 @@
 #include <iostream>
 #include "../../include/stb_image.h"
 
+
 class Image
 {
 public:
-    Image() {};
+    Image(std::string filename): filename(filename) {};
     ~Image() {};
     int width;
     int height;
     int channels;
     int bits;
+    std::string filename;
 
     unsigned char* data;
 
@@ -30,9 +32,17 @@ public:
         if(data == nullptr) {
             std::cout << "[Image] could not load png image: {}" << path << std::endl;
             std::cout << "[Image] error: {}" << stbi_failure_reason() << std::endl;
+            m_isLoaded = false;
             return;
         }
+        m_isLoaded = true;
     }
+
+    const std::string& GetFilename() const {return filename;}
+
+    bool IsLoaded(){return m_isLoaded;}
+private:
+    bool m_isLoaded = false;
 };
 
 #endif // IMAGE_H

@@ -10,7 +10,7 @@
 
 #include "../../include/icons/IconsFontAwesome6.h"
 
-Volume3D::Volume3D() : SceneObject{std::string("VOLUME3D")}
+Volume3D::Volume3D() : SceneObject{std::string("VOLUME3D"), SceneObjectTypes::VOLUME3D}
 {
     SetName(std::string(ICON_FA_CUBES " Volume 3D"));
     m_lines = std::make_shared<Lines>(m_wireframeVertices, 12 * 2 * 3);

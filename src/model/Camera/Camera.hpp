@@ -7,7 +7,7 @@
 #include "../utils/SceneSettings.hpp"
 #include "../view/Lines.hpp"
 
-class Camera
+class Camera : public SceneObject
 {
 
 public:
@@ -35,14 +35,14 @@ public:
      * 
      * @return glm::vec3 : World position.
      */
-    glm::vec3 GetPosition();
+    const glm::vec3& GetPosition();
     
     /**
      * @brief Get the camera's right vector, in world space coordinates.
      * 
      * @return glm::vec3 : Right vector.
      */
-    glm::vec3 GetRight();
+    const glm::vec3& GetRight();
 
     /**
      * @brief Get the camera's real up vector, (the one orthogonal to 
@@ -50,21 +50,21 @@ public:
      * 
      * @return glm::vec3 : Real up vector.
      */
-    glm::vec3 GetRealUp();
+    const glm::vec3& GetRealUp();
 
     /**
      * @brief Get the camera's up vector in world space coordinates.
      * 
      * @return glm::vec3 : Up vector.
      */
-    glm::vec3 GetUp();
+    const glm::vec3& GetUp();
 
     /**
      * @brief Get the camera's forward vector in world space coordinates.
      * 
      * @return glm::vec3 : Forward vector.
      */
-    glm::vec3 GetForward();
+    const glm::vec3& GetForward();
 
     /**
      * @brief Get the camera's target (lookAt) in world space coordinates.
@@ -72,7 +72,7 @@ public:
      * 
      * @return glm::vec3 : The camera lookAt point in world space coordinates.
      */
-    glm::vec3 GetTarget();
+    const glm::vec3& GetTarget();
     
     /**
      * @brief Computes the View / Projection (extrinsic, intrinsic) matrices 
@@ -103,10 +103,79 @@ public:
      */
     const float* GetWireframe();
 
+    /**
+     * @brief Set the Field of View horizontal direction of the camera.
+     * 
+     * @param fov : Angle in radian.
+     */
+    void SetFovX(float fov);
+    
+    /**
+     * @brief Get the Field of View horizontal direction.
+     * 
+     * @return float : The angle in radian. 
+     */
+    float GetFovX();
+    
+    /**
+     * @brief Set the Field of View vertical direction of the camera.
+     * 
+     * @param fov : Angle in radian.
+     */
+    void SetFovY(float fov);
+
+    /**
+     * @brief Get the Field of View vertical direction.
+     * 
+     * @return float : The angle in radian.
+     */
+    float GetFovY();
+
+    /**
+     * @brief Set the Near clip plane of the camera.
+     * 
+     * @param near : Near distance. 
+     */
+    void SetNear(float near);
+
+    /**
+     * @brief Get the Near clip plane distance.
+     * 
+     * @return float : Near clip plane distance.
+     */
+    float GetNear();
+
+    /**
+     * @brief Set the Far clip plane distance.
+     * 
+     * @param far : Far clip plane distance.
+     */
+    void SetFar(float far);
+
+    /**
+     * @brief Get the Far clip plane distance.
+     * 
+     * @return float : The far clip plane distance.
+     */
+    float GetFar();
+
+    /**
+     * @brief Set the target's of the camera. The point that the camera
+     * is looking at.
+     * 
+     * @param target : A coordinate in world space coordinates.
+     */
+    void SetTarget(const glm::vec3& target);
+
+    void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
+
+    void Update();
 private:
     std::shared_ptr<SceneSettings> m_sceneSettings;
 
+    /** Cursor */
     glm::vec2 m_previousCursorPos;
+    
     double yDeltaAngle;
 
     /** Camera position in world space coordinates. */
@@ -115,6 +184,15 @@ private:
     glm::vec3 m_target;
     /** The camera's up vector. */
     glm::vec3 m_up;
+    /** Field of view, (x,y). */
+    glm::vec2 m_fov;
+    
+    glm::vec3 m_forward;
+    glm::vec3 m_realUp;
+    glm::vec3 m_right;
+
+    float m_near;
+    float m_far;
 
     /**
      * @brief Also known as the extrinsic matrix.

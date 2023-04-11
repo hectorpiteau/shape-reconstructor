@@ -2,7 +2,7 @@
 
 #include "../../view/SceneObject/SceneObject.hpp"
 #include "../../utils/SceneSettings.hpp"
-#include "../../model/Camera.hpp"
+#include "../../model/Camera/Camera.hpp"
 #include "../../model/UniqId.hpp"
 
 #include <vector>

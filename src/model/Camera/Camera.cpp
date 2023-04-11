@@ -20,14 +20,13 @@ Camera::Camera(GLFWwindow *window, std::shared_ptr<SceneSettings> sceneSettings)
     m_target = glm::vec3(0.0f, 0.0f, 0.0f);
     m_up = glm::vec3(0.0f, 1.0f, 0.0f);
     m_projectionMatrix = glm::perspective(
-        glm::radians(m_initialFoV), 
-        m_sceneSettings->GetViewportRatio(), 
-        0.01f, 
-        100.0f
-    );
+        glm::radians(m_initialFoV),
+        m_sceneSettings->GetViewportRatio(),
+        0.01f,
+        100.0f);
 
-    m_viewMatrix = glm::lookAt( m_pos, m_target, m_up);
-    
+    m_viewMatrix = glm::lookAt(m_pos, m_target, m_up);
+
     m_previousCursorPos = glm::vec2(m_sceneSettings->GetViewportWidth() / 2, m_sceneSettings->GetViewportHeight() / 2);
 }
 
@@ -36,7 +35,7 @@ Camera::~Camera()
     // delete m_lines;
 }
 
-glm::vec3 Camera::GetPosition()
+const glm::vec3& Camera::GetPosition()
 {
     return m_pos;
 }
@@ -53,12 +52,12 @@ void Camera::SetPosition(float x, float y, float z)
     m_pos.z = z;
 }
 
-const glm::mat4& Camera::GetViewMatrix()
+const glm::mat4 &Camera::GetViewMatrix()
 {
     return m_viewMatrix;
 }
 
-const glm::mat4& Camera::GetProjectionMatrix()
+const glm::mat4 &Camera::GetProjectionMatrix()
 {
     return m_projectionMatrix;
 }
@@ -204,7 +203,7 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window)
 
         // + viewDir * m_sceneSettings->GetScrollOffsets().y
         m_viewMatrix = glm::lookAt(
-            m_pos ,
+            m_pos,
             m_target,
             m_up);
     }
@@ -217,48 +216,52 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window)
     lastTime = currentTime;
 }
 
-glm::vec3 Camera::GetTarget(){
+const glm::vec3& Camera::GetTarget()
+{
     return m_target;
 }
 
-glm::vec3 Camera::GetRight()
+const glm::vec3& Camera::GetRight()
 {
-    // return glm::vec3(sin(m_horizontalAngle - 3.14f / 2.0f), 0, cos(m_horizontalAngle - 3.14f / 2.0f));
-    return glm::normalize(glm::cross(GetForward(), GetUp()));
+    return m_right;
 }
 
-glm::vec3 Camera::GetRealUp(){
-    return glm::normalize(glm::cross(GetRight(), GetForward()));
+const glm::vec3& Camera::GetRealUp()
+{
+    return m_realUp;
 }
-glm::vec3 Camera::GetUp()
+
+const glm::vec3& Camera::GetUp()
 {
     return m_up;
 }
 
-glm::vec3 Camera::GetForward()
+const glm::vec3& Camera::GetForward()
 {
-    // return glm::vec3(
-    //     cos(m_verticalAngle) * sin(m_horizontalAngle),
-    //     sin(m_verticalAngle),
-    //     cos(m_verticalAngle) * cos(m_horizontalAngle));
+    return m_forward;
+}
 
-    return glm::normalize(m_pos - m_target);
+void Camera::Update(){
+    m_forward = glm::normalize(m_pos - m_target);
+
+    m_right = glm::normalize(glm::cross(m_forward, m_up));
+
+    m_realUp = glm::normalize(glm::cross(m_right, m_forward));
 }
 
 const float *Camera::GetWireframe()
 {
     glm::vec3 corner_top_left_tmp = Projection::NDCToCamera(glm::vec2(-1.0, 1.0), m_projectionMatrix);
     glm::vec3 corner_top_left = Projection::CameraToWorld(glm::vec4(corner_top_left_tmp, 1.0f), m_viewMatrix);
-    
+
     glm::vec3 corner_top_right_tmp = Projection::NDCToCamera(glm::vec2(1.0, 1.0), m_projectionMatrix);
     glm::vec3 corner_top_right = Projection::CameraToWorld(glm::vec4(corner_top_right_tmp, 1.0f), m_viewMatrix);
-    
+
     glm::vec3 corner_bot_left_tmp = Projection::NDCToCamera(glm::vec2(-1.0, -1.0), m_projectionMatrix);
     glm::vec3 corner_bot_left = Projection::CameraToWorld(glm::vec4(corner_bot_left_tmp, 1.0f), m_viewMatrix);
-    
+
     glm::vec3 corner_bot_right_tmp = Projection::NDCToCamera(glm::vec2(1.0, -1.0), m_projectionMatrix);
     glm::vec3 corner_bot_right = Projection::CameraToWorld(glm::vec4(corner_bot_right_tmp, 1.0f), m_viewMatrix);
-    
 
     WRITE_VEC3(m_wireframeVertices, 0, corner_top_left);
     WRITE_VEC3(m_wireframeVertices, 3, corner_top_right);
@@ -285,4 +288,30 @@ const float *Camera::GetWireframe()
     WRITE_VEC3(m_wireframeVertices, 45, corner_bot_right);
 
     return m_wireframeVertices;
+}
+
+void Camera::SetFovX(float fov) { m_fov.x = fov; }
+float Camera::GetFovX() { return m_fov.x; }
+void Camera::SetFovY(float fov) { m_fov.y = fov; }
+float Camera::GetFovY() { return m_fov.y; }
+
+void Camera::SetNear(float near) { m_near = near; }
+
+float Camera::GetNear() { return m_near; }
+
+void Camera::SetFar(float far) { m_far = far; }
+
+float Camera::GetFar() { return m_far; }
+
+void Camera::SetTarget(const glm::vec3 &target) { m_target = target; }
+
+void Camera::Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene)
+{
+    /** What to render as a scene object ? */
+
+    /** Wireframe ? */
+
+    /** Image plane linked. */
+
+    /** Rays (partial) for each pixel. */
 }

@@ -3,8 +3,8 @@
 #include <vector>
 #include <string>
 
-#include "../model/Image.hpp"
-#include "SceneObject/SceneObject.hpp"
+#include "Image.hpp"
+#include "../view/SceneObject/SceneObject.hpp"
 
 class ImageSet : public SceneObject
 {
@@ -15,12 +15,22 @@ public:
 
     void SetFolderPath(const std::string &path);
 
-    void LoadImages();
+    /**
+     * @brief Load the images contained in the folder path.
+     * 
+     * @return size_t : The amount of images loaded. 
+     */
+    size_t LoadImages();
 
     int GetAmountOfImages();
 
     const Image *GetImage(int index);
+    
+    std::vector<Image *>& GetImages();
+    const Image* operator[](size_t index);
 
+    size_t size();
+    
     void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
 
 private:

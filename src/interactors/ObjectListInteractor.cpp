@@ -1,12 +1,15 @@
 #include <memory>
-#include "ObjectListInteractor.hpp"
+#include <iostream>
+#include <string>
 
 #include "../controllers/Scene/Scene.hpp"
 #include "../view/SceneObject/SceneObject.hpp"
 #include "../view/ImUI/ObjectListItem.hpp"
 
-ObjectListInteractor::ObjectListInteractor(std::shared_ptr<Scene> &scene, std::shared_ptr<ObjectListView> listView)
-    : m_scene(scene), m_objectListView(listView), m_selectedObject(nullptr)
+#include "ObjectListInteractor.hpp"
+
+ObjectListInteractor::ObjectListInteractor(std::shared_ptr<Scene> &scene, std::shared_ptr<ObjectListView> listView, std::shared_ptr<SceneObjectInteractor>& sceneObjectInteractor)
+    : m_scene(scene), m_objectListView(listView), m_selectedObject(nullptr), m_sceneObjectInteractor(sceneObjectInteractor)
 {
     listView->SetInteractor(this);
 
@@ -18,6 +21,9 @@ ObjectListInteractor::ObjectListInteractor(std::shared_ptr<Scene> &scene, std::s
             );
         }
     }
+}
+
+ObjectListInteractor::~ObjectListInteractor(){
 }
 
 void ObjectListInteractor::SetActive(bool active, int id)
@@ -33,8 +39,14 @@ void ObjectListInteractor::SetActive(bool active, int id)
 void ObjectListInteractor::Select(int id)
 {
     std::shared_ptr<SceneObject> tmp = m_scene->Get(id);
-    if (tmp != nullptr)
+    if (tmp != nullptr){
+        std::cout << "ObjectListInteractor::Select " << std::to_string(id) << std::endl;
         m_selectedObject = tmp;
+        /** Update the sceneObject's interactor's selected SceneObject. */
+        m_sceneObjectInteractor->SetSelectedSceneObject(tmp);
+    }
+
+
 }
 
 void ObjectListInteractor::Render()

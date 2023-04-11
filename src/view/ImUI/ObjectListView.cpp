@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 
+#include "ObjectListItem.hpp"
 #include "ObjectListView.hpp"
 
 #include "../../interactors/ObjectListInteractor.hpp"
@@ -10,9 +11,8 @@
 #include "../../../include/imgui/backends/imgui_impl_opengl3.h"
 #include "../../../include/icons/IconsFontAwesome6.h"
 
-#include "ObjectListItem.hpp"
 
-ObjectListView::ObjectListView() : m_items()
+ObjectListView::ObjectListView()
 {
 }
 
@@ -66,12 +66,5 @@ void ObjectListView::Render()
 
         ImGui::EndTable();
     }
-
-
-    ImGui::End();
-    ImGui::Begin("Inspector");
-
-    ImGui::SeparatorText("Inspector");
-    
     ImGui::End();
 }

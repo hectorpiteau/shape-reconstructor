@@ -1,9 +1,11 @@
-#ifndef OBJECT_LIST_VIEW_H
-#define OBJECT_LIST_VIEW_H
+#pragma once 
 
 #include <string>
 #include <memory>
 #include <vector>
+
+#include "ObjectListItem.hpp"
+
 #include "../../interactors/ObjectListInteractor.hpp"
 #include "../../../include/imgui/imgui.h"
 #include "../../../include/imgui/backends/imgui_impl_glfw.h"
@@ -11,18 +13,17 @@
 
 #include "../../../include/icons/IconsFontAwesome6.h"
 
-#include "ObjectListItem.hpp"
 
 class ObjectListInteractor;
+class ObjectListItem;
 
 /**
  * @brief ImGui Window containing a list of all objects. 
- * Display also an Inspector for each object's type.
  */
 class ObjectListView {
 public:
     ObjectListView();
-
+    
     void AddItem(std::shared_ptr<ObjectListItem> item);
 
     void SetSelected(int id, const std::string& name);
@@ -39,6 +40,3 @@ private:
     std::string m_selectedName;
     int m_selectedId;
 };
-
-
-#endif //OBJECT_LIST_VIEW_H

@@ -3,11 +3,19 @@
 #include <string>
 #include <iostream>
 
+enum SceneObjectTypes {
+    IMAGESET,
+    CAMERA,
+    LINES,
+    LINEGRID,
+    VOLUME3D,
+    NONE
+};
 
 class SceneObject : public Renderable{
 public:
     
-    SceneObject(const std::string type) : m_type(type), m_id(-1){}
+    SceneObject(const std::string typeName, enum SceneObjectTypes type) : m_typeName(typeName), m_type(type), m_id(-1){}
 
     /**
      * @brief Get the uniq-id that identify this object.
@@ -55,18 +63,26 @@ public:
     const std::string& GetName(){ return m_name;}
 
     /**
+     * @brief Get the object type's name.
+     * Identify the Type of the Object as a string.
+     * 
+     * @return const std::string& : A constant string that contains the name of the type used. 
+     */
+    const std::string& GetTypeName(){ return m_typeName; }
+
+    /**
      * @brief Get the object type.
      * Identify the Type of the Object.
      * Used to connect with the appropriate inpector in the view.
      * 
-     * 
      * @return const std::string& : A constant string that contains the name of the type used. 
      */
-    const std::string& GetType(){ return m_type; }
+    enum SceneObjectTypes GetType(){ return m_type; }
 
     /** Remove copy constructor. */
     SceneObject(const SceneObject&) = delete;
-
+    
+    /** Default constructor. Create an invalid SceneObject. */
     SceneObject() : m_id(-1){}
 
 protected:
@@ -77,5 +93,7 @@ protected:
     /** The Object's name. */
     std::string m_name;
     /** The Object's type, stored as a string in order to be easily extended. */
-    const std::string m_type;
+    const std::string m_typeName;
+    /** The Object's type as the enum, used for fast comparison. */
+    enum SceneObjectTypes m_type;
 };
