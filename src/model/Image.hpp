@@ -3,17 +3,19 @@
 
 #include <string>
 #include <iostream>
-#include <stb_image.h>
+#include "../../include/stb_image.h"
+
 
 class Image
 {
 public:
-    Image() {};
+    Image(std::string filename): filename(filename) {};
     ~Image() {};
     int width;
     int height;
     int channels;
     int bits;
+    std::string filename;
 
     unsigned char* data;
 
@@ -23,16 +25,24 @@ public:
         if(!linearF) { //no float data
             data = stbi_load(path.c_str(), &width, &height, &channels, 0);
         } else { //float data like hdr images
-            data = reinterpret_cast<const unsigned char*>(stbi_loadf(path.c_str(), &width, &height, &channels, 0));
+            data = reinterpret_cast<unsigned char*>(stbi_loadf(path.c_str(), &width, &height, &channels, 0));
             bits = 8 * sizeof(float);
         }
 
         if(data == nullptr) {
             std::cout << "[Image] could not load png image: {}" << path << std::endl;
             std::cout << "[Image] error: {}" << stbi_failure_reason() << std::endl;
+            m_isLoaded = false;
             return;
         }
+        m_isLoaded = true;
     }
+
+    const std::string& GetFilename() const {return filename;}
+
+    bool IsLoaded(){return m_isLoaded;}
+private:
+    bool m_isLoaded = false;
 };
 
 #endif // IMAGE_H

@@ -13,7 +13,7 @@
 #include <tgmath.h>
 
 #include <sstream>
-#include "model/Camera.hpp"
+#include "model/Camera/Camera.hpp"
 #include "model/ShaderPipeline.hpp"
 #include "model/CudaTexture.hpp"
 #include "maths/MMath.hpp"
@@ -31,6 +31,10 @@
 #include "utils/SceneSettings.hpp"
 #include "utils/Projection.hpp"
 
+#include "controllers/Scene/Scene.hpp"
+
+#include "controllers/AppController/AppController.hpp"
+
 #include "../include/imgui/imgui.h"
 #include "../include/imgui/backends/imgui_impl_glfw.h"
 #include "../include/imgui/backends/imgui_impl_opengl3.h"
@@ -41,6 +45,10 @@
 #include "../../include/stb_image.h"
 #include "../../include/stb_image_write.h"
 
+#include "../../include/icons/IconsFontAwesome6.h"
+
+#include "cuda/CudaSurface3D.cuh"
+
 using namespace cv;
 using namespace glm;
 
@@ -48,7 +56,10 @@ using namespace glm;
 #define WINDOW_WIDTH 1080
 #define WINDOW_HEIGHT 720
 
-std::shared_ptr<SceneSettings> sceneSettings = std::make_shared<SceneSettings>(1080, 720);
+/**
+ * @brief
+ */
+std::shared_ptr<SceneSettings> sceneSettings = std::make_shared<SceneSettings>(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 static void pxl_glfw_fps(GLFWwindow *window)
 {
@@ -279,6 +290,22 @@ void ImGUIInitialization(GLFWwindow *window)
     ImGui_ImplOpenGL3_Init(glsl_version);
     /** Setup Dear ImGui style */
     ImGui::StyleColorsDark();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+
+    /** Icons */
+    io.Fonts->AddFontDefault();
+    float baseFontSize = 18.0f;                      // 13.0f is the size of the default font. Change to the font size you use.
+    float iconFontSize = baseFontSize * 2.0f / 3.0f; // FontAwesome fonts need to have their sizes reduced by 2.0f/3.0f in order to align correctly
+
+    // merge in icons from Font Awesome
+    static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_16_FA, 0};
+    ImFontConfig icons_config;
+    icons_config.MergeMode = true;
+    icons_config.PixelSnapH = true;
+    icons_config.GlyphMinAdvanceX = iconFontSize;
+    io.Fonts->AddFontFromFileTTF("../include/icons/fa-solid-900.ttf", iconFontSize, &icons_config, icons_ranges);
+    // use FONT_ICON_FILE_NAME_FAR if you want regular instead of solid
 }
 
 void OpenCVInitialization()
@@ -301,22 +328,8 @@ void OpenCVInitialization()
     // }
 }
 
-int main(void)
+void GLInitialization()
 {
-    Statistics();
-
-    /** Initialize everything that matter GLFW. */
-    GLFWwindow *window = GLFWInitialization();
-
-    /** Create the camera object. */
-    Camera camera(window, sceneSettings);
-
-    /** Init GLEW. */
-    GLEWInitialization();
-
-    /** Init Dear ImGUI. */
-    ImGUIInitialization(window);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -336,6 +349,28 @@ int main(void)
 
     // Cull triangles which normal is not towards the camera
     glEnable(GL_CULL_FACE);
+}
+
+int main(void)
+{
+    Statistics();
+
+    /** Initialize everything that matter GLFW. */
+    GLFWwindow *window = GLFWInitialization();
+
+    /** Init GLEW. */
+    GLEWInitialization();
+
+    /** Init Dear ImGUI. */
+    ImGUIInitialization(window);
+
+    /** Set gl variables. */
+    GLInitialization();
+
+    /** Create the camera object. */
+    std::shared_ptr<AppController> app = std::make_shared<AppController>(window, sceneSettings);
+
+    std::shared_ptr<Scene> scene = app->GetScene();
 
     auto cubePipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_shader.glsl", "../src/shaders/f_shader.glsl");
     UnitCube cube(cubePipeline);
@@ -366,14 +401,14 @@ int main(void)
     //     glm::vec3(1.0, 1.0, 0.0),
     //     glm::vec3(2.0, 1.0, 0.0)
     // };
-    glm::mat4 ext = camera.GetViewMatrix();
+    glm::mat4 ext = scene->GetActiveCam()->GetViewMatrix();
 
     Utils::print(ext);
 
     glm::mat3 R = glm::mat3(ext);
 
     glm::vec3 center = glm::vec3(ext[0][3], ext[1][3], ext[2][3]);
-    glm::vec3 pos = camera.GetPosition();
+    glm::vec3 pos = scene->GetActiveCam()->GetPosition();
 
     std::cout << "Center: " << std::endl;
     Utils::print(center);
@@ -399,7 +434,7 @@ int main(void)
     glm::vec3 wwRes = wwDelta / (float)width;
     glm::vec3 wwResD2 = wwDelta / 2.0f;
 
-    glm::mat4 intrinsics = camera.GetProjectionMatrix();
+    glm::mat4 intrinsics = scene->GetActiveCam()->GetProjectionMatrix();
 
     glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(wwMax.x, 0.0, -1.0, 1.0f), ext);
 
@@ -430,21 +465,23 @@ int main(void)
     Lines testLines(vertices2, 6 * 3);
     // Lines testLines(vertices2, 6 * width * height);
 
-    Lines cameraLines(camera.GetWireframe(), 16 * 3);
+    Lines cameraLines(scene->GetActiveCam()->GetWireframe(), 16 * 3);
     cameraLines.SetColor(1.0, 0.0, 0.0, 0.5);
 
-    Gizmo cameraGizmo(camera.GetPosition(), camera.GetRight(), camera.GetRealUp(), camera.GetForward());
+    Gizmo cameraGizmo(scene->GetActiveCam()->GetPosition(), scene->GetActiveCam()->GetRight(), scene->GetActiveCam()->GetRealUp(), scene->GetActiveCam()->GetForward());
 
-    Volume3D volume;
+    // Volume3D volume;
 
-    LineGrid lineGrid;
+    // LineGrid lineGrid;
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // cudaTex.RunCUDA();
 
-    Texture2D testImage("/home/hpiteau/work/shape-reconstructor/fiducial.png");
+    Texture2D testImage("../data/nerf/train/r_0.png");
+
+    CudaSurface3D surface(100, 100, 100);
 
     static float scale = 1.0f;
     while (!glfwWindowShouldClose(window))
@@ -460,20 +497,21 @@ int main(void)
         ImGui::NewFrame();
 
         /** MVP */
-        camera.ComputeMatricesFromInputs(window);
-        glm::mat4 projectionMatrix = camera.GetProjectionMatrix();
-        glm::mat4 viewMatrix = camera.GetViewMatrix();
+        scene->GetActiveCam()->ComputeMatricesFromInputs(window);
+        glm::mat4 projectionMatrix = scene->GetActiveCam()->GetProjectionMatrix();
+        glm::mat4 viewMatrix = scene->GetActiveCam()->GetViewMatrix();
 
         // cube.Render(projectionMatrix, viewMatrix, camera.GetPosition(), WINDOW_WIDTH, WINDOW_HEIGHT);
         // skybox.Render(projectionMatrix, viewMatrix);
+        // model.Render(projectionMatrix, viewMatrix, sceneSettings);
+        // testLines.Render(projectionMatrix, viewMatrix, sceneSettings);
 
-        model.Render(projectionMatrix, viewMatrix, sceneSettings);
-
-        testLines.Render(projectionMatrix, viewMatrix, sceneSettings);
         cameraLines.Render(projectionMatrix, viewMatrix, sceneSettings);
         cameraGizmo.Render(projectionMatrix, viewMatrix, sceneSettings);
 
-        lineGrid.Render(projectionMatrix, viewMatrix, sceneSettings);
+        app->Render();
+
+        // lineGrid.Render(projectionMatrix, viewMatrix, sceneSettings);
 
         // auto started = std::chrono::high_resolution_clock::now();
         // auto done = std::chrono::high_resolution_clock::now();
@@ -481,65 +519,67 @@ int main(void)
 
         // overlayPlane.Render(true, cudaTex.GetTex());
 
-        volume.Render(projectionMatrix, viewMatrix, sceneSettings);
+        // volume.Render(projectionMatrix, viewMatrix, sceneSettings);
 
         /** ImGUI */
-        ImGui::Begin("Objects");
+        // bool closable = true;
+        // ImGui::Begin("Objects", &closable);
 
-        ImGui::SeparatorText("Objects in Scene");
-        
-        static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
-        
-        if (ImGui::BeginTable("2ways", 2, flags))
-        {
-            // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
-            ImGui::TableSetupColumn("Active", ImGuiTableColumnFlags_NoHide);
-            ImGui::TableSetupColumn("Object Name", ImGuiTableColumnFlags_NoHide);
-            ImGui::TableHeadersRow();
+        // ImGui::SeparatorText("Objects in Scene");
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            bool test = true;
-            ImGui::Checkbox("", &test);
-            ImGui::TableNextColumn();
-            ImGui::Text(std::string("Camera 0 (main)").c_str());
+        // static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("", &test);
-            ImGui::TableNextColumn();
-            ImGui::Text(std::string("Volume 3D").c_str());
+        // if (ImGui::BeginTable("3ways", 3, flags))
+        // {
+        //     // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
+        //     ImGui::TableSetupColumn("Active", ImGuiTableColumnFlags_NoHide);
+        //     ImGui::TableSetupColumn("Object Name", ImGuiTableColumnFlags_NoHide);
+        //     ImGui::TableHeadersRow();
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("", &test);
-            ImGui::TableNextColumn();
-            ImGui::Text(std::string("Grid").c_str());
+        //     ImGui::TableNextRow();
+        //     ImGui::TableNextColumn();
+        //     bool test = true;
+        //     ImGui::BeginDisabled();
+        //     ImGui::Checkbox("", &test);
+        //     ImGui::EndDisabled();
+        //     ImGui::TableNextColumn();
+        //     ImGui::Text(std::string(ICON_FA_CAMERA " Camera 0 (main)").c_str());
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("", &test);
-            ImGui::TableNextColumn();
-            ImGui::Text(std::string("Volumetric Renderer").c_str());
+        //     ImGui::TableNextRow();
+        //     ImGui::TableNextColumn();
+        //     ImGui::Checkbox("", &test);
+        //     ImGui::TableNextColumn();
+        //     ImGui::Text(std::string(ICON_FA_CUBES " Volume 3D").c_str());
+        //     ImGui::TableNextColumn();
+        //     ImGui::Button(std::string("  " ICON_FA_GEAR "  ").c_str());
 
+        //     ImGui::TableNextRow();
+        //     ImGui::TableNextColumn();
+        //     ImGui::Checkbox("", &test);
+        //     ImGui::TableNextColumn();
+        //     ImGui::Text(std::string(ICON_FA_TABLE_CELLS " Grid").c_str());
 
+        //     ImGui::TableNextRow();
+        //     ImGui::TableNextColumn();
+        //     ImGui::Checkbox("", &test);
+        //     ImGui::TableNextColumn();
+        //     ImGui::Text(std::string(ICON_FA_CUBE " Volumetric Renderer").c_str());
 
-            ImGui::EndTable();
-        }
-        ImGui::End();
-        
+        //     ImGui::EndTable();
+        // }
+        // ImGui::End();
+
         ImGui::Begin("Main Settings");
         if (ImGui::BeginMainMenuBar())
         {
             if (ImGui::BeginMenu("File"))
             {
-                ImGui::MenuItem("Open calibration images");   
+                ImGui::MenuItem("Open calibration images");
                 ImGui::Separator();
                 static bool test = true;
-                ImGui::MenuItem("Enable v-sync.", NULL, &test);
-                // glfwSwapInterval(0);
+                ImGui::MenuItem("Enable v-sync.", NULL, &test); // glfwSwapInterval(0);
                 ImGui::Separator();
-                ImGui::MenuItem("Exit", "Esc");
+                ImGui::MenuItem(ICON_FA_SQUARE_XMARK " Exit", "Esc");
                 ImGui::EndMenu();
             }
 
@@ -566,16 +606,57 @@ int main(void)
         ImGui::Text(
             (std::string("Scroll offsets: ") + std::to_string(sceneSettings->GetScrollOffsets().x) + std::string(", ") + std::to_string(sceneSettings->GetScrollOffsets().y)).c_str());
 
-        float inf[3] = {camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z};
+        float inf[3] = {scene->GetActiveCam()->GetPosition().x, scene->GetActiveCam()->GetPosition().y, scene->GetActiveCam()->GetPosition().z};
         ImGui::InputFloat3("Camera position", inf);
-        camera.SetPosition(inf[0], inf[1], inf[2]);
+        scene->GetActiveCam()->SetPosition(inf[0], inf[1], inf[2]);
 
-        // ImGui::Image((void*)(intptr_t)testImage.GetID(), ImVec2(testImage.GetWidth(), testImage.GetHeight()));
         ImGui::Separator();
-        ImGui::Image((void *)(intptr_t)testImage.GetID(), ImVec2(256, 256), ImVec2(0, 0), ImVec2(1, 1));
-        const char *items = "Image1\0Image2\0";
-        int current = -1;
-        // ImGui::Combo(items, &current);
+        ImGuiIO &io = ImGui::GetIO();
+
+        static float dispSize[2] = {800, 800};
+        static float dsize = 1.0;
+        ImGui::SliderFloat("Displayed Size", &dsize, 0.001f, 2.0f);
+        // ImGui::InputFloat2("Displayed Size", dispSize);
+
+        float my_tex_w = testImage.GetWidth() * dsize;
+        float my_tex_h = testImage.GetHeight() * dsize;
+
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        
+        ImGui::Image((void *)(intptr_t)testImage.GetID(), ImVec2(my_tex_w, my_tex_h), ImVec2(0, 0), ImVec2(1, 1));
+        
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            float region_sz = 64.0f;
+            float region_x = io.MousePos.x - pos.x - region_sz * 0.5f;
+            float region_y = io.MousePos.y - pos.y - region_sz * 0.5f;
+            float zoom = 4.0f;
+            if (region_x < 0.0f)
+            {
+                region_x = 0.0f;
+            }
+            else if (region_x > my_tex_w - region_sz)
+            {
+                region_x = my_tex_w - region_sz;
+            }
+            if (region_y < 0.0f)
+            {
+                region_y = 0.0f;
+            }
+            else if (region_y > my_tex_h - region_sz)
+            {
+                region_y = my_tex_h - region_sz;
+            }
+            
+            ImGui::Text("Min: (%.2f, %.2f)", region_x, region_y);
+            ImGui::Text("Max: (%.2f, %.2f)", region_x + region_sz, region_y + region_sz);
+            ImVec2 uv0 = ImVec2((region_x) / my_tex_w, (region_y) / my_tex_h);
+            ImVec2 uv1 = ImVec2((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
+            ImGui::Image((void *)(intptr_t)testImage.GetID(), ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1);
+            ImGui::EndTooltip();
+        }
+        
         ImGui::Separator();
         ImGui::End();
 

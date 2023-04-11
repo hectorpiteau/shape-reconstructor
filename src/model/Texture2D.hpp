@@ -8,7 +8,7 @@
 #include <iostream>
 #include "../../include/stb_image.h"
 #include "../utils/Utils.hpp"
-
+#include "Image.hpp"
 
 class Texture2D
 {
@@ -26,8 +26,37 @@ private:
     size_t m_dataLength;
 
     /** Data from outside, not responsible for allocation and deletion. */
-    const char *m_refData;
+    const unsigned char *m_refData;
     bool m_useRefData;
+
+    void LoadFromData(unsigned char *data)
+    {
+        if (data != nullptr)
+        {
+            if (m_useRefData) m_refData = data;
+            else m_data = data;
+
+            GLenum format;
+            if (m_channels == 1)
+                format = GL_RED;
+            else if (m_channels == 3)
+                format = GL_RGB;
+            else if (m_channels == 4)
+                format = GL_RGBA;
+
+            glGenTextures(1, &m_ID);
+            glBindTexture(GL_TEXTURE_2D, m_ID);
+
+            // Setup filtering parameters for display
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
+
+            glTexImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, m_useRefData ? m_refData : m_data);
+            if(m_useRefData == false) stbi_image_free(data);
+        }
+    }
 
 public:
     Texture2D(int width, int height, int channels, short bytesPerItems) : m_width(width), m_height(height), m_channels(channels), m_bytesPerItem(bytesPerItems)
@@ -63,33 +92,29 @@ public:
         m_data = nullptr;
         m_refData = nullptr;
         m_useRefData = false;
-
-
         unsigned char *data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, 0);
-        if (data != nullptr)
-        {
-            m_data = data;
+        LoadFromData(data);
+    }
 
-            GLenum format;
-            if (m_channels == 1)
-                format = GL_RED;
-            else if (m_channels == 3)
-                format = GL_RGB;
-            else if (m_channels == 4)
-                format = GL_RGBA;
+    Texture2D()
+    {
+        m_data = nullptr;
+        m_refData = nullptr;
+        m_useRefData = false;
+    }
 
-            glGenTextures(1, &m_ID);
-            glBindTexture(GL_TEXTURE_2D, m_ID);
-
-            // Setup filtering parameters for display
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
-            
-            glTexImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, m_data);
-            stbi_image_free(data);
-        }
+    /**
+     * @brief Load the texture from an Image instance.
+     * 
+     * @param image 
+     */
+    void LoadFromImage(const Image *image)
+    {
+        m_width = image->width;
+        m_height = image->height;
+        m_channels = image->channels;
+        m_useRefData = true;
+        LoadFromData(image->data);
     }
 
     void InitData()
@@ -133,7 +158,7 @@ public:
         return true;
     }
 
-    void SetDataAsReference(const char *data)
+    void SetDataAsReference(const unsigned char *data)
     {
         m_useRefData = true;
         m_refData = data;

@@ -2,7 +2,7 @@
 
 #include "../../view/SceneObject/SceneObject.hpp"
 #include "../../utils/SceneSettings.hpp"
-#include "../../model/Camera.hpp"
+#include "../../model/Camera/Camera.hpp"
 #include "../../model/UniqId.hpp"
 
 #include <vector>
@@ -15,8 +15,11 @@ public:
      * 
      * @param sceneSettings : A pointer to the sceneSettings object.
      */
-    Scene(std::shared_ptr<SceneSettings> sceneSettings);
+    Scene(std::shared_ptr<SceneSettings> sceneSettings, GLFWwindow *window);
     
+    /** Delete copy constructor. */
+    Scene(const Scene&) = delete;
+
     /**
      * @brief Destroy the Scene object.
      * 
@@ -29,9 +32,18 @@ public:
      * twice will lead to an early return -1.
      * 
      * @param object : The new SceneObject to add to the scene.
+     * @param active=true : True if the object is active by default, false to set it directly inactive.
      * @return int : The uniq-id of the newly added object or -1 if not added.
      */
-    int Add(std::shared_ptr<SceneObject> object);
+    int Add(std::shared_ptr<SceneObject> object, bool active = true);
+
+    /**
+     * @brief Get a SceneObject from it's id.
+     * 
+     * @param id : The id of the SceneObject to get.
+     * @return std::shared_ptr<SceneObject> : The SceneObject if it exist, nullptr otherwise.
+     */
+    std::shared_ptr<SceneObject> Get(int id);
     
     /**
      * @brief Remove an object from the scene.
@@ -45,11 +57,26 @@ public:
      */
     void RenderAll();
 
+    /**
+     * @brief Get the currently active camera.
+     * 
+     * @return const Camera& : A constant ref to the active camera.
+     */
+    const std::shared_ptr<Camera>& GetActiveCam();
+
+    const std::vector<std::shared_ptr<SceneObject>>& GetSceneObjects();
+
 private:
+    /**
+     * @brief Current Window.
+     * 
+     */
+    GLFWwindow *m_window;
+    
     /**
      * @brief A manager that handle uniq-ids.
      */
-    std::unique_ptr<UniqId> m_uniqIdManager;
+    std::shared_ptr<UniqId> m_uniqIdManager;
 
     /**
      * @brief The main camera is the default that is used to 
