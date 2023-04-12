@@ -3,7 +3,6 @@
 #include "../Scene/Scene.hpp"
 #include "../../utils/SceneSettings.hpp"
 
-#include "../../view/Volume3D.hpp"
 #include "../../view/LineGrid.hpp"
 #include "../../view/ImUI/ObjectListView.hpp"
 #include "../../view/ImUI/InspectorView.hpp"
@@ -15,6 +14,8 @@
 #include "../../model/SphereSDF.hpp"
 #include "../../model/ImageSet.hpp"
 #include "../../model/Calibration/OpenCVCalibrator.hpp"
+#include "../../model/Dataset/NeRFDataset.hpp"
+#include "../../model/Volume3D.hpp"
 
 
 
@@ -29,7 +30,11 @@ public:
         /** Fill default Scene. */
         m_scene->Add(std::make_shared<Volume3D>());
         m_scene->Add(std::make_shared<LineGrid>());
-        m_scene->Add(std::make_shared<ImageSet>());
+        
+        m_scene->Add(std::make_shared<NeRFDataset>(
+            m_scene,
+            std::dynamic_pointer_cast<ImageSet>(m_scene->Add(std::make_shared<ImageSet>(), true, true))
+        ));
 
         /** Create Views and Interactors */
         m_objectListView = std::make_shared<ObjectListView>();

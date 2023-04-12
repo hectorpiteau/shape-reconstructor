@@ -4,13 +4,19 @@
 
 #include "ImageSetInteractor.hpp"
 #include "CameraInteractor.hpp"
+#include "NeRFInteractor.hpp"
+#include "CameraSetInteractor.hpp"
+
 #include "../model/ImageSet.hpp"
+#include "../model/Dataset/NeRFDataset.hpp"
 #include "../view/ImUI/InspectorView.hpp"
 
 SceneObjectInteractor::SceneObjectInteractor()
 {
     imageSetInteractor = new ImageSetInteractor();
     cameraInteractor = new CameraInteractor();
+    nerfInteractor = new NeRFInteractor();
+    cameraSetInteractor = new CameraSetInteractor();
 
     m_inspectorView = new InspectorView(this);
 }
@@ -20,12 +26,13 @@ SceneObjectInteractor::~SceneObjectInteractor(){
 
     delete imageSetInteractor;
     delete cameraInteractor;
+    delete nerfInteractor;
+    delete cameraSetInteractor;
 }
 
 void SceneObjectInteractor::SetSelectedSceneObject(std::shared_ptr<SceneObject> &object)
 {
     m_selectedSceneObject = object;
-    // m_inspectorView->SetSelected();
 
     switch(object->GetType()){
         case SceneObjectTypes::IMAGESET:
@@ -33,6 +40,12 @@ void SceneObjectInteractor::SetSelectedSceneObject(std::shared_ptr<SceneObject> 
             break;
         case SceneObjectTypes::CAMERA:
             cameraInteractor->SetCamera(std::dynamic_pointer_cast<Camera>(object));
+            break;
+        case SceneObjectTypes::NERFDATASET:
+            nerfInteractor->SetNeRFDataset(std::dynamic_pointer_cast<NeRFDataset>(object));
+            break;
+        case SceneObjectTypes::CAMERASET:
+            cameraSetInteractor->SetActiveCameraSet(std::dynamic_pointer_cast<CameraSet>(object));
             break;
     }
 }

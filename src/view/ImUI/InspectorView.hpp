@@ -13,6 +13,7 @@
 
 #include "Inspectors/ImageSetInspector.hpp"
 #include "Inspectors/CameraInspector.hpp"
+#include "Inspectors/NeRFInspector.hpp"
 
 #include "../../interactors/SceneObjectInteractor.hpp"
 
@@ -55,6 +56,7 @@ private:
     /** Inspectors */
     ImageSetInspector* m_imageSetInspectorView;
     CameraInspector* m_cameraInspectorView;
+    NeRFInspector* m_nerfDatasetInspectorView;
 
     std::string m_selectedName;
     int m_selectedId;

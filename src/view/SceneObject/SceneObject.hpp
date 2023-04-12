@@ -2,6 +2,7 @@
 #include "../Renderable/Renderable.hpp"
 #include <string>
 #include <iostream>
+#include <vector>
 
 enum SceneObjectTypes {
     IMAGESET,
@@ -9,7 +10,18 @@ enum SceneObjectTypes {
     LINES,
     LINEGRID,
     VOLUME3D,
+    NERFDATASET,
+    CAMERASET,
     NONE
+};
+
+static const std::vector<const char*> SceneObjectNames = {
+    "ImageSet",
+    "Camera",
+    "Lines",
+    "LineGrid",
+    "Volume3D",
+    "NeRF Dataset",
 };
 
 class SceneObject : public Renderable{
@@ -85,7 +97,14 @@ public:
     /** Default constructor. Create an invalid SceneObject. */
     SceneObject() : m_id(-1){}
 
+    std::vector<std::shared_ptr<SceneObject>>& GetChildren(){ return m_children;}
+
+    bool IsChild(){ return m_isChild;}
+
+    void SetIsChild(bool isChild){m_isChild = isChild;}
+
 protected:
+    bool m_isChild;
     /** A uniq-id that identify this SceneObject. */
     int m_id;
     /** True if the object is active in the scene (visible) or not. */
@@ -96,4 +115,7 @@ protected:
     const std::string m_typeName;
     /** The Object's type as the enum, used for fast comparison. */
     enum SceneObjectTypes m_type;
+
+    /** Chilren SceneObjects (dependencies). */
+    std::vector<std::shared_ptr<SceneObject>> m_children;
 };

@@ -11,8 +11,6 @@ ImageSet::ImageSet() : SceneObject{std::string("IMAGESET"), SceneObjectTypes::IM
     SetName(std::string(ICON_FA_IMAGES " ImageSet"));
     
     m_images = std::vector<Image*>();
-    // m_images.reserve(100);
-
 }
 
 std::vector<Image *>& ImageSet::GetImages(){
@@ -29,6 +27,11 @@ size_t ImageSet::size(){
 
 void ImageSet::SetFolderPath(const std::string& path){
     m_folderPath = path;
+    std::cout << "SET IMAGESET FOLDER PATH: " << path << std::endl;
+}
+
+const std::string& ImageSet::GetFolderPath(){
+    return m_folderPath;
 }
 
 size_t ImageSet::LoadImages() {

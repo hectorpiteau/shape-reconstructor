@@ -8,6 +8,27 @@
 
 #include "ObjectListInteractor.hpp"
 
+/**
+ * @brief Helper function to recursively create ObjectListItems for the SceneObject given
+ * and it's dependencies at once. 
+ * 
+ * @param sceneObject : The SceneObject to create its corresponding ObjectListItem.
+ * @param interactor : The interactor that the items are going to communicate with. 
+ * @return std::shared_ptr<ObjectListItem> : A shared pointer of the ObjectListItem that correspond to the SceneObject given.
+ */
+std::shared_ptr<ObjectListItem> CreateObjectListItem(const std::shared_ptr<SceneObject> &sceneObject, ObjectListInteractor* interactor){
+    std::vector<std::shared_ptr<ObjectListItem>> result =  std::vector<std::shared_ptr<ObjectListItem>>();
+
+    /** Loop trough children with the same function to generate an ObjectListItem per child. */
+    for(const auto& child: sceneObject->GetChildren()){
+        std::shared_ptr<ObjectListItem> childItem = CreateObjectListItem(child, interactor);
+        childItem->SetLocked(true);
+        result.push_back(childItem);
+    }
+
+    return std::make_shared<ObjectListItem>(sceneObject->GetName(), sceneObject->GetID(), sceneObject->IsActive(), result, interactor);
+}
+
 ObjectListInteractor::ObjectListInteractor(std::shared_ptr<Scene> &scene, std::shared_ptr<ObjectListView> listView, std::shared_ptr<SceneObjectInteractor>& sceneObjectInteractor)
     : m_scene(scene), m_objectListView(listView), m_selectedObject(nullptr), m_sceneObjectInteractor(sceneObjectInteractor)
 {
@@ -15,16 +36,14 @@ ObjectListInteractor::ObjectListInteractor(std::shared_ptr<Scene> &scene, std::s
 
     for (const auto &sceneObject : m_scene->GetSceneObjects())
     {
-        if(sceneObject != nullptr){
-            m_objectListView->AddItem(
-                std::make_shared<ObjectListItem>(sceneObject->GetName(), sceneObject->GetID(), sceneObject->IsActive(), this)
-            );
-        }
+        if(sceneObject == nullptr || sceneObject->IsChild()) continue;
+        m_objectListView->AddItem(CreateObjectListItem(sceneObject, this));
     }
 }
 
-ObjectListInteractor::~ObjectListInteractor(){
-}
+
+
+ObjectListInteractor::~ObjectListInteractor(){}
 
 void ObjectListInteractor::SetActive(bool active, int id)
 {
@@ -32,7 +51,7 @@ void ObjectListInteractor::SetActive(bool active, int id)
     if (tmp != nullptr)
         tmp->SetActive(active);
     else {
-        std::cout << "err" << std::endl;
+        std::cout << "Error SceneObject does not exist." << std::endl;
     }
 }
 

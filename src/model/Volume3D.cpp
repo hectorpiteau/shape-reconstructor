@@ -3,10 +3,10 @@
 
 #include "Volume3D.hpp"
 
-#include "Lines.hpp"
-#include "Renderable/Renderable.hpp"
-#include "Wireframe/Wireframe.hpp"
-#include "SceneObject/SceneObject.hpp"
+#include "../view/Lines.hpp"
+#include "../view/Renderable/Renderable.hpp"
+#include "../view/Wireframe/Wireframe.hpp"
+#include "../view/SceneObject/SceneObject.hpp"
 
 #include "../../include/icons/IconsFontAwesome6.h"
 
