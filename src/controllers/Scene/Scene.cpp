@@ -6,8 +6,6 @@
 #include "../../view/SceneObject/SceneObject.hpp"
 #include "../../utils/SceneSettings.hpp"
 #include "../../model/UniqId.hpp"
-#include "../../view/Volume3D.hpp"
-#include "../../view/LineGrid.hpp"
 
 
 Scene::Scene(std::shared_ptr<SceneSettings> sceneSettings, GLFWwindow *window) : m_sceneSettings(sceneSettings), m_window(window), m_objects(){
@@ -25,16 +23,17 @@ Scene::~Scene(){
     //do nothing for now
 }
 
-int Scene::Add(std::shared_ptr<SceneObject> object, bool active){
-    if(object == nullptr) return -1;
-    if(object->GetID() != -1) return -1;
-    if(m_uniqIdManager->IdExists(object->GetID())) return -2;
+
+std::shared_ptr<SceneObject> Scene::Add(std::shared_ptr<SceneObject> object, bool active, bool isChild){
+    if(object->GetID() != -1) return object;
+    if(m_uniqIdManager->IdExists(object->GetID())) return object;
 
     object->SetID(m_uniqIdManager->GetUniqId());
     object->SetActive(active);
 
+    object->SetIsChild(isChild);
     m_objects.push_back(object);
-    return object->GetID();
+    return object;
 }
 
 void Scene::Remove(int id){
@@ -61,7 +60,6 @@ std::shared_ptr<SceneObject> Scene::Get(int id){
     auto iterator = m_objects.begin();
 
     for(int i=0; i<m_objects.size(); ++i){
-        
         if(m_objects[i]->GetID() == id) {
             return m_objects[i];
         }

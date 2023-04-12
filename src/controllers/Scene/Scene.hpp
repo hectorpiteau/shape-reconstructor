@@ -33,9 +33,10 @@ public:
      * 
      * @param object : The new SceneObject to add to the scene.
      * @param active=true : True if the object is active by default, false to set it directly inactive.
-     * @return int : The uniq-id of the newly added object or -1 if not added.
+     * @return T : The object newly added to the scene. 
      */
-    int Add(std::shared_ptr<SceneObject> object, bool active = true);
+    // template<typename T>
+    std::shared_ptr<SceneObject> Add(std::shared_ptr<SceneObject> object, bool active = true, bool isChild = false);
 
     /**
      * @brief Get a SceneObject from it's id.

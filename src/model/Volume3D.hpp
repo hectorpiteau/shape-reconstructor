@@ -4,10 +4,10 @@
 #include <memory>
 #include <iostream>
 
-#include "Renderable/Renderable.hpp"
-#include "Wireframe/Wireframe.hpp"
-#include "Lines.hpp"
-#include "SceneObject/SceneObject.hpp"
+#include "../view/Renderable/Renderable.hpp"
+#include "../view/Wireframe/Wireframe.hpp"
+#include "../view/Lines.hpp"
+#include "../view/SceneObject/SceneObject.hpp"
 
 /**
  * @brief This class allows for the render of 3D volumetric data.
@@ -25,7 +25,6 @@ public:
     void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
     
     void UpdateWireFrame(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
-
 
 private: 
     std::shared_ptr<Lines> m_lines;

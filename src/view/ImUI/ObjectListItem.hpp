@@ -14,9 +14,11 @@ class ObjectListInteractor;
 class ObjectListItem {
 public:
     
-    ObjectListItem(const std::string &name, int id, bool checked, ObjectListInteractor* interactor);
+    ObjectListItem(const std::string &name, int id, bool checked, std::vector<std::shared_ptr<ObjectListItem>>& children, ObjectListInteractor* interactor);
 
     void SetChecked(bool checked);
+
+    void SetLocked(bool locked);
 
     void Render();
 
@@ -29,4 +31,8 @@ private:
     int m_id;
 
     ObjectListInteractor* m_interactor;
+
+    bool m_locked;
+
+    std::vector<std::shared_ptr<ObjectListItem>> m_children;
 };

@@ -14,6 +14,8 @@ public:
     ImageSet(const ImageSet &) = delete;
 
     void SetFolderPath(const std::string &path);
+    
+    const std::string& GetFolderPath();
 
     /**
      * @brief Load the images contained in the folder path.
@@ -22,6 +24,12 @@ public:
      */
     size_t LoadImages();
 
+    /**
+     * @brief Get the Amount Of Images in this imageset.
+     * If the images are not loaded, the amount is 0.
+     * 
+     * @return int : The amount of loaded images.
+     */
     int GetAmountOfImages();
 
     const Image *GetImage(int index);

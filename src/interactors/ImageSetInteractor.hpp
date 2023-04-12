@@ -18,7 +18,13 @@ size_t LoadImages(const char* folderPath);
 
 std::shared_ptr<ImageSet>& GetImageSet();
 
+bool GetUpdatedImageSet();
+
+void SetUpdatedImageSet(bool value);
+
 private:
     std::shared_ptr<ImageSet> m_imageSet;
+
+    bool m_updatedImageSet = true;
     
 };

@@ -66,6 +66,7 @@ cuda_add_executable(DRTMCS
     src/interactors/CameraInteractor.cpp 
     src/interactors/ObjectListInteractor.cpp
     src/interactors/SceneObjectInteractor.cpp
+    src/interactors/NeRFInteractor.cpp
 
     src/controllers/Scene/Scene.cpp 
 
@@ -76,6 +77,7 @@ cuda_add_executable(DRTMCS
     src/model/DenseFloat32Volume.cpp
     src/model/Dataset/NeRFDataset.cpp
     src/model/ImageSet.cpp 
+    src/model/Volume3D.cpp 
 
     src/view/UnitCube.cpp 
     src/view/Grid.cpp 
@@ -83,7 +85,6 @@ cuda_add_executable(DRTMCS
     src/view/OverlayPlane.cpp 
     src/view/Gizmo.cpp 
     src/view/Lines.cpp 
-    src/view/Volume3D.cpp 
     src/view/LineGrid.cpp 
 
     ${CUDA_SOURCE_FILES})

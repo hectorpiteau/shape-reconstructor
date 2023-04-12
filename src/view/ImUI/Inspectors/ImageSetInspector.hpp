@@ -24,21 +24,22 @@ public:
     {
         m_comboBoxImagesName = std::vector<char *>();
     };
+
     ImageSetInspector(const ImageSetInspector &) = delete;
 
     ~ImageSetInspector(){};
 
-    void SetImageSet(std::shared_ptr<ImageSet> &imageSet)
-    {
-        // m_imageSet = imageSet;
-        Update();
-    }
-
     void Update()
     {
-        if (m_interactor->GetImageSet()->size() <= 0)
-            return;
+        if (m_interactor->GetImageSet() == nullptr) return;
 
+        /** Copy the full path to the current folder; */
+        strcpy(m_folderPath, m_interactor->GetImageSet()->GetFolderPath().c_str());
+        std::cout <<"ImageSet UPDATE: " << m_interactor->GetImageSet()->GetFolderPath() << std::endl;
+
+        if (m_interactor->GetImageSet()->size() <= 0) return;
+
+        
         if (m_comboBoxImagesName.size() > 0)
         {
             for (char *elem : m_comboBoxImagesName)
@@ -49,8 +50,6 @@ public:
         }
 
         /** Retrieve images names for combobox. */
-        std::cout << "Update combo: " << m_interactor->GetImageSet()->size() << std::endl;
-
         for (int i = 0; i < m_interactor->GetImageSet()->size(); ++i)
         {
             const Image *img = (*m_interactor->GetImageSet())[i];
@@ -70,6 +69,12 @@ public:
             ImGui::Text("Error: interactor is null.");
             return;
         }
+        /** Check if the imageSet have been updated or not. */
+        if(m_interactor->GetUpdatedImageSet()){
+            Update();
+            m_interactor->SetUpdatedImageSet(false);
+        }
+
         ImGui::SeparatorText(ICON_FA_INFO " ImageSet - Informations");
         /** SceneObject id. */
         ImGui::Text((std::string("Images count: ") + std::to_string(m_interactor->GetImageSet()->GetAmountOfImages())).c_str());
@@ -196,7 +201,7 @@ public:
 private:
     ImageSetInteractor *m_interactor;
 
-    char m_folderPath[256] = {"/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/nerf/train"};
+    char m_folderPath[256] = {""};
 
     std::vector<char *> m_comboBoxImagesName;
 
