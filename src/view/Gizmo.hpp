@@ -9,8 +9,15 @@
 
 class Gizmo : Renderable {
 public:
-    Gizmo(glm::vec3 origin, glm::vec3 x, glm::vec3 y, glm::vec3 z);
+    Gizmo(const glm::vec3& origin, const glm::vec3& x, const glm::vec3& y, const glm::vec3& z);
 
+    void UpdateLines();
+
+    void SetPosition(const glm::vec3& pos);
+    void SetX(const glm::vec3& x);
+    void SetY(const glm::vec3& y);
+    void SetZ(const glm::vec3& z);
+    
     void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
     
 private:
@@ -22,9 +29,10 @@ private:
     float m_yData[6];
     float m_zData[6];
 
-    glm::vec3 m_xVec = glm::vec3(1.0, 0.0, 0.0);
-    glm::vec3 m_yVec = glm::vec3(0.0, 1.0, 0.0);
-    glm::vec3 m_zVec = glm::vec3(0.0, 0.0, 1.0);
+    glm::vec3 m_origin = glm::vec3(0.0, 0.0, 0.0);
+    glm::vec3 m_x = glm::vec3(1.0, 0.0, 0.0);
+    glm::vec3 m_y = glm::vec3(0.0, 1.0, 0.0);
+    glm::vec3 m_z = glm::vec3(0.0, 0.0, 1.0);
 
     std::unique_ptr<Lines> m_xLines;
     std::unique_ptr<Lines> m_yLines;
@@ -33,6 +41,4 @@ private:
     glm::vec4 m_xColor = glm::vec4(1.0, 0.0, 0.0, 1.0);
     glm::vec4 m_yColor = glm::vec4(0.0, 1.0, 0.0, 1.0);
     glm::vec4 m_zColor = glm::vec4(0.0, 0.0, 1.0, 1.0);
-
-    
 };
