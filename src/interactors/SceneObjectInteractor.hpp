@@ -3,6 +3,8 @@
 #include "../view/SceneObject/SceneObject.hpp"
 #include "../view/ImUI/InspectorView.hpp"
 
+#include "../controllers/Scene/Scene.hpp"
+
 #include "ImageSetInteractor.hpp"
 #include "CameraInteractor.hpp"
 #include "NeRFInteractor.hpp"
@@ -22,7 +24,7 @@ class InspectorView;
  */
 class SceneObjectInteractor {
 public:
-    SceneObjectInteractor();
+    SceneObjectInteractor(std::shared_ptr<Scene> m_scene);
     SceneObjectInteractor(const SceneObjectInteractor&) = delete;
     ~SceneObjectInteractor();
 
@@ -65,6 +67,7 @@ public:
     CameraSetInteractor* cameraSetInteractor;
 
 private:
+    std::shared_ptr<Scene> m_scene;
     /** The currently selected SceneObject. */
     std::shared_ptr<SceneObject> m_selectedSceneObject;
 

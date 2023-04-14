@@ -6,6 +6,7 @@
 
 #include "NeRFDataset.hpp"
 #include "../ImageSet.hpp"
+#include "../Camera/CameraSet.hpp"
 
 #include "../../controllers/Scene/Scene.hpp"
 #include "../../include/icons/IconsFontAwesome6.h"
@@ -103,6 +104,20 @@ bool NeRFDataset::Load()
                 float value = img["transform_matrix"][i][j];
                 tmp.transformMatrix[i][j] = value;
             }
+
+            /** Create intrinsic and extrinsic matrices. */
+            glm::mat4 K = glm::mat4(1.0f);
+            float fx = width / (2.0 * glm::tan(tmp.fov / 2.0));
+            float fy = height / (2.0 * glm::tan(tmp.fov / 2.0));
+            K[0, 0] = fx
+            K[1, 1] = fy
+            K[0, 2] = width / 2.0
+            K[1, 2] = height / 2.0
+            tmp.intrinsic = K;
+
+            
+
+
         }
 
         m_images.push_back(tmp);
@@ -193,6 +208,17 @@ void NeRFDataset::LoadCalibrations(){
 }
 
 void NeRFDataset::GenerateCameras(){
+    /** Create a CameraSet */
+    std::shared_ptr<CameraSet> camSet = std::make_shared<CameraSet>();
+    
+    m_scene->Add(camSet, true, true);
+    
+    m_children.push_back(camSet);
+
+    camSet->LinkToImageSet(GetImageSet(), m_scene);
+
+    camSet->CalibrateFromInformations(m_images);
+
     m_camerasGenerated = true;
 }
 

@@ -20,15 +20,13 @@ static const std::vector<const char*> NeRFDatasetModesNames = {
     "Valid"
 };
 
-struct NeRFImage {
-    /** Extrinsic + Intrinsic fused. */
+struct NeRFImage : public CameraCalibrationInformations {
+    /** Original transform matrix. Extrinsic + Intrinsic fused. */
     glm::mat4 transformMatrix;
     /** Full path to the file, including the filename. */
     std::string fullPath;
     /** Just the filename. */
     std::string fileName;
-
-    float fov;
 };
 
 /**

@@ -77,3 +77,11 @@ void Scene::RenderAll()
         }
     }
 }
+
+
+GLFWwindow *Scene::GetWindow(){
+    return m_window;
+}
+std::shared_ptr<SceneSettings> Scene::GetSceneSettings(){
+    return m_sceneSettings;
+}

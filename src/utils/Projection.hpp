@@ -155,6 +155,10 @@ public:
         return tmp;
     }
 
+    static glm::vec3 PixelToWorld(const glm::vec2 &pixelCoords, const glm::mat4 &intrinsics, int width, int height){
+        return glm::vec3(0.0f);
+    }
+
     /**
      * @brief Converts coordinates expressed in (u,v) pixel space which is in
      * range u \in [0, height], v \in [0, width], into coordinates in Normalized

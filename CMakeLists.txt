@@ -67,6 +67,7 @@ cuda_add_executable(DRTMCS
     src/interactors/ObjectListInteractor.cpp
     src/interactors/SceneObjectInteractor.cpp
     src/interactors/NeRFInteractor.cpp
+    src/interactors/CameraSetInteractor.cpp
 
     src/controllers/Scene/Scene.cpp 
 
@@ -78,6 +79,8 @@ cuda_add_executable(DRTMCS
     src/model/Dataset/NeRFDataset.cpp
     src/model/ImageSet.cpp 
     src/model/Volume3D.cpp 
+
+    src/model/RayCaster/SingleRayCaster.cpp 
 
     src/view/UnitCube.cpp 
     src/view/Grid.cpp 

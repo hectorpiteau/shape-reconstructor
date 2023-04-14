@@ -5,13 +5,15 @@
 #include "../model/Camera/CameraSet.hpp"
 #include "../model/Camera/Camera.hpp"
 
+#include "../controllers/Scene/Scene.hpp"
+
 /**
  * @brief Interactor that is used to interact and edit a
  * CameraSet Object.
  */
 class CameraSetInteractor {
 public:
-    CameraSetInteractor();
+    CameraSetInteractor(std::shared_ptr<Scene> scene);
     CameraSetInteractor(const CameraSetInteractor &) = delete;
     ~CameraSetInteractor();
 
@@ -22,7 +24,7 @@ public:
      * 
      * @param cameraSet : A shared pointer to a CameraSet.
      */
-    void SetActiveCameraSet(std::shared_ptr<CameraSet>& cameraSet);
+    void SetActiveCameraSet(std::shared_ptr<CameraSet> cameraSet);
 
     /**
      * @brief Get the vector of cameras associated with the cameraSet.
@@ -67,5 +69,7 @@ public:
     bool LinkCameraSetToSceneObject(int id);
 
 private:
+    std::shared_ptr<Scene> m_scene;
+
     std::shared_ptr<CameraSet> m_cameraSet;
 };
