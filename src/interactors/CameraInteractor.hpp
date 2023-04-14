@@ -59,7 +59,7 @@ public:
     float GetFar();
 
     void SetDistortion(const glm::vec2& dist);
-    const glm::vec2& GetDistortion(); 
+    const glm::vec2 GetDistortion(); 
 
     std::shared_ptr<Camera>& GetCamera();
 

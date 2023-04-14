@@ -6,24 +6,28 @@
 #include "CameraInteractor.hpp"
 #include "NeRFInteractor.hpp"
 #include "CameraSetInteractor.hpp"
-
+#include "../model/Camera/CameraSet.hpp"
 #include "../model/ImageSet.hpp"
 #include "../model/Dataset/NeRFDataset.hpp"
 #include "../view/ImUI/InspectorView.hpp"
+#include "../controllers/Scene/Scene.hpp"
 
-SceneObjectInteractor::SceneObjectInteractor()
+SceneObjectInteractor::SceneObjectInteractor(std::shared_ptr<Scene> scene)
+: m_scene(scene)
 {
     imageSetInteractor = new ImageSetInteractor();
     cameraInteractor = new CameraInteractor();
     nerfInteractor = new NeRFInteractor();
-    cameraSetInteractor = new CameraSetInteractor();
+    cameraSetInteractor = new CameraSetInteractor(m_scene);
 
     m_inspectorView = new InspectorView(this);
 }
 
 SceneObjectInteractor::~SceneObjectInteractor(){
+    /** Delete the View Object generated. */
     delete m_inspectorView;
 
+    /** Delete dependencies interactors. */
     delete imageSetInteractor;
     delete cameraInteractor;
     delete nerfInteractor;

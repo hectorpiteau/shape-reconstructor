@@ -68,7 +68,7 @@ void CameraInteractor::SetDistortion(const glm::vec2 &dist)
 }
 
 
-const glm::vec2 &CameraInteractor::GetDistortion()
+const glm::vec2 CameraInteractor::GetDistortion()
 {
     return glm::vec2(0.0f);
 }

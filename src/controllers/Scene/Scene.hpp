@@ -67,6 +67,9 @@ public:
 
     const std::vector<std::shared_ptr<SceneObject>>& GetSceneObjects();
 
+    GLFWwindow *GetWindow();
+    std::shared_ptr<SceneSettings> GetSceneSettings();
+
 private:
     /**
      * @brief Current Window.

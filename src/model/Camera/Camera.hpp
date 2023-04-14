@@ -6,6 +6,7 @@
 #include "../utils/Utils.hpp"
 #include "../utils/SceneSettings.hpp"
 #include "../view/Lines.hpp"
+#include "../view/SceneObject/SceneObject.hpp"
 
 class Camera : public SceneObject
 {
@@ -107,8 +108,9 @@ public:
      * @brief Set the Field of View horizontal direction of the camera.
      * 
      * @param fov : Angle in radian.
+     * @param keepRatio : True if the ratio height/width 
      */
-    void SetFovX(float fov);
+    void SetFovX(float fov, bool keepRatio = false);
     
     /**
      * @brief Get the Field of View horizontal direction.
@@ -169,7 +171,13 @@ public:
 
     void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
 
+    void SetIntrinsic(const glm::mat4& intrinsic);
+    void SetExtrinsic(const glm::mat4& extrinsic);
+    const glm::mat4& GetIntrinsic();
+    const glm::mat4& GetExtrinsic();
+    
     void Update();
+
 private:
     std::shared_ptr<SceneSettings> m_sceneSettings;
 
@@ -217,4 +225,7 @@ private:
     float m_mouseSpeed = 0.005f;
 
     float m_wireframeVertices[16*3] = {0.0f};
+
+    Lines m_frustumLines;
+    Gizmo m_gizmo;
 };

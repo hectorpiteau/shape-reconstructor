@@ -5,15 +5,21 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <vector>
-#include "../maths/MMath.hpp"
-#include "../utils/Utils.hpp"
-#include "../utils/SceneSettings.hpp"
-#include "../utils/Projection.hpp"
-#include "Camera.hpp"
 #include <memory>
 
+#include "../../maths/MMath.hpp"
+#include "../../utils/Utils.hpp"
+#include "../../utils/SceneSettings.hpp"
+#include "../../utils/Projection.hpp"
+#include "../../view/Lines.hpp"
+#include "../../view/Gizmo.hpp"
+
+#include "Camera.hpp"
+
+
 Camera::Camera(GLFWwindow *window, std::shared_ptr<SceneSettings> sceneSettings)
-    : m_sceneSettings(sceneSettings)
+    : m_sceneSettings(sceneSettings), 
+    m_frustumLines(m_wireframeVertices, 16 * 3)
 {
     window = window;
     m_pos = glm::vec3(4.0f, 4.0f, 4.0f);
@@ -28,11 +34,15 @@ Camera::Camera(GLFWwindow *window, std::shared_ptr<SceneSettings> sceneSettings)
     m_viewMatrix = glm::lookAt(m_pos, m_target, m_up);
 
     m_previousCursorPos = glm::vec2(m_sceneSettings->GetViewportWidth() / 2, m_sceneSettings->GetViewportHeight() / 2);
+    
+    /** Parameters to visual components. */
+    m_frustumLines.SetColor(1.0, 0.0, 0.0, 0.5);
+    m_gizmo = Gizmo(GetPosition(), GetRight(), GetRealUp(), GetForward());
 }
 
 Camera::~Camera()
 {
-    // delete m_lines;
+    
 }
 
 const glm::vec3& Camera::GetPosition()
@@ -290,8 +300,12 @@ const float *Camera::GetWireframe()
     return m_wireframeVertices;
 }
 
-void Camera::SetFovX(float fov) { m_fov.x = fov; }
+void Camera::SetFovX(float fov, bool keepRatio) { 
+    m_fov.x = fov; 
+    //TODO: ratio.
+}
 float Camera::GetFovX() { return m_fov.x; }
+
 void Camera::SetFovY(float fov) { m_fov.y = fov; }
 float Camera::GetFovY() { return m_fov.y; }
 
@@ -314,4 +328,21 @@ void Camera::Render(const glm::mat4 &projection, const glm::mat4 &view, std::sha
     /** Image plane linked. */
 
     /** Rays (partial) for each pixel. */
+}
+
+void Camera::SetIntrinsic(const glm::mat4& intrinsic){
+    m_projectionMatrix = intrinsic;
+}
+
+void Camera::SetExtrinsic(const glm::mat4& extrinsic){
+    m_viewMatrix = extrinsic;
+    m_gizmo.UpdateLines();
+}
+
+const glm::mat4& Camera::GetIntrinsic(){
+    return m_projectionMatrix;
+}
+
+const glm::mat4& Camera::GetExtrinsic(){
+    return m_viewMatrix;
 }

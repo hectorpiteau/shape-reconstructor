@@ -4,13 +4,17 @@
 
 #include "../model/Camera/CameraSet.hpp"
 #include "../model/Camera/Camera.hpp"
+#include "../model/ImageSet.hpp"
+
+#include "../view/SceneObject/SceneObject.hpp"
+#include "../controllers/Scene/Scene.hpp"
 
 #include "CameraSetInteractor.hpp"
 
-CameraSetInteractor::CameraSetInteractor() {}
+CameraSetInteractor::CameraSetInteractor(std::shared_ptr<Scene> scene) : m_scene(scene) {}
 CameraSetInteractor::~CameraSetInteractor() {}
 
-void CameraSetInteractor::SetActiveCameraSet(std::shared_ptr<CameraSet> &cameraSet) {}
+void CameraSetInteractor::SetActiveCameraSet(std::shared_ptr<CameraSet> cameraSet) {}
 
 std::vector<std::shared_ptr<Camera>> &CameraSetInteractor::GetCameras() {
     return m_cameraSet->GetCameras();
@@ -29,12 +33,13 @@ bool CameraSetInteractor::IsCameraSetLocked() {
 }
 
 bool CameraSetInteractor::LinkCameraSetToSceneObject(int id) {
-    std:::shared_ptr<SceneObject> obj = m_scene->Get(id);
+    std::shared_ptr<SceneObject> obj = m_scene->Get(id);
+    
     if(obj == nullptr){
         return false;
     }else{
         if(obj->GetType() == SceneObjectTypes::IMAGESET){
-            m_cameraSet->LinkToImageSet(std::dynamic_pointer_cast<ImageSet>(obj));
+            m_cameraSet->LinkToImageSet(std::dynamic_pointer_cast<ImageSet>(obj), m_scene);
             return true;
         }
         return false;
