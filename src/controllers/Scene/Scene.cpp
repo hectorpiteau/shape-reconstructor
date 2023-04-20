@@ -11,11 +11,13 @@
 Scene::Scene(std::shared_ptr<SceneSettings> sceneSettings, GLFWwindow *window) : m_sceneSettings(sceneSettings), m_window(window), m_objects(){
     m_uniqIdManager = std::make_shared<UniqId>(128);
 
-    m_mainCamera = std::make_shared<Camera>(m_window, m_sceneSettings);
+    m_mainCamera = std::make_shared<Camera>(this);
+    m_objects.push_back(Add(m_mainCamera, true, true));
+
     m_activeCamera = m_mainCamera;
 }
 
-const std::vector<std::shared_ptr<SceneObject>>& Scene::GetSceneObjects() {
+std::vector<std::shared_ptr<SceneObject>>& Scene::GetSceneObjects() {
     return m_objects;
 }
 
@@ -32,7 +34,7 @@ std::shared_ptr<SceneObject> Scene::Add(std::shared_ptr<SceneObject> object, boo
     object->SetActive(active);
 
     object->SetIsChild(isChild);
-    m_objects.push_back(object);
+    if(isChild == false) m_objects.push_back(object);
     return object;
 }
 
@@ -47,8 +49,12 @@ void Scene::Remove(int id){
     }
 }
 
-const std::shared_ptr<Camera>& Scene::GetActiveCam(){
+std::shared_ptr<Camera> Scene::GetActiveCam(){
     return m_activeCamera;
+}
+
+std::shared_ptr<Camera> Scene::GetDefaultCam(){
+    return m_mainCamera;
 }
 
 std::shared_ptr<SceneObject> Scene::Get(int id){
@@ -62,18 +68,20 @@ std::shared_ptr<SceneObject> Scene::Get(int id){
     for(int i=0; i<m_objects.size(); ++i){
         if(m_objects[i]->GetID() == id) {
             return m_objects[i];
+        }else{
+            auto child = m_objects[i]->GetChild(id);
+            if(child != nullptr) return child;
         }
     }
     return nullptr;
 }
-
 
 void Scene::RenderAll()
 {
     for(auto &obj : m_objects){
         /** Render only active objects. (The checkbox in the scene object's lists). */
         if(obj != nullptr && obj->IsActive()){
-            obj->Render(m_activeCamera->GetProjectionMatrix(), m_activeCamera->GetViewMatrix(), m_sceneSettings);
+            obj->Render();
         }
     }
 }

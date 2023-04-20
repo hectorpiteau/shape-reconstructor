@@ -16,31 +16,34 @@
 #include "../../model/Calibration/OpenCVCalibrator.hpp"
 #include "../../model/Dataset/NeRFDataset.hpp"
 #include "../../model/Volume3D.hpp"
-
-
+#include "../../model/VolumeRenderer.hpp"
 
 class AppController
 {
 public:
-    AppController(GLFWwindow *window, std::shared_ptr<SceneSettings>& sceneSettings) : m_window(window), m_sceneSettings(sceneSettings)
+    AppController(GLFWwindow *window, std::shared_ptr<SceneSettings> sceneSettings) : m_window(window), m_sceneSettings(sceneSettings)
     {
         /** Create the Scene */
-        m_scene = std::make_shared<Scene>(m_sceneSettings, window);
+        m_scene = new Scene(m_sceneSettings, window);
 
         /** Fill default Scene. */
-        m_scene->Add(std::make_shared<Volume3D>());
-        m_scene->Add(std::make_shared<LineGrid>());
+        auto volume = m_scene->Add(std::make_shared<Volume3D>(m_scene));
+        m_scene->Add(std::make_shared<LineGrid>(m_scene));
         
         m_scene->Add(std::make_shared<NeRFDataset>(
             m_scene,
-            std::dynamic_pointer_cast<ImageSet>(m_scene->Add(std::make_shared<ImageSet>(), true, true))
+            std::dynamic_pointer_cast<ImageSet>(m_scene->Add(std::make_shared<ImageSet>(m_scene), true, true))
         ));
+
+        m_scene->Add(
+            std::make_shared<VolumeRenderer>(m_scene, std::dynamic_pointer_cast<Volume3D>(volume))
+        );
 
         /** Create Views and Interactors */
         m_objectListView = std::make_shared<ObjectListView>();
         // m_inspectorView = std::make_shared<InspectorView>();
 
-        m_sceneObjectInteractor = std::make_shared<SceneObjectInteractor>();
+        m_sceneObjectInteractor = std::make_shared<SceneObjectInteractor>(m_scene);
         m_objectListInteractor = std::make_shared<ObjectListInteractor>(m_scene, m_objectListView, m_sceneObjectInteractor);
 
         m_volume = new DenseFloat32Volume(100);
@@ -52,9 +55,10 @@ public:
 
     ~AppController(){
         delete m_volume;
+        delete m_scene;
     }
 
-    std::shared_ptr<Scene>& GetScene(){
+    Scene* GetScene(){
         return m_scene;
     }
 
@@ -68,7 +72,7 @@ public:
 private:
     GLFWwindow *m_window;
     std::shared_ptr<SceneSettings> m_sceneSettings;
-    std::shared_ptr<Scene> m_scene;
+    Scene* m_scene;
 
     /** Interactors */
     std::shared_ptr<ObjectListInteractor> m_objectListInteractor;

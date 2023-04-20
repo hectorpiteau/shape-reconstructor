@@ -25,11 +25,12 @@
 #include "view/Grid.hpp"
 #include "view/SkyBox.hpp"
 #include "view/OverlayPlane.hpp"
+#include "view/Plane.hpp"
 #include "view/Lines.hpp"
 #include "view/Gizmo.hpp"
 #include "view/LineGrid.hpp"
 #include "utils/SceneSettings.hpp"
-#include "utils/Projection.hpp"
+#include "utils/Projection.h"
 
 #include "controllers/Scene/Scene.hpp"
 
@@ -331,6 +332,7 @@ void OpenCVInitialization()
 void GLInitialization()
 {
     glEnable(GL_BLEND);
+    glEnable(GL_TEXTURE_2D);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // // Enable depth test
@@ -370,14 +372,14 @@ int main(void)
     /** Create the camera object. */
     std::shared_ptr<AppController> app = std::make_shared<AppController>(window, sceneSettings);
 
-    std::shared_ptr<Scene> scene = app->GetScene();
+    Scene *scene = app->GetScene();
 
     auto cubePipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_shader.glsl", "../src/shaders/f_shader.glsl");
     UnitCube cube(cubePipeline);
 
     auto meshPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_mesh.glsl", "../src/shaders/f_mesh.glsl");
     // Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/data/sphere.obj");
-    Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/bust/marble_bust_01_4k.fbx");
+    Model model(scene, meshPipeline, "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/bust/marble_bust_01_4k.fbx");
 
     // auto skyboxPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_skybox.glsl", "../src/shaders/f_skybox.glsl");
 
@@ -401,74 +403,76 @@ int main(void)
     //     glm::vec3(1.0, 1.0, 0.0),
     //     glm::vec3(2.0, 1.0, 0.0)
     // };
-    glm::mat4 ext = scene->GetActiveCam()->GetViewMatrix();
+    // glm::mat4 ext = scene->GetActiveCam()->GetViewMatrix();
 
-    Utils::print(ext);
+    // glm::mat3 R = glm::mat3(ext);
 
-    glm::mat3 R = glm::mat3(ext);
+    // glm::vec3 center = glm::vec3(ext[0][3], ext[1][3], ext[2][3]);
+    // glm::vec3 pos = scene->GetActiveCam()->GetPosition();
 
-    glm::vec3 center = glm::vec3(ext[0][3], ext[1][3], ext[2][3]);
-    glm::vec3 pos = scene->GetActiveCam()->GetPosition();
+    // glm::mat3x3 RT = glm::transpose(R);
 
-    std::cout << "Center: " << std::endl;
-    Utils::print(center);
-    std::cout << "Pos: " << std::endl;
-    Utils::print(pos);
+    // glm::vec3 cameraCoords = glm::vec3(-1.0 * sceneSettings->GetViewportRatio(), 1.0, -1.0);
 
-    glm::mat3x3 RT = glm::transpose(R);
+    // glm::vec3 res = RT * cameraCoords - RT * center + pos;
 
-    glm::vec3 cameraCoords = glm::vec3(-1.0 * sceneSettings->GetViewportRatio(), 1.0, -1.0);
+    // glm::vec4 res1 = CameraToWorld(glm::vec4(cameraCoords, 1.0f), ext, pos);
 
-    glm::vec3 res = RT * cameraCoords - RT * center + pos;
+    // int width = 1080 / 32;
+    // int height = 720 / 32;
+    // double wres = 1.0 / (double)width;
+    // double hres = 1.0 / (double)height;
 
-    // glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(cameraCoords, 1.0f), ext, pos);
+    // glm::vec3 wwMin = glm::vec3(-1.0 * sceneSettings->GetViewportRatio(), -1.0, -1.0);
+    // glm::vec3 wwMax = glm::vec3(1.0 * sceneSettings->GetViewportRatio(), 1.0, -1.0);
+    // glm::vec3 wwDelta = wwMax - wwMin;
+    // glm::vec3 wwRes = wwDelta / (float)width;
+    // glm::vec3 wwResD2 = wwDelta / 2.0f;
 
-    int width = 1080 / 32;
-    int height = 720 / 32;
-    double wres = 1.0 / (double)width;
-    double hres = 1.0 / (double)height;
+    // glm::mat4 intrinsics = scene->GetActiveCam()->GetProjectionMatrix();
 
-    glm::vec3 wwMin = glm::vec3(-1.0 * sceneSettings->GetViewportRatio(), -1.0, -1.0);
-    glm::vec3 wwMax = glm::vec3(1.0 * sceneSettings->GetViewportRatio(), 1.0, -1.0);
-    glm::vec3 wwDelta = wwMax - wwMin;
-    glm::vec3 wwRes = wwDelta / (float)width;
-    glm::vec3 wwResD2 = wwDelta / 2.0f;
+    // glm::vec4 res1 = CameraToWorld(glm::vec4(wwMax.x, 0.0, -1.0, 1.0f), ext);
 
-    glm::mat4 intrinsics = scene->GetActiveCam()->GetProjectionMatrix();
+    // glm::vec3 adj = glm::vec3(0.0, 0.0, 1.0);
+    // glm::vec3 hypo = glm::vec3(pos.x - res1.x, pos.y - res1.y, pos.z - res1.z);
 
-    glm::vec4 res1 = Projection::CameraToWorld(glm::vec4(wwMax.x, 0.0, -1.0, 1.0f), ext);
-
-    glm::vec3 adj = glm::vec3(0.0, 0.0, 1.0);
-    glm::vec3 hypo = glm::vec3(pos.x - res1.x, pos.y - res1.y, pos.z - res1.z);
-
-    std::cout << "Angle: (FOV):  " << glm::length(adj) << " / " << glm::length(hypo) << " | " << (acos(glm::length(adj) / glm::length(hypo))) << std::endl;
+    // std::cout << "Angle: (FOV):  " << glm::length(adj) << " / " << glm::length(hypo) << " | " << (acos(glm::length(adj) / glm::length(hypo))) << std::endl;
 
     // float *vertices2 = new float[6]{
     //     pos.x, pos.y, pos.z,
     //     res1.x, res1.y, res1.z
     // };
 
-    float *vertices2 = new float[6 * 3]{
-        0.0, 0.0, 0.0,
-        4.0, 0.0, 0.0,
+    // float *vertices2 = new float[6 * 3]{
+    //     0.0, 0.0, 0.0,
+    //     4.0, 0.0, 0.0,
 
-        4.0, 0.0, 0.0,
-        4.0, 0.0, 4.0,
+    //     4.0, 0.0, 0.0,
+    //     4.0, 0.0, 4.0,
 
-        4.0, 0.0, 4.0,
-        4.0, 4.0, 4.0
+    //     4.0, 0.0, 4.0,
+    //     4.0, 4.0, 4.0
 
-    };
+    // };
 
-    std::cout << "Initialize rays. " << std::endl;
+    // std::cout << "Initialize rays. " << std::endl;
 
-    Lines testLines(vertices2, 6 * 3);
+    // Lines testLines(scene, vertices2, 6 * 3);
     // Lines testLines(vertices2, 6 * width * height);
 
-    Lines cameraLines(scene->GetActiveCam()->GetWireframe(), 16 * 3);
+    scene->GetActiveCam()->UpdateWireframe();
+    Lines cameraLines(scene, scene->GetActiveCam()->GetWireframe(), 16 * 3);
     cameraLines.SetColor(1.0, 0.0, 0.0, 0.5);
 
-    Gizmo cameraGizmo(scene->GetActiveCam()->GetPosition(), scene->GetActiveCam()->GetRight(), scene->GetActiveCam()->GetRealUp(), scene->GetActiveCam()->GetForward());
+
+    // Image image = Image("../screen1.png");
+    // image.LoadPng("../data/nerf/train/r_0.png", true, false);
+
+    // Texture2D testImageTex = Texture2D();
+    // testImageTex.LoadFromImage(&image);
+
+    // Plane m_imagePlane = Plane(scene);
+    // m_imagePlane.SetTexture2D(&testImageTex);
 
     // Volume3D volume;
 
@@ -478,8 +482,6 @@ int main(void)
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // cudaTex.RunCUDA();
-
-    Texture2D testImage("../data/nerf/train/r_0.png");
 
     CudaSurface3D surface(100, 100, 100);
 
@@ -498,18 +500,14 @@ int main(void)
 
         /** MVP */
         scene->GetActiveCam()->ComputeMatricesFromInputs(window);
-        glm::mat4 projectionMatrix = scene->GetActiveCam()->GetProjectionMatrix();
-        glm::mat4 viewMatrix = scene->GetActiveCam()->GetViewMatrix();
-
+        
         // cube.Render(projectionMatrix, viewMatrix, camera.GetPosition(), WINDOW_WIDTH, WINDOW_HEIGHT);
         // skybox.Render(projectionMatrix, viewMatrix);
         // model.Render(projectionMatrix, viewMatrix, sceneSettings);
         // testLines.Render(projectionMatrix, viewMatrix, sceneSettings);
 
-        cameraLines.Render(projectionMatrix, viewMatrix, sceneSettings);
-        cameraGizmo.Render(projectionMatrix, viewMatrix, sceneSettings);
-
         app->Render();
+        // m_imagePlane.Render();
 
         // lineGrid.Render(projectionMatrix, viewMatrix, sceneSettings);
 
@@ -521,53 +519,7 @@ int main(void)
 
         // volume.Render(projectionMatrix, viewMatrix, sceneSettings);
 
-        /** ImGUI */
-        // bool closable = true;
-        // ImGui::Begin("Objects", &closable);
 
-        // ImGui::SeparatorText("Objects in Scene");
-
-        // static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
-
-        // if (ImGui::BeginTable("3ways", 3, flags))
-        // {
-        //     // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
-        //     ImGui::TableSetupColumn("Active", ImGuiTableColumnFlags_NoHide);
-        //     ImGui::TableSetupColumn("Object Name", ImGuiTableColumnFlags_NoHide);
-        //     ImGui::TableHeadersRow();
-
-        //     ImGui::TableNextRow();
-        //     ImGui::TableNextColumn();
-        //     bool test = true;
-        //     ImGui::BeginDisabled();
-        //     ImGui::Checkbox("", &test);
-        //     ImGui::EndDisabled();
-        //     ImGui::TableNextColumn();
-        //     ImGui::Text(std::string(ICON_FA_CAMERA " Camera 0 (main)").c_str());
-
-        //     ImGui::TableNextRow();
-        //     ImGui::TableNextColumn();
-        //     ImGui::Checkbox("", &test);
-        //     ImGui::TableNextColumn();
-        //     ImGui::Text(std::string(ICON_FA_CUBES " Volume 3D").c_str());
-        //     ImGui::TableNextColumn();
-        //     ImGui::Button(std::string("  " ICON_FA_GEAR "  ").c_str());
-
-        //     ImGui::TableNextRow();
-        //     ImGui::TableNextColumn();
-        //     ImGui::Checkbox("", &test);
-        //     ImGui::TableNextColumn();
-        //     ImGui::Text(std::string(ICON_FA_TABLE_CELLS " Grid").c_str());
-
-        //     ImGui::TableNextRow();
-        //     ImGui::TableNextColumn();
-        //     ImGui::Checkbox("", &test);
-        //     ImGui::TableNextColumn();
-        //     ImGui::Text(std::string(ICON_FA_CUBE " Volumetric Renderer").c_str());
-
-        //     ImGui::EndTable();
-        // }
-        // ImGui::End();
 
         ImGui::Begin("Main Settings");
         if (ImGui::BeginMainMenuBar())
@@ -608,55 +560,12 @@ int main(void)
 
         float inf[3] = {scene->GetActiveCam()->GetPosition().x, scene->GetActiveCam()->GetPosition().y, scene->GetActiveCam()->GetPosition().z};
         ImGui::InputFloat3("Camera position", inf);
-        scene->GetActiveCam()->SetPosition(inf[0], inf[1], inf[2]);
-
-        ImGui::Separator();
-        ImGuiIO &io = ImGui::GetIO();
-
-        static float dispSize[2] = {800, 800};
-        static float dsize = 1.0;
-        ImGui::SliderFloat("Displayed Size", &dsize, 0.001f, 2.0f);
-        // ImGui::InputFloat2("Displayed Size", dispSize);
-
-        float my_tex_w = testImage.GetWidth() * dsize;
-        float my_tex_h = testImage.GetHeight() * dsize;
-
-        ImVec2 pos = ImGui::GetCursorScreenPos();
-        
-        ImGui::Image((void *)(intptr_t)testImage.GetID(), ImVec2(my_tex_w, my_tex_h), ImVec2(0, 0), ImVec2(1, 1));
-        
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::BeginTooltip();
-            float region_sz = 64.0f;
-            float region_x = io.MousePos.x - pos.x - region_sz * 0.5f;
-            float region_y = io.MousePos.y - pos.y - region_sz * 0.5f;
-            float zoom = 4.0f;
-            if (region_x < 0.0f)
-            {
-                region_x = 0.0f;
-            }
-            else if (region_x > my_tex_w - region_sz)
-            {
-                region_x = my_tex_w - region_sz;
-            }
-            if (region_y < 0.0f)
-            {
-                region_y = 0.0f;
-            }
-            else if (region_y > my_tex_h - region_sz)
-            {
-                region_y = my_tex_h - region_sz;
-            }
-            
-            ImGui::Text("Min: (%.2f, %.2f)", region_x, region_y);
-            ImGui::Text("Max: (%.2f, %.2f)", region_x + region_sz, region_y + region_sz);
-            ImVec2 uv0 = ImVec2((region_x) / my_tex_w, (region_y) / my_tex_h);
-            ImVec2 uv1 = ImVec2((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
-            ImGui::Image((void *)(intptr_t)testImage.GetID(), ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1);
-            ImGui::EndTooltip();
+        if(inf[0] != scene->GetActiveCam()->GetPosition()[0]
+        || inf[1] != scene->GetActiveCam()->GetPosition()[1]
+        || inf[2] != scene->GetActiveCam()->GetPosition()[2]){
+            scene->GetActiveCam()->SetPosition(inf[0], inf[1], inf[2]);
         }
-        
+
         ImGui::Separator();
         ImGui::End();
 

@@ -19,9 +19,7 @@
 class NeRFInspector
 {
 public:
-    NeRFInspector(NeRFInteractor *interactor) : m_interactor(interactor){
-
-                                                };
+    NeRFInspector(NeRFInteractor *interactor) : m_interactor(interactor){};
 
     NeRFInspector(const NeRFInspector &) = delete;
 
@@ -52,8 +50,6 @@ public:
         }else{
             ImGui::TextColored(ImVec4(0.851f, 0.012f, 0.122f, 1.0f), "Not Generated");
         }
-
-
 
         ImGui::Spacing();
         ImGui::SeparatorText(ICON_FA_FILE " Source");

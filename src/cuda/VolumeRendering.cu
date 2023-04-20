@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRendering.cu (c) 2023
 Desc: Volume rendering algorithms.
 Created:  2023-04-13T12:33:22.433Z
-Modified: 2023-04-14T12:36:02.581Z
+Modified: 2023-04-17T11:37:50.055Z
 */
 
 #include <glm/glm.hpp>
@@ -16,11 +16,12 @@ Modified: 2023-04-14T12:36:02.581Z
 #include <cmath>
 
 #include "VolumeRendering.cuh"
+#include "../model/RayCaster/Ray.h"
+#include "SingleRayCaster.cuh"
 
 static const float MIN_TRANSMITTANCE = 0.001f;
 
 using namespace glm;
-
 
 __device__ bool ReadVolume(struct VolumeData& data, vec3& pos, cudaTextureObject_t& volume){
     
@@ -52,7 +53,7 @@ __device__ float tsdfToAlpha(float tsdf, float previousTsdf, float density){
 // }
 
 
-__device__ vec4 forward(struct Ray ray, cudaTextureObject_t& volume)
+__device__ vec4 forward(Ray ray, cudaTextureObject_t& volume)
 {
     /** Partial transmittance. */
     float Tpartial = 1.0f;
@@ -97,7 +98,7 @@ __device__ vec4 forward(struct Ray ray, cudaTextureObject_t& volume)
 }
 
 /** 2D kernel that project rays in the volume. */
-__global__ void volumeRendering(RayCaster& rayCaster, cudaTextureObject_t& volume, float4* outTexture, size_t width, size_t height)
+__global__ void volumeRendering(RayCasterParams& params, cudaTextureObject_t& volume, float4* outTexture, size_t width, size_t height)
 {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -111,10 +112,12 @@ __global__ void volumeRendering(RayCaster& rayCaster, cudaTextureObject_t& volum
         .dir = vec3(1.0, 0.0, 0.0), 
         .tmin = 0.0f, 
         .tmax = 1.0f
-    }; //rayCaster.GetRay();
+    };
+    
+    ray = SingleRayCaster::GetRay(vec2(x, y), params);
 
     /** Call forward. */
-    vec4 result = forward(ray,volume);
+    vec4 result = forward(ray, volume);
 
     /** Store value in Out Memory. */
     outTexture[x * height + y].x = result.r;
@@ -126,16 +129,15 @@ __global__ void volumeRendering(RayCaster& rayCaster, cudaTextureObject_t& volum
 /**
  * @brief 
  * 
- * @param rayCaster : The rayCaster to use in the volume rendering process. 
  * It provide a ray for each pixel coordinates.
  * @param volume : A cuda Texture3D that contains the values of each texels.
  * @param outTexture : A 2D texture in which the volume rendering is rendered.
  * 
  */
-extern "C" void volume_rendering_wrapper(RayCaster& rayCaster, cudaTextureObject_t &volume, float4* outTexture, size_t width, size_t height)
+extern "C" void volume_rendering_wrapper(RayCasterParams& params, cudaTextureObject_t &volume, float4* outTexture, size_t width, size_t height)
 {
     /** Max 1024 per block. As each pixel is independant, may be useful to search for optimal size. */
-    dim3 threadsperBlock(32, 32); 
+    dim3 threadsperBlock(16, 16); 
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
     dim3 numBlocks(
         (width + threadsperBlock.x - 1) / threadsperBlock.x, 
@@ -143,6 +145,6 @@ extern "C" void volume_rendering_wrapper(RayCaster& rayCaster, cudaTextureObject
     );
 
     /** Call the main volumeRendering kernel. **/
-    volumeRendering<<<numBlocks, threadsperBlock>>>(rayCaster, volume, outTexture, width, height);
+    volumeRendering<<<numBlocks, threadsperBlock>>>(params, volume, outTexture, width, height);
     cudaDeviceSynchronize();
 }

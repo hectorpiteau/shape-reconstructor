@@ -54,7 +54,7 @@ private:
     int m_viewportWidth, m_viewportHeight;
 
     /** Camera movement model to be used by the active camera. */
-    enum CameraMovementModel m_cameraModel = CameraMovementModel::FPS;
+    enum CameraMovementModel m_cameraModel = CameraMovementModel::ARCBALL;
 
     /** Scroll offsets. */
     glm::vec2 m_scrollOffsets = glm::vec2(0.0, 0.0);

@@ -20,11 +20,12 @@
 #include <memory>
 
 #include "../model/Mesh.hpp"
-#include "Renderable/Renderable.hpp"
+#include "../controllers/Scene/Scene.hpp"
 
+class Mesh;
 unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
 
-class Model : Renderable
+class Model : public SceneObject
 {
 public:
     // model data
@@ -34,7 +35,10 @@ public:
     bool gammaCorrection;
 
     // constructor, expects a filepath to a 3D model.
-    Model(std::shared_ptr<ShaderPipeline> pipeline, std::string const &path, bool gamma = false) : gammaCorrection(gamma)
+    Model(Scene* scene, std::shared_ptr<ShaderPipeline> pipeline, std::string const &path, bool gamma = false) 
+    : SceneObject{std::string("Model"), SceneObjectTypes::MODEL}, 
+    m_scene(scene),
+    gammaCorrection(gamma)
     {
         m_pipeline = pipeline;
 
@@ -46,7 +50,7 @@ public:
     }
 
     // draws the model, and thus all its meshes
-    void Render(const glm::mat4 &projectionMatrix, const glm::mat4 &viewMatrix, std::shared_ptr<SceneSettings> scene)
+    void Render()
     {
         m_pipeline->UseShader();
 
@@ -56,8 +60,8 @@ public:
         model = glm::scale(model, glm::vec3(2.0,2.0,2.0));
 
         glUniformMatrix4fv(m_modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(m_viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-        glUniformMatrix4fv(m_projectionLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+        glUniformMatrix4fv(m_viewLocation, 1, GL_FALSE, glm::value_ptr(m_scene->GetActiveCam()->GetViewMatrix()));
+        glUniformMatrix4fv(m_projectionLocation, 1, GL_FALSE, glm::value_ptr(m_scene->GetActiveCam()->GetProjectionMatrix()));
         
         
         for (unsigned int i = 0; i < meshes.size(); i++)
@@ -65,6 +69,7 @@ public:
     }
 
 private:
+    Scene* m_scene;
     GLint m_modelLocation;
     GLint m_viewLocation;
     GLint m_projectionLocation;

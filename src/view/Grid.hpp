@@ -3,6 +3,7 @@
 #include <GL/gl.h>
 #include <glm/glm.hpp>
 #include <memory>
+#include "../controllers/Scene/Scene.hpp"
 #include "../model/ShaderPipeline.hpp"
 #include "Renderable/Renderable.hpp"
 
@@ -35,7 +36,8 @@ public:
      * @return true 
      * @return false 
      */
-    void Render(const glm::mat4& projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
+    void Render(Scene* scene);
+    // void Render(const glm::mat4& projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
 
 private:
     std::shared_ptr<ShaderPipeline> m_pipeline;

@@ -6,6 +6,8 @@
 #include <memory>
 #include "ShaderPipeline.hpp"
 
+#include "../controllers/Scene/Scene.hpp"
+
 struct Vertex
 {
     glm::vec3 Position;
@@ -20,18 +22,11 @@ struct Texture
     std::string path;
 };
 
-class Mesh
+class Mesh : public SceneObject
 {
 public:
     // mesh data
-    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
-    {
-        // m_pipeline = pipeline;
-        m_vertices = vertices;
-        m_indices = indices;
-        m_textures = textures;
-        setupMesh();
-    }
+    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
 
     void Draw(std::shared_ptr<ShaderPipeline> pipeline)
     {
@@ -70,6 +65,8 @@ public:
         // always good practice to set everything back to defaults once configured.
         glActiveTexture(GL_TEXTURE0);
     }
+
+    void Render();
 
 private:
     std::vector<Vertex> m_vertices;

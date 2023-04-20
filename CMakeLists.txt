@@ -41,7 +41,7 @@ if(NOT DEFINED CMAKE_CUDA_STANDARD)
 endif()
 find_package(CUDA REQUIRED)
 enable_language(CUDA)
-set(CUDA_SOURCE_FILES src/cuda/kernel.cu src/cuda/CudaSurface3D.cu src/cuda/VolumeRendering.cu)
+set(CUDA_SOURCE_FILES src/cuda/kernel.cu src/cuda/CudaSurface3D.cu src/cuda/VolumeRendering.cu )
 set(CUDA_ARCH "-arch=sm_61")
 set(CMAKE_CUDA_ARCHITECTURES "61")
 
@@ -79,13 +79,16 @@ cuda_add_executable(DRTMCS
     src/model/Dataset/NeRFDataset.cpp
     src/model/ImageSet.cpp 
     src/model/Volume3D.cpp 
+    src/model/Mesh.cpp 
+    src/model/VolumeRenderer.cpp 
 
-    src/model/RayCaster/SingleRayCaster.cpp 
+    # src/model/RayCaster/SingleRayCaster.cpp 
 
     src/view/UnitCube.cpp 
     src/view/Grid.cpp 
     src/view/SkyBox.cpp 
     src/view/OverlayPlane.cpp 
+    src/view/Plane.cpp 
     src/view/Gizmo.cpp 
     src/view/Lines.cpp 
     src/view/LineGrid.cpp 

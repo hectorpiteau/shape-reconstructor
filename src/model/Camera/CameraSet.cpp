@@ -7,9 +7,12 @@
 #include "CameraSet.hpp"
 #include "../../controllers/Scene/Scene.hpp"
 
-CameraSet::CameraSet()
-    : m_areCameraGenerated(false), m_isLocked(false)
+#include "../../include/icons/IconsFontAwesome6.h"
+
+CameraSet::CameraSet(Scene* scene)
+    : SceneObject{std::string("CameraSet"), SceneObjectTypes::CAMERASET}, m_scene(scene), m_areCameraGenerated(false), m_isLocked(false)
 {
+    SetName(std::string("Camera Set"));
 }
 
 CameraSet::~CameraSet()
@@ -24,6 +27,7 @@ size_t CameraSet::Size()
 void CameraSet::AddCamera(std::shared_ptr<Camera> camera)
 {
     m_cameras.push_back(camera);
+    m_children.push_back(camera);
 }
 
 std::shared_ptr<Camera> &CameraSet::operator[](size_t index)
@@ -56,27 +60,38 @@ bool CameraSet::IsLocked()
     return m_isLocked;
 }
 
-bool CameraSet::LinkToImageSet(std::shared_ptr<ImageSet> imageSet, std::shared_ptr<Scene> scene)
+bool CameraSet::LinkToImageSet(std::shared_ptr<ImageSet> imageSet)
 {
-    if (imageSet == nullptr || scene == nullptr)
+    if (imageSet == nullptr || m_scene == nullptr){
+        std::cout << "CameraSet::LinkToImageSet : imageset null or scene null. " << std::endl;
         return false;
+    }
 
     /** If there is already cameras in our list of cameras, empty it. */
-
+    int cpt = 0;
     for (Image *img : imageSet->GetImages())
     {
-        std::shared_ptr<Camera> cam = std::make_shared<Camera>(scene->GetWindow(), scene->GetSceneSettings());
-        scene->Add(cam, true, true);
+        std::shared_ptr<Camera> cam = std::make_shared<Camera>(m_scene);
+        cam->SetActive(true);
+        cam->SetIsChild(true);
+        cam->SetName(std::string(ICON_FA_CAMERA " Camera ") + std::to_string(cpt++));
+        cam->SetIsVisibleInList(false);
+        cam->SetImage(img);
+        m_scene->Add(cam, true, true);
+        std::cout << "CameraSet: Add camera for img: " << img->filename << " " << cam->GetID() << std::endl;
 
         m_cameras.push_back(cam);
+        m_children.push_back(cam);
+        
     }
 
     m_isLocked = true;
     m_areCameraGenerated = true;
     m_areCalibrated = false;
+    return true;
 }
 
-bool CameraSet::CalibrateFromInformations(const std::vector<struct CameraCalibrationInformations> &informations)
+bool CameraSet::CalibrateFromInformations(const std::vector<CameraCalibrationInformations> &informations)
 {
     if (informations.size() != m_cameras.size())
         return false;
@@ -85,21 +100,31 @@ bool CameraSet::CalibrateFromInformations(const std::vector<struct CameraCalibra
 
     for (int i = 0; i < informations.size(); ++i)
     {
-        struct CameraCalibrationInformations info = informations[i];
+        CameraCalibrationInformations info = informations[i];
         std::shared_ptr<Camera> cam = m_cameras[i];
 
-        cam->SetIntrinsic(info.intrisic);
+        std::cout << "Calibrate camera: " << i << std::endl;
+
+        // cam->SetFovX(info.fov, true);
+        cam->SetIntrinsic(info.intrinsic);
         cam->SetExtrinsic(info.extrinsic);
-        cam->SetFovX(info.fov, true);
     }
 
     m_areCalibrated = true;
+    return true;
 }
 
-void CameraSet::Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene)
+
+void CameraSet::Render()
 {
-    for (auto &child : m_children)
-    {
-        child->Render(projection, view, scene);
+    
+    for(auto& cam : m_cameras){
+        
+        cam->Render();
     }
+
+
+    // for(auto& child : m_children){
+    //     if(child->IsActive()) child->Render();
+    // }
 }

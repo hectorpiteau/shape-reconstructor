@@ -5,8 +5,17 @@
 #include "../model/ShaderPipeline.hpp"
 #include "../model/Texture2D.hpp"
 
+OverlayPlane::OverlayPlane(){
+    m_pipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl", "../src/shaders/f_overlay_plane.glsl");
+    Initialize();
+}
+
 OverlayPlane::OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline) : m_pipeline(pipeline)
 {
+    Initialize();
+}
+
+void OverlayPlane::Initialize(){
     m_scaleLocation = m_pipeline->AddUniform("scale");
 
     glGenBuffers(1, &m_VBO);
@@ -23,7 +32,6 @@ OverlayPlane::OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline) : m_pipelin
     glEnableVertexAttribArray(1);
 
     m_texture0 = std::make_shared<Texture2D>(1080, 720, 4, 1);
-
 }
 
 OverlayPlane::~OverlayPlane()

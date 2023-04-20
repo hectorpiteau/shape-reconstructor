@@ -11,14 +11,25 @@
 
 #include "../../../interactors/CameraSetInteractor.hpp"
 
+#include "CameraInspector.hpp"
+
 class CameraSetInspector
 {
 public:
-    CameraSetInspector(CameraSetInteractor *interactor) : m_interactor(interactor){};
+    CameraSetInspector(CameraSetInteractor *interactor) : m_interactor(interactor){
+
+        m_cameraInteractor = new CameraInteractor();
+        m_cameraInspector = new CameraInspector(m_cameraInteractor);
+        m_cameraInspector->SetAsExternal();
+    };
 
     CameraSetInspector(const CameraSetInspector &) = delete;
 
-    ~CameraSetInspector(){};
+    ~CameraSetInspector(){
+        delete m_cameraInteractor;
+        delete m_cameraInspector;
+
+    };
 
     void Render()
     {
@@ -30,16 +41,16 @@ public:
         ImGui::SeparatorText(ICON_FA_INFO " CameraSet - Informations");
 
         ImGui::Text("ImageSet linked: Yes");
-        ImGui::Text("Calibrations: ");
-        ImGui::SameLine();
-        if (m_interactor->IsCalibrationLoaded())
-        {
-            ImGui::TextColored(ImVec4(0.012f, 0.784f, 0.851f, 1.0f), "Loaded");
-        }
-        else
-        {
-            ImGui::TextColored(ImVec4(0.851f, 0.012f, 0.122f, 1.0f), "Not Loaded");
-        }
+        // ImGui::Text("Calibrations: ");
+        // ImGui::SameLine();
+        // if (m_interactor->IsCalibrationLoaded())
+        // {
+        //     ImGui::TextColored(ImVec4(0.012f, 0.784f, 0.851f, 1.0f), "Loaded");
+        // }
+        // else
+        // {
+        //     ImGui::TextColored(ImVec4(0.851f, 0.012f, 0.122f, 1.0f), "Not Loaded");
+        // }
 
         if (ImGui::Button("Generate cameras"))
         {
@@ -50,52 +61,56 @@ public:
         else
             ImGui::TextColored(ImVec4(0.851f, 0.012f, 0.122f, 1.0f), "Not Generated");
 
-        ImGui::Checkbox("Linked to an ImageSet");
+        ImGui::Checkbox("Linked to an ImageSet", &m_linkedToImageSet);
 
-        if (ImGui::BeginTable("3ways", 3, flags))
+        static ImGuiTableFlags flags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+
+        static const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+        ImVec2 outer_size = ImVec2(0.0f, TEXT_BASE_HEIGHT * 8);
+        if (ImGui::BeginTable("table_scrolly", 2, flags, outer_size))
         {
-            // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
-            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
-            ImGui::TableSetupColumn("Image", ImGuiTableColumnFlags_NoHide);
-            ImGui::TableSetupColumn("Object", ImGuiTableColumnFlags_NoHide);
+            ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+            ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_None);
+            ImGui::TableSetupColumn("Camera", ImGuiTableColumnFlags_None);
             ImGui::TableHeadersRow();
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            bool test = true;
-            ImGui::BeginDisabled();
-            ImGui::Checkbox("", &test);
-            ImGui::EndDisabled();
-            ImGui::TableNextColumn();
-            ImGui::Text(std::string(ICON_FA_CAMERA " Camera 0 (main)").c_str());
-            ImGui::TableNextColumn();
-            ImGui::Button(std::string(" " ICON_FA_GEAR " ").c_str());
-
-            for (int i = 0; i < m_items.size(); ++i)
-            {
-                m_items[i]->Render();
+            for(auto cam : m_interactor->GetCameras()){
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::Text("%d", cam->GetID());
+                ImGui::TableSetColumnIndex(1);
+                if(ImGui::Button(cam->GetName().c_str())){
+                    std::cout << "Click on camera editor: " << cam->GetName() << std::endl;
+                    m_cameraInteractor->SetCamera(cam);
+                    m_cameraInspector->SetIsOpened(true);
+                }
             }
-
             ImGui::EndTable();
+        }
 
-            ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::SeparatorText(ICON_FA_GEARS " Actions");
 
-            ImGui::SeparatorText(ICON_FA_GEARS " Actions");
+        if(m_cameraInspector->IsOpened()){
+            m_cameraInspector->Render();
+        }
+    }
 
-            if (ImGui::Button("Load Calibrations"))
-            {
-            }
 
-            if (ImGui::Button("Generate cameras"))
-            {
-            }
-
-            ImGui::Spacing();
-        };
 
     private:
         CameraSetInteractor *m_interactor;
+        
+        bool m_linkedToImageSet = true;
+
+        /** External camera editor. */
+        std::shared_ptr<Camera> m_camera;
+        CameraInspector *m_cameraInspector;
+        CameraInteractor *m_cameraInteractor;
 
         /** Combo */
         int m_comboBoxCurrent = 0;
+    
+        
+
     };

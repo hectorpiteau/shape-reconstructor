@@ -9,6 +9,8 @@
 #include "../view/Lines.hpp"
 #include "../view/SceneObject/SceneObject.hpp"
 
+#include "../controllers/Scene/Scene.hpp"
+
 /**
  * @brief This class allows for the render of 3D volumetric data.
  * It is physically contained inside the unit-cube (size 1 in all directions).
@@ -17,12 +19,13 @@
  * 
  * This class performs the rendering of the result of the CUDA kernel in a plane that overlay the view. 
  */
-class Volume3D : public SceneObject, Wireframe
+class Volume3D : public SceneObject, public Wireframe
 {
 public:
-    Volume3D();
+    Volume3D(Scene* scene);
 
-    void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
+    // void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
+    void Render();
     
     void UpdateWireFrame(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
 

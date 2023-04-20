@@ -3,8 +3,10 @@
 
 #include <string>
 #include <iostream>
+#include <glm/glm.hpp>
 #include "../../include/stb_image.h"
 
+using namespace glm;
 
 struct Patch {
     /** The patch origin on the original image. 
@@ -65,25 +67,26 @@ public:
      * @param isBackgroundTransparent 
      * @param patchSize 
      */
-    void Patchify(bool isBackgroundTransparent, const glm::vec2& patchSize){
-        m_patchSize = patchSize;
+    void Patchify(unsigned short patchWidth, unsigned short patchHeight, bool isBackgroundTransparent = true){
+        m_patchWidth = patchWidth;
+        m_patchHeight = patchHeight;
 
         int alpha_min = 1;
 
         // #pragma omp parallel for collapse(2)
-        for(int y=0; y < height; y += patchSize.y){
-            for(int x=0; x < width; x += patchSize.x){
+        for(unsigned short y=0; y < height; y += m_patchHeight){
+            for(unsigned short x=0; x < width; x += m_patchWidth){
                 /** Search for valid pixels in the patch. */
                 /** This process can be optimized. omp or cuda kernel. */
-                for(int i=0; i<patchSize.y; i++){
-                    for(int j=0; j<patchSize.x; j++){
+                for(unsigned short i=0; i<m_patchHeight; i++){
+                    for(unsigned short j=0; j<m_patchWidth; j++){
                         /** Get the (y+i, x+j) pixel and compare the 4th value (the alpha) with
                          * the min-alpha. */
                         if(data[((y+i) * width + (x+j)) * 4 + 3 ] > alpha_min){
                             /** Create a patch. */
                             Patch patch = {
-                                .x = x+j,
-                                .y = y+i,
+                                .x = (unsigned short)(x+j),
+                                .y = (unsigned short)(y+i),
                                 .data = &data[((y+i) * width + (x+j)) * 4]
                             };
 
@@ -120,7 +123,8 @@ private:
     bool m_patchesLoaded = false;
 
     std::vector<Patch> m_patches;
-    glm::vec2 m_patchSize;
+    unsigned short m_patchWidth;
+    unsigned short m_patchHeight;
 };
 
 #endif // IMAGE_H

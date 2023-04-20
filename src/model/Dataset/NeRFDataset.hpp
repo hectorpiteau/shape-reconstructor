@@ -8,7 +8,10 @@
 #include "../ImageSet.hpp"
 #include "../../view/SceneObject/SceneObject.hpp"
 #include "../../controllers/Scene/Scene.hpp"
+#include "../Camera/CameraSet.hpp"
+#include "../controllers/Scene/Scene.hpp"
 
+using namespace glm;
 
 enum NeRFDatasetModes {
     TRAIN,
@@ -23,6 +26,8 @@ static const std::vector<const char*> NeRFDatasetModesNames = {
 struct NeRFImage : public CameraCalibrationInformations {
     /** Original transform matrix. Extrinsic + Intrinsic fused. */
     glm::mat4 transformMatrix;
+    // glm::mat4 intrinsic;
+    // glm::mat4 extrinsic;
     /** Full path to the file, including the filename. */
     std::string fullPath;
     /** Just the filename. */
@@ -36,7 +41,7 @@ struct NeRFImage : public CameraCalibrationInformations {
  */
 class NeRFDataset : public Dataset, public SceneObject{
 public:
-    NeRFDataset(std::shared_ptr<Scene> scene, std::shared_ptr<ImageSet> imageSet);
+    NeRFDataset(Scene* scene, std::shared_ptr<ImageSet> imageSet);
     ~NeRFDataset();
 
     /**
@@ -68,7 +73,7 @@ public:
      */
     void SetMode(enum NeRFDatasetModes mode);
 
-    void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
+    void Render();
 
     const std::string& GetCurrentJsonPath();
     const std::string& GetCurrentImageFolderPath();
@@ -83,6 +88,8 @@ public:
     bool AreCamerasGenerated();
 
 private:
+
+    vec2 m_imageSize = vec2(800, 800);
     enum NeRFDatasetModes m_mode;
     
     std::string m_trainJSONPath;
@@ -91,9 +98,14 @@ private:
     std::string m_validJSONPath;
     std::string m_validImagesPath;
 
-    std::vector<struct NeRFImage> m_images;
-    std::shared_ptr<Scene> m_scene;
+    std::vector<NeRFImage> m_images;
+    std::vector<CameraCalibrationInformations> m_imagesCalibration;
+    Scene* m_scene;
 
     bool m_isCalibrationLoaded;
     bool m_camerasGenerated;
+
+    /** in dep */
+    std::shared_ptr<CameraSet> m_cameraSet = nullptr;
+    std::shared_ptr<ImageSet> m_imageSet = nullptr;
 };

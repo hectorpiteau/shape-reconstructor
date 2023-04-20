@@ -7,6 +7,7 @@
 class OverlayPlane
 {
 public:
+    OverlayPlane();
     OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline);
     ~OverlayPlane();
 
@@ -15,6 +16,8 @@ public:
     void SetTextureData(const unsigned char *data);
 
 private:
+    void Initialize();
+    
     int m_width;
     int m_height;
     int m_nbChannels;
