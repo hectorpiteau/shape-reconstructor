@@ -13,7 +13,7 @@
  */
 class CameraSetInteractor {
 public:
-    CameraSetInteractor(std::shared_ptr<Scene> scene);
+    CameraSetInteractor(Scene* scene);
     CameraSetInteractor(const CameraSetInteractor &) = delete;
     ~CameraSetInteractor();
 
@@ -69,7 +69,10 @@ public:
     bool LinkCameraSetToSceneObject(int id);
 
 private:
-    std::shared_ptr<Scene> m_scene;
+    /** out dep */
+    Scene* m_scene;
 
+    /** in dep */
     std::shared_ptr<CameraSet> m_cameraSet;
+    std::vector<std::shared_ptr<Camera>> m_dummyCameras;
 };

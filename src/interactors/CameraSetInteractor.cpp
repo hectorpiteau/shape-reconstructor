@@ -1,6 +1,6 @@
-#pragma once
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "../model/Camera/CameraSet.hpp"
 #include "../model/Camera/Camera.hpp"
@@ -11,35 +11,38 @@
 
 #include "CameraSetInteractor.hpp"
 
-CameraSetInteractor::CameraSetInteractor(std::shared_ptr<Scene> scene) : m_scene(scene) {}
+CameraSetInteractor::CameraSetInteractor(Scene* scene) : m_scene(scene), m_dummyCameras() {}
 CameraSetInteractor::~CameraSetInteractor() {}
 
-void CameraSetInteractor::SetActiveCameraSet(std::shared_ptr<CameraSet> cameraSet) {}
+void CameraSetInteractor::SetActiveCameraSet(std::shared_ptr<CameraSet> cameraSet) {
+    m_cameraSet = cameraSet;
+}
 
-std::vector<std::shared_ptr<Camera>> &CameraSetInteractor::GetCameras() {
-    return m_cameraSet->GetCameras();
+std::vector<std::shared_ptr<Camera>>& CameraSetInteractor::GetCameras() {
+    return m_cameraSet == nullptr ? m_dummyCameras : m_cameraSet->GetCameras();
 }
 
 size_t CameraSetInteractor::GetAmountOfCameras() {
-    return m_cameraSet->Size();
+    return m_cameraSet == nullptr ? 0 : m_cameraSet->Size();
 }
 
 bool CameraSetInteractor::AreCamerasGenerated() {
-    return m_cameraSet->AreCamerasGenerated();
+    return m_cameraSet == nullptr ? false : m_cameraSet->AreCamerasGenerated();
 }
 
 bool CameraSetInteractor::IsCameraSetLocked() {
-    return m_cameraSet->IsLocked();
+    return m_cameraSet == nullptr ? false : m_cameraSet->IsLocked();
 }
 
 bool CameraSetInteractor::LinkCameraSetToSceneObject(int id) {
+    if(m_cameraSet == nullptr) return false;
     std::shared_ptr<SceneObject> obj = m_scene->Get(id);
     
     if(obj == nullptr){
         return false;
     }else{
         if(obj->GetType() == SceneObjectTypes::IMAGESET){
-            m_cameraSet->LinkToImageSet(std::dynamic_pointer_cast<ImageSet>(obj), m_scene);
+            m_cameraSet->LinkToImageSet(std::dynamic_pointer_cast<ImageSet>(obj));
             return true;
         }
         return false;

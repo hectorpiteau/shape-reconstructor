@@ -29,7 +29,15 @@ void CameraInteractor::SetTarget(const glm::vec3 &target)
 
 void CameraInteractor::SetUp(const glm::vec3 &up)
 {
-    // m_camera->SetUp(up);
+    m_camera->SetUp(up);
+}
+
+void CameraInteractor::SetRight(const glm::vec3& vec){
+    m_camera->SetRight(vec);
+}
+
+const glm::vec3& CameraInteractor::GetRight(){
+    return m_camera->GetRight();
 }
 
 void CameraInteractor::SetFovX(float fov)
@@ -85,7 +93,7 @@ const glm::vec3 &CameraInteractor::GetPosition()
 
 const glm::vec3 &CameraInteractor::GetTarget()
 {
-    // return m_camera->
+    return m_camera->GetTarget();
 }
 
 const glm::vec3& CameraInteractor::GetUp()
@@ -103,6 +111,14 @@ float CameraInteractor::GetFovY()
     return m_camera->GetFovY();
 }
 
-std::shared_ptr<Camera>& CameraInteractor::GetCamera(){
+std::shared_ptr<Camera> CameraInteractor::GetCamera(){
     return m_camera;
+}
+
+const mat4& CameraInteractor::GetIntrinsic(){
+    return m_camera->GetIntrinsic();
+}
+
+const mat4& CameraInteractor::GetExtrinsic(){
+    return m_camera->GetExtrinsic();
 }

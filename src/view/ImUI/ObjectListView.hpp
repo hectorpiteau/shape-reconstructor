@@ -32,6 +32,10 @@ public:
 
     void Render();
 
+    void EmptyList();
+
+    
+
 private:
     std::vector<std::shared_ptr<ObjectListItem>> m_items;
 

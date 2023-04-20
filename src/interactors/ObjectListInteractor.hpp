@@ -16,7 +16,7 @@ class ObjectListView;
  */
 class ObjectListInteractor {
 public:
-    ObjectListInteractor(std::shared_ptr<Scene> &scene, std::shared_ptr<ObjectListView> listView, std::shared_ptr<SceneObjectInteractor>& sceneObjectInteractor);
+    ObjectListInteractor(Scene* scene, std::shared_ptr<ObjectListView> listView, std::shared_ptr<SceneObjectInteractor>& sceneObjectInteractor);
     ObjectListInteractor(const ObjectListInteractor&) = delete;
 
     ~ObjectListInteractor();
@@ -41,12 +41,16 @@ public:
      */
     void Render();
 
+    void UpdateList();
+
+    void SelectMainCamera();
+
 private:
 
     /**
      * @brief A pointer to the current active scene.
      */
-    std::shared_ptr<Scene> m_scene;
+    Scene* m_scene;
 
     /**
      * @brief A pointer to the main ObjectListView.

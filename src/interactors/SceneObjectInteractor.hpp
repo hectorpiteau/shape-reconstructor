@@ -24,7 +24,7 @@ class InspectorView;
  */
 class SceneObjectInteractor {
 public:
-    SceneObjectInteractor(std::shared_ptr<Scene> m_scene);
+    SceneObjectInteractor(Scene* m_scene);
     SceneObjectInteractor(const SceneObjectInteractor&) = delete;
     ~SceneObjectInteractor();
 
@@ -67,7 +67,7 @@ public:
     CameraSetInteractor* cameraSetInteractor;
 
 private:
-    std::shared_ptr<Scene> m_scene;
+    Scene* m_scene;
     /** The currently selected SceneObject. */
     std::shared_ptr<SceneObject> m_selectedSceneObject;
 

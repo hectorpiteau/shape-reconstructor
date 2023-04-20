@@ -12,7 +12,7 @@
 #include "../view/ImUI/InspectorView.hpp"
 #include "../controllers/Scene/Scene.hpp"
 
-SceneObjectInteractor::SceneObjectInteractor(std::shared_ptr<Scene> scene)
+SceneObjectInteractor::SceneObjectInteractor(Scene* scene)
 : m_scene(scene)
 {
     imageSetInteractor = new ImageSetInteractor();

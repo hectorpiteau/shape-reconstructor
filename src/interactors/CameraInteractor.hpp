@@ -46,6 +46,9 @@ public:
     void SetUp(const glm::vec3& up);
     const glm::vec3& GetUp();
 
+    void SetRight(const glm::vec3&);
+    const glm::vec3& GetRight();
+
     void SetFovX(float fov);
     float GetFovX();
     
@@ -61,7 +64,10 @@ public:
     void SetDistortion(const glm::vec2& dist);
     const glm::vec2 GetDistortion(); 
 
-    std::shared_ptr<Camera>& GetCamera();
+    std::shared_ptr<Camera> GetCamera();
+
+    const mat4& GetIntrinsic();
+    const mat4& GetExtrinsic();
 
 private:
     /** A pointer to the camera to modify. */

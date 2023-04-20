@@ -19,13 +19,15 @@
 
 InspectorView::InspectorView(SceneObjectInteractor* interactor) : m_interactor(interactor) {
     m_imageSetInspectorView = new ImageSetInspector(m_interactor->imageSetInteractor);
-    m_cameraInspectorView = new CameraInspector();
+    m_cameraInspectorView = new CameraInspector(m_interactor->cameraInteractor);
+    m_cameraSetInspectorView = new CameraSetInspector(m_interactor->cameraSetInteractor);
     m_nerfDatasetInspectorView = new NeRFInspector(m_interactor->nerfInteractor);
 }
 
 InspectorView::~InspectorView() {
     delete m_imageSetInspectorView;
     delete m_cameraInspectorView;
+    delete m_nerfDatasetInspectorView;
 }
 
 void InspectorView::SetSelected(enum SceneObjectTypes type){
@@ -38,7 +40,7 @@ void InspectorView::SetSelected(enum SceneObjectTypes type){
             // m_imageSetInspectorView->SetImageSet(m_interactor->imageSetInteractor->GetImageSet());
             break;
         case SceneObjectTypes::CAMERA:
-            m_cameraInspectorView->SetCamera(m_interactor->cameraInteractor->GetCamera());
+            // m_cameraInspectorView->SetCamera(m_interactor->cameraInteractor->GetCamera());
             break;
         case SceneObjectTypes::NERFDATASET:
             // m_nerfDatasetInspectorView->SetNeRFDataset();
@@ -63,7 +65,10 @@ void InspectorView::Render(){
             m_imageSetInspectorView->Render();
             break;
         case SceneObjectTypes::CAMERA:
-            // m_cameraInspectorView->Render(m_interactor->cameraInteractor);
+            m_cameraInspectorView->Render();
+            break;
+        case SceneObjectTypes::CAMERASET:
+            m_cameraSetInspectorView->Render();
             break;
         case SceneObjectTypes::NERFDATASET:
             m_nerfDatasetInspectorView->Render();
