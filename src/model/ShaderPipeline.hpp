@@ -13,6 +13,7 @@ public:
      * @param fragmentShaderFilename : The path to the fragment shader's file.
      */
     ShaderPipeline(const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename);
+    ShaderPipeline(const char* vertexShaderFilename, const char* fragmentShaderFilename);
 
     /** Delete copy constructor. */
     ShaderPipeline(const ShaderPipeline&) = delete;
@@ -36,6 +37,7 @@ public:
     void UseShader();
 
     GLint AddUniform(std::string name);
+    GLint AddUniform(const char* name);
     GLint GetUniform(std::string name);
 
     void SetFloat(const std::string &name, float value) const

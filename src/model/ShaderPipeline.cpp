@@ -7,6 +7,12 @@
 #include "../utils/FileUtils.hpp"
 #include "ShaderPipeline.hpp"
 
+ShaderPipeline::ShaderPipeline(const char* vertexShaderFilename, const char* fragmentShaderFilename)
+: m_vertexShaderFilename(vertexShaderFilename), m_fragmentShaderFilename(fragmentShaderFilename), m_programShader(0)
+{
+    CompileShader();
+}
+
 ShaderPipeline::ShaderPipeline(const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
 : m_vertexShaderFilename(vertexShaderFilename), m_fragmentShaderFilename(fragmentShaderFilename), m_programShader(0)
 {
@@ -24,7 +30,7 @@ void ShaderPipeline::CompileShader()
     GLenum err = glGetError();
     if (err != GL_NO_ERROR)
     {
-        fprintf(stderr, "OpenGL error (at line scene.cpp:%d): %s\n", __LINE__, gluErrorString(err));
+        fprintf(stderr, "OpenGL error (at line ShaderPipeline.cpp:%d): %s\n", __LINE__, gluErrorString(err));
     }
 
     GLuint shaderProgram = glCreateProgram();
@@ -75,9 +81,9 @@ void ShaderPipeline::CompileShader()
     }
     else
     {
-        std::cout << "ShaderPipeline: Success loading shader: " << m_vertexShaderFilename << std::endl;
-        std::cout << "ShaderPipeline: Success loading shader: " << m_fragmentShaderFilename << std::endl
-                  << "===" << std::endl;
+        // std::cout << "ShaderPipeline: Success loading shader: " << m_vertexShaderFilename << std::endl;
+        // std::cout << "ShaderPipeline: Success loading shader: " << m_fragmentShaderFilename << std::endl
+        //           << "===" << std::endl;
     }
 
     glDetachShader(shaderProgram, vertexShaderID);
@@ -92,16 +98,20 @@ void ShaderPipeline::CompileShader()
     m_programShader = shaderProgram;
 }
 
-GLint ShaderPipeline::AddUniform(std::string name)
-{
-    GLint res = glGetUniformLocation(m_programShader, name.c_str());
+GLint ShaderPipeline::AddUniform(const char* name){
+    GLint res = glGetUniformLocation(m_programShader, name);
     if (res == -1)
     {
-        std::cerr << "Error creating uniform location: " << res << std::endl;
+        std::cerr << "Error creating uniform location: " << res << " name: " << name << std::endl;
         exit(1);
     }
     m_uniforms[name] = res;
     return res;
+}
+
+GLint ShaderPipeline::AddUniform(const std::string name)
+{
+    AddUniform(name.c_str());
 }
 
 GLint ShaderPipeline::GetUniform(std::string name)
