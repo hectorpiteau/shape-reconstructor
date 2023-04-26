@@ -3,20 +3,28 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRenderer.hpp (c) 2023
 Desc: description
 Created:  2023-04-14T09:48:58.410Z
-Modified: 2023-04-17T09:43:58.230Z
+Modified: 2023-04-26T09:37:54.284Z
 */
 #pragma once
 
 // #include "RayCaster/RayCaster.hpp"
+#include <memory>
+#include <vector>
+#include <glm/glm.hpp>
+
 #include "Texture2D.hpp"
 #include "Volume3D.hpp"
+#include "Camera/Camera.hpp"
 #include "../view/SceneObject/SceneObject.hpp"
 #include "../view/OverlayPlane.hpp"
 #include "../controllers/Scene/Scene.hpp"
+#include "../view/Lines.hpp"
+
+using namespace glm;
 
 class VolumeRenderer : public SceneObject {
 public:
-    VolumeRenderer(Scene* scene, std::shared_ptr<Volume3D> volume);
+    VolumeRenderer(Scene* scene);
     VolumeRenderer(const VolumeRenderer&) = delete;
     ~VolumeRenderer();
 
@@ -24,10 +32,30 @@ public:
 
     void SetUseDefaultCamera(bool useDefaultCamera);
 
+    const vec2& GetRenderingZoneMinNDC();
+    const vec2& GetRenderingZoneMaxNDC();
+
+    void SetShowRenderingZone(bool visible);
+    bool ShowRenderingZone();
+
+    void ComputeRenderingZone();
+    std::shared_ptr<Lines> m_renderZoneLines;
+    float m_renderingZoneVertices[4 * 2 * 3] = {0.0f};
+
+    std::vector<std::shared_ptr<Camera>> GetAvailableCameras();
+    void SetTargetCamera(std::shared_ptr<Camera> cam);
+    std::shared_ptr<Camera> GetTargetCamera();
+
     void Render();
 
+    size_t amountOfRays = 0;
+
+    vec2 m_renderZoneMinNDC;
+    vec2 m_renderZoneMaxNDC;
+
 private:
-    bool m_useDefaultCamera;
+    bool m_useDefaultCamera = true;
+    bool m_showRenderingZone = true;
 
     /** out dep. */
     Scene* m_scene;

@@ -36,8 +36,6 @@ private:
             if (m_useRefData) m_refData = data;
             else m_data = data;
             
-            std::cout <<"Load texture from data: channels :" << std::to_string(m_channels) << std::endl;
-            
             GLenum format;
             
             if (m_channels == 1)

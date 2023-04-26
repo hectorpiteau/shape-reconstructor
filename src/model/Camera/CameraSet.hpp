@@ -84,6 +84,10 @@ public:
 
     void Render();
 
+    void ShowCenterLines();
+    void HideCenterLines();
+    void SetCenterLinesLength(float length);
+
     bool m_areCameraGenerated;
     bool m_areCalibrated;
     bool m_isLocked;

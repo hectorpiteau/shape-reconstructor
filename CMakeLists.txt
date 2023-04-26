@@ -68,6 +68,8 @@ cuda_add_executable(DRTMCS
     src/interactors/SceneObjectInteractor.cpp
     src/interactors/NeRFInteractor.cpp
     src/interactors/CameraSetInteractor.cpp
+    src/interactors/Volume3DInteractor.cpp
+    src/interactors/VolumeRendererInteractor.cpp
 
     src/controllers/Scene/Scene.cpp 
 

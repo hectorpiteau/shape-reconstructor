@@ -25,6 +25,17 @@ Scene::~Scene(){
     //do nothing for now
 }
 
+// template<typename T>
+std::vector<std::shared_ptr<SceneObject>> Scene::GetAll(SceneObjectTypes type){
+    std::vector<std::shared_ptr<SceneObject>> tab = std::vector<std::shared_ptr<SceneObject>>();
+    for(auto obj : m_objects){
+        if(obj->GetType() == type) tab.push_back(obj);
+
+        std::vector<std::shared_ptr<SceneObject>> tmp = obj->GetAll(type);
+        for(auto a : tmp) tab.push_back(a);
+    }
+    return tab;
+}
 
 std::shared_ptr<SceneObject> Scene::Add(std::shared_ptr<SceneObject> object, bool active, bool isChild){
     if(object->GetID() != -1) return object;

@@ -122,3 +122,35 @@ const mat4& CameraInteractor::GetIntrinsic(){
 const mat4& CameraInteractor::GetExtrinsic(){
     return m_camera->GetExtrinsic();
 }
+
+bool CameraInteractor::IsCenterLineVisible(){
+    return m_camera->IsCenterLineVisible();
+}
+
+void CameraInteractor::SetIsCenterLineVisible(bool visible){
+    m_camera->SetIsCenterLineVisible(visible);
+}
+
+float CameraInteractor::GetCenterLineLength(){
+    return m_camera->GetCenterLineLength();
+}
+
+void CameraInteractor::SetCenterLineLength(float length){
+    m_camera->SetCenterLineLength(length);
+}
+
+bool CameraInteractor::ShowFrustumLines(){
+    return m_camera->ShowFrustumLines();
+}
+
+void CameraInteractor::SetShowFrustumLines(bool visible){
+    m_camera->SetShowFrustumLines(visible);
+}
+
+bool CameraInteractor::ShowImagePlane(){
+    return m_camera->ShowImagePlane();
+}
+
+void CameraInteractor::SetShowImagePlane(bool visible){
+    m_camera->SetShowImagePlane(visible);
+}

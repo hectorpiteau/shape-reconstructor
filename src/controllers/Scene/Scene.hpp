@@ -49,6 +49,9 @@ public:
      * @return std::shared_ptr<SceneObject> : The SceneObject if it exist, nullptr otherwise.
      */
     std::shared_ptr<SceneObject> Get(int id);
+
+    // template<typename T>
+    std::vector<std::shared_ptr<SceneObject>> GetAll(SceneObjectTypes type);
     
     /**
      * @brief Remove an object from the scene.

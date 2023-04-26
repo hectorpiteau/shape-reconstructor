@@ -16,6 +16,7 @@ CameraSetInteractor::~CameraSetInteractor() {}
 
 void CameraSetInteractor::SetActiveCameraSet(std::shared_ptr<CameraSet> cameraSet) {
     m_cameraSet = cameraSet;
+    m_centerLinesLength = 1.0f;
 }
 
 std::vector<std::shared_ptr<Camera>>& CameraSetInteractor::GetCameras() {
@@ -47,4 +48,21 @@ bool CameraSetInteractor::LinkCameraSetToSceneObject(int id) {
         }
         return false;
     }
+}
+
+
+void CameraSetInteractor::ShowCenterLines(){
+    m_cameraSet->ShowCenterLines();
+}
+
+void CameraSetInteractor::HideCenterLines(){
+    m_cameraSet->HideCenterLines();
+}
+
+float CameraSetInteractor::GetCenterLinesLength(){
+    return m_centerLinesLength;
+}
+void CameraSetInteractor::SetCenterLinesLength(float length){
+    m_centerLinesLength = length;
+    m_cameraSet->SetCenterLinesLength(length);
 }

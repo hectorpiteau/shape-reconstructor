@@ -3,11 +3,11 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRendering.cu (c) 2023
 Desc: Volume rendering algorithms.
 Created:  2023-04-13T12:33:22.433Z
-Modified: 2023-04-17T11:37:50.055Z
+Modified: 2023-04-25T12:52:31.084Z
 */
 
 #include <glm/glm.hpp>
-
+#include <iostream>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <surface_functions.h>
@@ -23,11 +23,22 @@ static const float MIN_TRANSMITTANCE = 0.001f;
 
 using namespace glm;
 
+__device__ bool ReadVolumeLinear(struct VolumeData& data, vec3& pos, float4* volume, ivec3 res){
+    ivec3 fpos = (ivec3)floor(pos);
+    
+    data.data = volume[
+          fpos.x * (res.y * res.z) 
+        + fpos.y * (res.z) 
+        + fpos.z
+    ];
+
+    
+    return true;
+}
+
 __device__ bool ReadVolume(struct VolumeData& data, vec3& pos, cudaTextureObject_t& volume){
     
-
     tex3D<float4>(&data.data, volume, pos.x, pos.y, pos.z);
-    
     return true;
 }
 
@@ -147,4 +158,38 @@ extern "C" void volume_rendering_wrapper(RayCasterParams& params, cudaTextureObj
     /** Call the main volumeRendering kernel. **/
     volumeRendering<<<numBlocks, threadsperBlock>>>(params, volume, outTexture, width, height);
     cudaDeviceSynchronize();
+}
+
+
+__global__ void testFillBlue(RayCasterParams& params, float4* volume, float4* outTexture, size_t width, size_t height)
+{
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if(x >= width)return;
+    if(y >= height)return;
+
+    /** Compute Ray. */
+    struct Ray ray = {
+        .origin = vec3(0.0, 0.0, 0.0), 
+        .dir = vec3(1.0, 0.0, 0.0), 
+        .tmin = 0.0f, 
+        .tmax = 1.0f
+    };
+    
+    ray = SingleRayCaster::GetRay(vec2(x, y), params);
+
+    /** Call forward. */
+    vec4 result = vec4(0.0, 0.0, 1.0, 1.0);
+
+    /** Store value in Out Memory. */
+    outTexture[x * height + y].x = result.r;
+    outTexture[x * height + y].y = result.g;
+    outTexture[x * height + y].z = result.b;
+}
+
+
+
+extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height){
+    std::cout << "not implemented yet." << std::endl;
 }

@@ -27,17 +27,16 @@ public:
         m_scene = new Scene(m_sceneSettings, window);
 
         /** Fill default Scene. */
-        auto volume = m_scene->Add(std::make_shared<Volume3D>(m_scene));
+        // auto volume = m_scene->Add(std::make_shared<Volume3D>(m_scene));
+        auto cam1 = std::make_shared<Camera>(m_scene, std::string("CameraT"), vec3(-4.0, 3.0, -4.0), vec3(0.0, 0.0, 0.0));
+
+        m_scene->Add(cam1);
+
         m_scene->Add(std::make_shared<LineGrid>(m_scene));
         
-        m_scene->Add(std::make_shared<NeRFDataset>(
-            m_scene,
-            std::dynamic_pointer_cast<ImageSet>(m_scene->Add(std::make_shared<ImageSet>(m_scene), true, true))
-        ));
+        m_scene->Add(std::make_shared<NeRFDataset>(m_scene));
 
-        m_scene->Add(
-            std::make_shared<VolumeRenderer>(m_scene, std::dynamic_pointer_cast<Volume3D>(volume))
-        );
+        m_scene->Add(std::make_shared<VolumeRenderer>(m_scene));
 
         /** Create Views and Interactors */
         m_objectListView = std::make_shared<ObjectListView>();

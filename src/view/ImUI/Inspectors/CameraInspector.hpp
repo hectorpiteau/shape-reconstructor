@@ -21,10 +21,6 @@ public:
 
     ~CameraInspector(){};
 
-    // void SetCamera(std::shared_ptr<Camera>& camera){
-    //     m_camera = camera;
-    // }
-
     void Render()
     {
         if(m_interactor == nullptr) return;
@@ -36,9 +32,17 @@ public:
         m_target = m_interactor->GetTarget();
         m_right = m_interactor->GetRight();
         m_up = m_interactor->GetUp();
+        m_near = m_interactor->GetNear();
+        m_far = m_interactor->GetFar();
 
         m_intrinsicT = glm::transpose(m_interactor->GetIntrinsic());
         m_extrinsicT = glm::transpose(m_interactor->GetExtrinsic());
+
+        bool dispCenterLine = m_interactor->IsCenterLineVisible();
+        bool dispFrustLines = m_interactor->ShowFrustumLines();
+        bool dispImagePlane = m_interactor->ShowImagePlane();
+
+        float centerLineLength = m_interactor->GetCenterLineLength();
         
         /** Camera id. */
         ImGui::SeparatorText("Camera");
@@ -50,8 +54,12 @@ public:
 
         ImGui::Text(m_interactor->GetCamera()->filename.c_str());
 
-        ImGui::Spacing();
+        ImGui::Checkbox("Display Image Plane", &dispImagePlane);
+        ImGui::Checkbox("Display Frustum", &dispFrustLines);
 
+        ImGui::Separator();
+        ImGui::Spacing();
+        
         ImGui::Text("Instrinsic Matrix: ");
         ImGui::BeginDisabled();
         ImGui::InputFloat4("##CameraIntrinsic0", &m_intrinsicT[0][0]);
@@ -79,6 +87,10 @@ public:
         ImGui::InputFloat("Near", &m_near);
         ImGui::InputFloat("Far", &m_far);
         ImGui::Separator();
+        
+        ImGui::Checkbox("Display Center Line", &dispCenterLine);
+        ImGui::InputFloat("Center Line Length", &centerLineLength);
+        
 
 
         /** Update values in model if changed. */
@@ -106,6 +118,18 @@ public:
         if(m_isExternal){ 
             ImGui::End();
         }
+
+        if(m_interactor->ShowImagePlane() != dispImagePlane)
+            m_interactor->SetShowImagePlane(dispImagePlane);
+
+        if(m_interactor->ShowFrustumLines() != dispFrustLines)
+            m_interactor->SetShowFrustumLines(dispFrustLines);
+
+        if(m_interactor->IsCenterLineVisible() != dispCenterLine)
+            m_interactor->SetIsCenterLineVisible(dispCenterLine);
+
+        if(centerLineLength != m_interactor->GetCenterLineLength())
+            m_interactor->SetCenterLineLength(centerLineLength);
     };
 
     void SetIsOpened(bool opened) {m_isOpened = opened;}

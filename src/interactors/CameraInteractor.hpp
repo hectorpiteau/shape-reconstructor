@@ -69,6 +69,18 @@ public:
     const mat4& GetIntrinsic();
     const mat4& GetExtrinsic();
 
+    bool IsCenterLineVisible();
+    void SetIsCenterLineVisible(bool visible);
+
+    float GetCenterLineLength();
+    void SetCenterLineLength(float length);
+
+    void SetShowFrustumLines(bool visible);
+    bool ShowFrustumLines();
+
+    bool ShowImagePlane();
+    void SetShowImagePlane(bool visible);
+    
 private:
     /** A pointer to the camera to modify. */
     std::shared_ptr<Camera> m_camera;

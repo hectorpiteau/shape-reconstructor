@@ -38,19 +38,12 @@ public:
             ImGui::Text("Error: interactor is null.");
             return;
         }
+        
+        float centerLinesLength = m_interactor->GetCenterLinesLength();
+
         ImGui::SeparatorText(ICON_FA_INFO " CameraSet - Informations");
 
         ImGui::Text("ImageSet linked: Yes");
-        // ImGui::Text("Calibrations: ");
-        // ImGui::SameLine();
-        // if (m_interactor->IsCalibrationLoaded())
-        // {
-        //     ImGui::TextColored(ImVec4(0.012f, 0.784f, 0.851f, 1.0f), "Loaded");
-        // }
-        // else
-        // {
-        //     ImGui::TextColored(ImVec4(0.851f, 0.012f, 0.122f, 1.0f), "Not Loaded");
-        // }
 
         if (ImGui::Button("Generate cameras"))
         {
@@ -91,6 +84,21 @@ public:
         ImGui::Spacing();
         ImGui::SeparatorText(ICON_FA_GEARS " Actions");
 
+        if(ImGui::Button("Show Center Lines")){
+            m_interactor->ShowCenterLines();
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Hide Center Lines")){
+            m_interactor->HideCenterLines();
+        }
+
+
+        ImGui::InputFloat("Lines Length", &centerLinesLength);
+        ImGui::Separator();
+
+        if(centerLinesLength != m_interactor->GetCenterLinesLength())
+            m_interactor->SetCenterLinesLength(centerLinesLength);
+
         if(m_cameraInspector->IsOpened()){
             m_cameraInspector->Render();
         }
@@ -110,7 +118,4 @@ public:
 
         /** Combo */
         int m_comboBoxCurrent = 0;
-    
-        
-
     };

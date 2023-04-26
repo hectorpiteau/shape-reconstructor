@@ -9,6 +9,8 @@
 #include "CameraInteractor.hpp"
 #include "NeRFInteractor.hpp"
 #include "CameraSetInteractor.hpp"
+#include "Volume3DInteractor.hpp"
+#include "VolumeRendererInteractor.hpp"
 
 class InspectorView;
 
@@ -65,6 +67,8 @@ public:
     CameraInteractor* cameraInteractor;
     NeRFInteractor* nerfInteractor;
     CameraSetInteractor* cameraSetInteractor;
+    Volume3DInteractor* volume3DInteractor;
+    VolumeRendererInteractor* volumeRendererInteractor;
 
 private:
     Scene* m_scene;

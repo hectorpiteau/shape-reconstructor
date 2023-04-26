@@ -17,35 +17,37 @@
 using json = nlohmann::json;
 using namespace glm;
 
-NeRFDataset::NeRFDataset(Scene *scene, std::shared_ptr<ImageSet> imageSet)
-    : Dataset{std::string("NeRFDataset")}, SceneObject{std::string("NeRFDataset"), SceneObjectTypes::NERFDATASET}, m_scene(scene), m_imageSet(imageSet),
+NeRFDataset::NeRFDataset(Scene *scene)
+    : Dataset{std::string("NeRFDataset")}, SceneObject{std::string("NeRFDataset"), SceneObjectTypes::NERFDATASET}, m_scene(scene),
       m_trainJSONPath("../data/nerf/transforms_train.json"),
       m_validJSONPath("../data/nerf/transforms_val.json"),
       m_trainImagesPath("../data/nerf/train/"),
       m_validImagesPath("../data/nerf/val/")
 {
     SetName(std::string(ICON_FA_DATABASE " Nerf Dataset"));
-
     m_children = std::vector<std::shared_ptr<SceneObject>>();
+
+    /** Create the image_set. */
+    m_imageSet = std::make_shared<ImageSet>(m_scene);
+    m_scene->Add(m_imageSet, true, true);
     m_children.push_back(m_imageSet);
     m_imageSet->SetFolderPath(GetCurrentImageFolderPath());
 
-    m_isCalibrationLoaded = false;
-    m_camerasGenerated = false;
-
     /** Create a CameraSet */
     m_cameraSet = std::make_shared<CameraSet>(m_scene);
-    m_cameraSet->SetActive(true);
-    m_cameraSet->SetIsChild(true);
     m_scene->Add(m_cameraSet, true, true);
     m_children.push_back(m_cameraSet);
+
+
+    m_isCalibrationLoaded = false;
+    m_camerasGenerated = false;
 }
 
 NeRFDataset::~NeRFDataset()
 {
 }
 
-bool NeRFDataset::Load()
+bool NeRFDataset::LoadCalibrations()
 {
     std::string configFilePath = m_mode == NeRFDatasetModes::TRAIN ? m_trainJSONPath : m_validJSONPath;
     std::cout << "Load calibration file: " << configFilePath << std::endl;
@@ -57,7 +59,7 @@ bool NeRFDataset::Load()
     if (data["frames"] == nullptr || data["frames"].is_array() == false)
     {
         f.close();
-        return false;
+        m_isCalibrationLoaded = false;
     }
 
     /** Parse FOV x : */
@@ -151,6 +153,7 @@ bool NeRFDataset::Load()
 
         image_counter += 1;
     }
+    m_isCalibrationLoaded = true;
     return true;
 }
 
@@ -239,9 +242,12 @@ bool NeRFDataset::IsCalibrationLoaded()
     return m_isCalibrationLoaded;
 }
 
-void NeRFDataset::LoadCalibrations()
+bool NeRFDataset::Load()
 {
-    m_isCalibrationLoaded = Load();
+    m_imageSet->LoadImages();
+    LoadCalibrations();
+    GenerateCameras();
+    return m_camerasGenerated && m_isCalibrationLoaded;
 }
 
 void NeRFDataset::GenerateCameras()
@@ -261,10 +267,10 @@ void NeRFDataset::GenerateCameras()
         NeRFImage imgInfo = m_images[i];
         CameraCalibrationInformations calibInfo = m_imagesCalibration[i];
         std::shared_ptr<Camera> cam = std::make_shared<Camera>(m_scene);
-        cam->SetExtrinsic(calibInfo.extrinsic);
+        // cam->SetFovX(calibInfo.fov);
+        // cam->SetFovY(calibInfo.fov);
         cam->SetIntrinsic(calibInfo.intrinsic);
-        cam->SetFovX(calibInfo.fov);
-        cam->SetFovY(calibInfo.fov);
+        cam->SetExtrinsic(calibInfo.extrinsic);
         cam->SetImage(m_imageSet->GetImage(imgInfo.fileName));
 
         cam->SetActive(true);

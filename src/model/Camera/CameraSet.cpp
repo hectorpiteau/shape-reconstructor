@@ -9,7 +9,7 @@
 
 #include "../../include/icons/IconsFontAwesome6.h"
 
-CameraSet::CameraSet(Scene* scene)
+CameraSet::CameraSet(Scene *scene)
     : SceneObject{std::string("CameraSet"), SceneObjectTypes::CAMERASET}, m_scene(scene), m_areCameraGenerated(false), m_isLocked(false)
 {
     SetName(std::string("Camera Set"));
@@ -62,7 +62,8 @@ bool CameraSet::IsLocked()
 
 bool CameraSet::LinkToImageSet(std::shared_ptr<ImageSet> imageSet)
 {
-    if (imageSet == nullptr || m_scene == nullptr){
+    if (imageSet == nullptr || m_scene == nullptr)
+    {
         std::cout << "CameraSet::LinkToImageSet : imageset null or scene null. " << std::endl;
         return false;
     }
@@ -82,7 +83,6 @@ bool CameraSet::LinkToImageSet(std::shared_ptr<ImageSet> imageSet)
 
         m_cameras.push_back(cam);
         m_children.push_back(cam);
-        
     }
 
     m_isLocked = true;
@@ -114,17 +114,40 @@ bool CameraSet::CalibrateFromInformations(const std::vector<CameraCalibrationInf
     return true;
 }
 
-
 void CameraSet::Render()
 {
-    
-    for(auto& cam : m_cameras){
-        
+
+    for (auto &cam : m_cameras)
+    {
+
         cam->Render();
     }
-
 
     // for(auto& child : m_children){
     //     if(child->IsActive()) child->Render();
     // }
+}
+
+void CameraSet::ShowCenterLines()
+{
+    for (auto &cam : m_cameras)
+    {
+        cam->SetIsCenterLineVisible(true);
+    }
+}
+
+void CameraSet::HideCenterLines()
+{
+    for (auto &cam : m_cameras)
+    {
+        cam->SetIsCenterLineVisible(false);
+    }
+}
+
+void CameraSet::SetCenterLinesLength(float length)
+{
+    for (auto &cam : m_cameras)
+    {
+        cam->SetCenterLineLength(length);
+    }
 }

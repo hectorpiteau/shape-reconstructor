@@ -54,6 +54,8 @@ public:
 
     void SetDatasetMode(size_t index);
 
+    void LoadDataset();
+
 private:
     std::shared_ptr<NeRFDataset> m_nerf;
 };

@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 Projection.cuh (c) 2023
 Desc: description
 Created:  2023-04-17T09:50:40.519Z
-Modified: 2023-04-17T11:52:24.768Z
+Modified: 2023-04-24T17:45:06.102Z
 */
 
 #ifndef PROJECTION_CUDA_H
@@ -117,6 +117,18 @@ CUDA_HOSTDEV inline vec2 CameraToPixel(vec3 cameraCoords, mat3 intrinsic)
 CUDA_HOSTDEV inline vec3 NDCToCamera(const vec2 &ndcCoords, const mat4 &intrinsic)
 {
     return vec3(ndcCoords.x * 1 / intrinsic[0][0], ndcCoords.y * 1 / intrinsic[1][1], 1.0);
+}
+
+/**
+ * @brief Convert normalized Camera coordinates to Device Coordinates.
+ *
+ * @param cameraCoords : 
+ * @param intrinsic : The camera's intrinsic matrix.
+ * @return vec3 : 
+ */
+CUDA_HOSTDEV inline vec2 CameraToNDC(const vec3& cameraCoords, const mat4 &intrinsic)
+{
+    return vec2(cameraCoords.x * intrinsic[0][0], cameraCoords.y *intrinsic[1][1]) / cameraCoords.z;
 }
 
 /**

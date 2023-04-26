@@ -61,3 +61,7 @@ void NeRFInteractor::SetDatasetMode(size_t index){
 bool NeRFInteractor::AreCamerasGenerated(){
     return m_nerf->AreCamerasGenerated();
 }
+
+void NeRFInteractor::LoadDataset(){
+    m_nerf->Load();
+}

@@ -14,6 +14,8 @@
 #include "Inspectors/ImageSetInspector.hpp"
 #include "Inspectors/CameraInspector.hpp"
 #include "Inspectors/NeRFInspector.hpp"
+#include "Inspectors/VolumeEditor.hpp"
+#include "Inspectors/VolumeRendererEditor.hpp"
 
 
 
@@ -22,6 +24,8 @@ InspectorView::InspectorView(SceneObjectInteractor* interactor) : m_interactor(i
     m_cameraInspectorView = new CameraInspector(m_interactor->cameraInteractor);
     m_cameraSetInspectorView = new CameraSetInspector(m_interactor->cameraSetInteractor);
     m_nerfDatasetInspectorView = new NeRFInspector(m_interactor->nerfInteractor);
+    m_volumeEditorView = new VolumeEditor(m_interactor->volume3DInteractor);
+    m_volumeRendererEditorView = new VolumeRendererEditor(m_interactor->volumeRendererInteractor);
 }
 
 InspectorView::~InspectorView() {
@@ -72,6 +76,12 @@ void InspectorView::Render(){
             break;
         case SceneObjectTypes::NERFDATASET:
             m_nerfDatasetInspectorView->Render();
+            break;
+        case SceneObjectTypes::VOLUME3D:
+            m_volumeEditorView->Render();
+            break;
+        case SceneObjectTypes::VOLUMERENDERER:
+            m_volumeRendererEditorView->Render();
             break;
         case SceneObjectTypes::NONE:
         default:

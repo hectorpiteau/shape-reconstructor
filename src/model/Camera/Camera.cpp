@@ -22,16 +22,26 @@
 
 using namespace glm;
 
+Camera::Camera(Scene *scene, const std::string& name, const vec3& position, const vec3& target)
+    : SceneObject{std::string("Camera"), SceneObjectTypes::CAMERA}, m_scene(scene), m_pos(position), m_target(target)
+{
+    SetName(std::string(ICON_FA_CAMERA " ") + name);
+    Initialize();
+}
+
 Camera::Camera(Scene *scene)
     : SceneObject{std::string("Camera"), SceneObjectTypes::CAMERA}, m_scene(scene)
 {
     SetName(std::string(ICON_FA_CAMERA " Camera"));
-    
-    m_sceneSettings = scene->GetSceneSettings();
-    
     /** Initialize camera's properties. */
     m_pos = vec3(4.0f, 4.0f, 4.0f);
     m_target = vec3(0.0f, 0.0f, 0.0f);
+    Initialize();
+}
+
+void Camera::Initialize(){
+    m_sceneSettings = m_scene->GetSceneSettings();
+    /** Initialize camera's properties. */
     m_up = vec3(0.0f, 1.0f, 0.0f);
     m_forward = normalize(m_target - m_pos);
     m_right = cross(m_forward, m_up);
@@ -47,19 +57,24 @@ Camera::Camera(Scene *scene)
     m_previousCursorPos = vec2(m_sceneSettings->GetViewportWidth() / 2, m_sceneSettings->GetViewportHeight() / 2);
 
     /** Parameters to visual components. */
-    m_frustumLines = new Lines(scene, m_wireframeVertices, 16 * 3);
+    m_frustumLines = new Lines(m_scene, m_wireframeVertices, 16 * 3);
     m_frustumLines->SetColor(1.0, 0.8, 0.8, 0.8);
-    m_gizmo = new Gizmo(scene, m_pos, m_right, m_realUp, m_forward);
+    m_gizmo = new Gizmo(m_scene, m_pos, m_right, m_realUp, m_forward);
 
     /** Create the camera's image plane. */
     m_imageTex = new Texture2D();
-    m_imagePlane = new Plane(scene);
+    m_imagePlane = new Plane(m_scene);
     m_imagePlane->SetTexture2D(m_imageTex);
+
+    /** Center line. */
+    m_centerLine = new Lines(m_scene, m_centerLineVertices, 6);
+    m_centerLine->SetColor(0.0, 1.0, 1.0, 1.0);
 }
 
 Camera::~Camera()
 {
     delete m_frustumLines;
+    delete m_centerLine;
     delete m_gizmo;
     delete m_imageTex;
     delete m_imagePlane;
@@ -73,10 +88,15 @@ const vec3 &Camera::GetPosition()
 void Camera::SetPosition(const vec3 &position)
 {
     m_pos = position;
+    m_viewMatrix = lookAt(m_pos, m_target, m_up);
     UpdateWireframe();
     
     m_gizmo->SetPosition(position);
     m_gizmo->UpdateLines();
+
+    /** Update center line. */
+    WRITE_VEC3(m_centerLineVertices, 0, m_pos);
+    m_centerLine->UpdateVertices(m_centerLineVertices);
 }
 
 void Camera::SetPosition(float x, float y, float z)
@@ -84,9 +104,14 @@ void Camera::SetPosition(float x, float y, float z)
     m_pos.x = x;
     m_pos.y = y;
     m_pos.z = z;
+    m_viewMatrix = lookAt(m_pos, m_target, m_up);
     UpdateWireframe();
     m_gizmo->SetPosition(vec3(x,y,z));
     m_gizmo->UpdateLines();
+
+    /** Update center line. */
+    WRITE_VEC3(m_centerLineVertices, 0, m_pos);
+    m_centerLine->UpdateVertices(m_centerLineVertices);
 }
 
 const mat4 &Camera::GetViewMatrix()
@@ -116,57 +141,57 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window)
     // Reset mouse position for next frame
     if (m_sceneSettings->GetCameraModel() == CameraMovementModel::FPS)
     {
-        glfwSetCursorPos(window, m_sceneSettings->GetViewportWidth() / 2, m_sceneSettings->GetViewportHeight() / 2);
-        // Compute new orientation
-        m_horizontalAngle += m_mouseSpeed * float(m_sceneSettings->GetViewportWidth() / 2 - xpos);
-        m_verticalAngle += m_mouseSpeed * float(m_sceneSettings->GetViewportHeight() / 2 - ypos);
-        // Direction : Spherical coordinates to Cartesian coordinates conversion
-        vec3 direction(
-            cos(m_verticalAngle) * sin(m_horizontalAngle),
-            sin(m_verticalAngle),
-            cos(m_verticalAngle) * cos(m_horizontalAngle));
+        // glfwSetCursorPos(window, m_sceneSettings->GetViewportWidth() / 2, m_sceneSettings->GetViewportHeight() / 2);
+        // // Compute new orientation
+        // m_horizontalAngle += m_mouseSpeed * float(m_sceneSettings->GetViewportWidth() / 2 - xpos);
+        // m_verticalAngle += m_mouseSpeed * float(m_sceneSettings->GetViewportHeight() / 2 - ypos);
+        // // Direction : Spherical coordinates to Cartesian coordinates conversion
+        // vec3 direction(
+        //     cos(m_verticalAngle) * sin(m_horizontalAngle),
+        //     sin(m_verticalAngle),
+        //     cos(m_verticalAngle) * cos(m_horizontalAngle));
 
-        // Right vector
-        vec3 right = vec3(
-            sin(m_horizontalAngle - 3.14f / 2.0f),
-            0,
-            cos(m_horizontalAngle - 3.14f / 2.0f));
+        // // Right vector
+        // vec3 right = vec3(
+        //     sin(m_horizontalAngle - 3.14f / 2.0f),
+        //     0,
+        //     cos(m_horizontalAngle - 3.14f / 2.0f));
 
-        // Up vector
-        vec3 up = cross(right, direction);
+        // // Up vector
+        // vec3 up = cross(right, direction);
 
-        // Move forward
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        {
-            m_pos += direction * deltaTime * m_speed;
-        }
-        // Move backward
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        {
-            m_pos -= direction * deltaTime * m_speed;
-        }
-        // Strafe right
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        {
-            m_pos += right * deltaTime * m_speed;
-        }
-        // Strafe left
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        {
-            m_pos -= right * deltaTime * m_speed;
-        }
+        // // Move forward
+        // if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        // {
+        //     m_pos += direction * deltaTime * m_speed;
+        // }
+        // // Move backward
+        // if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        // {
+        //     m_pos -= direction * deltaTime * m_speed;
+        // }
+        // // Strafe right
+        // if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        // {
+        //     m_pos += right * deltaTime * m_speed;
+        // }
+        // // Strafe left
+        // if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        // {
+        //     m_pos -= right * deltaTime * m_speed;
+        // }
 
-        // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-        // (intrinsics)
-        // m_projectionMatrix = perspective(radians(m_initialFoV), m_sceneSettings->GetViewportRatio(), 0.1f, 100.0f);
+        // // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+        // // (intrinsics)
+        // // m_projectionMatrix = perspective(radians(m_initialFoV), m_sceneSettings->GetViewportRatio(), 0.1f, 100.0f);
 
-        // Camera matrix
-        // (extrinsics)
-        m_viewMatrix = lookAt(
-            m_pos,             // Camera is here
-            m_pos + direction, // and looks here : at the same position, plus "direction"
-            m_up               // Head is up (set to 0,-1,0 to look upside-down)
-        );
+        // // Camera matrix
+        // // (extrinsics)
+        // m_viewMatrix = lookAt(
+        //     m_pos,             // Camera is here
+        //     m_pos + direction, // and looks here : at the same position, plus "direction"
+        //     m_up               // Head is up (set to 0,-1,0 to look upside-down)
+        // );
     }
     else
     {
@@ -259,6 +284,7 @@ const vec3 &Camera::GetTarget() { return m_target; }
 
 void Camera::SetTarget(const vec3 &target) { 
     m_target = target; 
+    m_viewMatrix = lookAt(m_pos, m_target, m_up);
     UpdateWireframe();
     m_forward = normalize(m_pos - m_target);
     m_right = normalize(cross(m_forward, m_up));
@@ -268,7 +294,10 @@ void Camera::SetTarget(const vec3 &target) {
     m_gizmo->SetY(m_realUp);
     m_gizmo->SetZ(m_forward);
     m_gizmo->UpdateLines();
-    std::cout << "Update camera Target: " << target.x << " " << target.y << " " << target.z << std::endl;
+
+    /** Update center line. */
+    WRITE_VEC3(m_centerLineVertices, 3, m_pos + m_forward * m_centerLineLength);
+    m_centerLine->UpdateVertices(m_centerLineVertices);
 }
 
 const vec3 &Camera::GetRight() { return m_right; }
@@ -313,16 +342,16 @@ const float *Camera::GetWireframe()
 
 void Camera::UpdateWireframe()
 {
-    vec3 corner_top_left_tmp = NDCToCamera(vec2(-1.0, 1.0), m_projectionMatrix) * m_wireSize;
+    vec3 corner_top_left_tmp = NDCToCamera(vec2(-1.0, 1.0), m_projectionMatrix) * m_wireSize * -1.0f;
     vec3 corner_top_left = CameraToWorld(vec4(corner_top_left_tmp, 1.0f), m_viewMatrix);
 
-    vec3 corner_top_right_tmp = NDCToCamera(vec2(1.0, 1.0), m_projectionMatrix) * m_wireSize;
+    vec3 corner_top_right_tmp = NDCToCamera(vec2(1.0, 1.0), m_projectionMatrix) * m_wireSize * -1.0f;
     vec3 corner_top_right = CameraToWorld(vec4(corner_top_right_tmp, 1.0f), m_viewMatrix);
 
-    vec3 corner_bot_left_tmp = NDCToCamera(vec2(-1.0, -1.0), m_projectionMatrix) * m_wireSize;
+    vec3 corner_bot_left_tmp = NDCToCamera(vec2(-1.0, -1.0), m_projectionMatrix) * m_wireSize * -1.0f;
     vec3 corner_bot_left = CameraToWorld(vec4(corner_bot_left_tmp, 1.0f), m_viewMatrix);
 
-    vec3 corner_bot_right_tmp = NDCToCamera(vec2(1.0, -1.0), m_projectionMatrix) * m_wireSize;
+    vec3 corner_bot_right_tmp = NDCToCamera(vec2(1.0, -1.0), m_projectionMatrix) * m_wireSize * -1.0f;
     vec3 corner_bot_right = CameraToWorld(vec4(corner_bot_right_tmp, 1.0f), m_viewMatrix);
 
     m_imagePlane->SetVertices(corner_top_left, corner_top_right, corner_bot_left, corner_bot_right);
@@ -350,6 +379,8 @@ void Camera::UpdateWireframe()
 
     WRITE_VEC3(m_wireframeVertices, 42, m_pos);
     WRITE_VEC3(m_wireframeVertices, 45, corner_bot_right);
+
+    m_frustumLines->UpdateVertices(m_wireframeVertices);
 }
 
 float Camera::GetFovX() { return m_fov.x; }
@@ -372,22 +403,17 @@ float Camera::GetFar() { return m_far; }
 
 void Camera::Render()
 {
-    // static vec3 tmp_test = vec3(0.0, 0.0, 0.0);
-    // if(std::strcmp(GetName().c_str(), std::string(std::string(ICON_FA_CAMERA " Camera ") + std::to_string(0)).c_str()) == 0){
-    //     std::cout << "Camera render: " << std::endl;
-    //     std::cout << "pos: " << m_pos[0] << " " << m_pos[1] << " " << m_pos[2] << std::endl;
-    //     std::cout << "fwd: " << m_forward[0] << " " << m_forward[1] << " " << m_forward[2] << std::endl;
-    //     tmp_test[0] += 0.00002f;
-    //     m_pos += tmp_test;
-    // }
-    /** What to render as a scene object ? */
-
     /** Frustum */
-    m_frustumLines->Render();
+    if(m_showFrustumLines) m_frustumLines->Render();
     m_gizmo->Render();
 
     /** Image plane linked. */
-    if(m_imagePlane != nullptr) m_imagePlane->Render();
+    if(m_imagePlane != nullptr && m_showImagePlane) m_imagePlane->Render();
+
+    /** Center line. */
+    if(m_displayCenterLine){
+        m_centerLine->Render();
+    }
 
     /** Rays (partial) for each pixel. */
 }
@@ -395,6 +421,7 @@ void Camera::Render()
 void Camera::SetIntrinsic(const mat4 &intrinsic)
 {
     m_projectionMatrix = intrinsic;
+    UpdateWireframe();
 }
 
 void Camera::SetExtrinsic(const mat4 &extrinsic)
@@ -421,7 +448,12 @@ void Camera::SetExtrinsic(const mat4 &extrinsic)
     m_gizmo->UpdateLines();
 
     UpdateWireframe();
-    m_frustumLines->UpdateVertices(GetWireframe());
+
+    /** Update center line. */
+    WRITE_VEC3(m_centerLineVertices, 0, m_pos);
+    WRITE_VEC3(m_centerLineVertices, 3, m_pos + m_forward * m_centerLineLength);
+    m_centerLine->UpdateVertices(m_centerLineVertices);
+    
 }
 
 const mat4 &Camera::GetIntrinsic()
@@ -443,4 +475,40 @@ void Camera::SetImage(Image* image){
     if(image == nullptr) return;
     m_imageTex->LoadFromImage(image);
     filename = image->filename;
+    m_showImagePlane = true;
+}
+
+bool Camera::IsCenterLineVisible(){
+    return m_displayCenterLine;
+}
+
+void Camera::SetIsCenterLineVisible(bool visible){
+    m_displayCenterLine = visible;
+}
+
+void Camera::SetCenterLineLength(float length){
+    m_centerLineLength = length;
+
+    /** Update center line. */
+    WRITE_VEC3(m_centerLineVertices, 3, m_pos + m_forward * m_centerLineLength);
+    m_centerLine->UpdateVertices(m_centerLineVertices);
+}
+
+float Camera::GetCenterLineLength(){
+    return m_centerLineLength;
+}
+
+void Camera::SetShowFrustumLines(bool value){
+    m_showFrustumLines = value;
+}
+
+bool Camera::ShowFrustumLines(){
+    return m_showFrustumLines;
+}
+
+bool Camera::ShowImagePlane(){
+    return m_showImagePlane;
+}
+void Camera::SetShowImagePlane(bool visible){
+    m_showImagePlane = visible;
 }

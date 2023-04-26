@@ -41,7 +41,7 @@ struct NeRFImage : public CameraCalibrationInformations {
  */
 class NeRFDataset : public Dataset, public SceneObject{
 public:
-    NeRFDataset(Scene* scene, std::shared_ptr<ImageSet> imageSet);
+    NeRFDataset(Scene* scene);
     ~NeRFDataset();
 
     /**
@@ -53,8 +53,21 @@ public:
      * @return true 
      * @return false 
      */
+    bool LoadCalibrations();
+
+    /**
+     * @brief Load images in the ImageSet.
+     * 
+     * @return true : Images loaded.
+     * @return false : Images not loaded.
+     */
     bool Load();
 
+    /**
+     * @brief Get the amount of images in the dataset currently loaded.
+     * 
+     * @return size_t : The amount of images.
+     */
     size_t Size();
 
     /**
@@ -63,6 +76,12 @@ public:
      * @return enum NeRFDatasetModes : Either TRAIN, VALID, (TEST) 
      */
     enum NeRFDatasetModes GetMode();
+
+    /**
+     * @brief Get the Mode's name as a string (char*).
+     * 
+     * @return const char* : The mode's name.
+     */
     const char* GetModeName();
 
     /**
@@ -81,8 +100,7 @@ public:
     std::shared_ptr<ImageSet> GetImageSet();
 
     bool IsCalibrationLoaded();
-
-    void LoadCalibrations();
+    
     void GenerateCameras();
 
     bool AreCamerasGenerated();

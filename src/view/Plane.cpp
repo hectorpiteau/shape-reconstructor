@@ -64,6 +64,7 @@ void Plane::Render(){
     glBindVertexArray(m_VAO);
 
     glDrawArrays(GL_TRIANGLES, 0, m_size);
+    glEnable(GL_CULL_FACE);
 }
 
 void Plane::SetTexture2D(Texture2D* texture){

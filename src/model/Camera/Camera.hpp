@@ -22,8 +22,11 @@ class Camera : public SceneObject
 {
 
 public:
+    Camera(Scene *scene, const std::string& name, const vec3& position, const vec3& target);
     Camera(Scene* scene);
     ~Camera();
+
+    void Initialize();
 
     /**
      * @brief Set the camera's position in world space coordinates.
@@ -124,6 +127,10 @@ public:
      */
     const float* GetWireframe();
     
+    /**
+     * @brief Updates the wireframe with the current camera's parameters.
+     * 
+     */
     void UpdateWireframe();
 
     /**
@@ -229,8 +236,31 @@ public:
      */
     void Render();
 
+    /**
+     * @brief Set the Image dislpayed on the current image plane.
+     * 
+     * @param image : A pointer to the image to display.
+     */
     void SetImage(Image* image);
 
+    bool IsCenterLineVisible();
+
+    void SetIsCenterLineVisible(bool visible);
+
+    void SetCenterLineLength(float length);
+
+    float GetCenterLineLength();
+
+    void SetShowFrustumLines(bool value);
+    bool ShowFrustumLines();
+
+    bool ShowImagePlane();
+    void SetShowImagePlane(bool visible);
+
+    /**
+     * @brief Filename releated to the source image of the camera. 
+     * 
+     */
     std::string filename;
 
 private:
@@ -252,14 +282,19 @@ private:
     vec3 m_up;
     /** Field of view, (x,y). */
     vec2 m_fov;
+
+    float m_near = 0.001f;
+    float m_far = 100.0f;
     
+    /** Computed values. */
     vec3 m_forward;
     vec3 m_realUp;
     vec3 m_right;
 
-    float m_near = 0.001f;
-    float m_far = 100.0f;
-
+    bool m_displayCenterLine = false;
+    bool m_showImagePlane = false;
+    bool m_showFrustumLines = true;
+    
     /**
      * @brief Also known as the extrinsic matrix.
      * Rotate and translate compare to world coordinates.
@@ -278,7 +313,7 @@ private:
     // Initial vertical angle : none
     float m_verticalAngle = -3.14f * 0.2f;
     // Initial Field of View
-    float m_initialFoV = 90.0f;
+    float m_initialFoV = 65.0f;
 
     float m_mouseSpeed = 0.005f;
 
@@ -288,9 +323,16 @@ private:
 
     Lines* m_frustumLines;
     Gizmo* m_gizmo;
-    float m_wireSize = 0.2f;
+    // float m_wireSize = 0.1f;
+    float m_wireSize = 1.0f;
 
     /** Image plane. */
     Texture2D* m_imageTex = nullptr;
     Plane* m_imagePlane = nullptr;
+    /** Center line forward dir. */
+    Lines* m_centerLine;
+    float m_centerLineVertices[6] = {0.0f};
+    
+    float m_centerLineLength = 1.0f;
+
 };

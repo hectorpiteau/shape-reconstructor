@@ -6,7 +6,6 @@
 #include "../../../include/imgui/imgui.h"
 #include "../../../include/imgui/backends/imgui_impl_glfw.h"
 #include "../../../include/imgui/backends/imgui_impl_opengl3.h"
-
 #include "../../../include/icons/IconsFontAwesome6.h"
 
 #include "../../../model/ImageSet.hpp"
@@ -82,19 +81,10 @@ public:
 
         ImGui::SeparatorText(ICON_FA_GEARS " Actions");
 
-        if (ImGui::Button("Load Calibrations"))
+        if (ImGui::Button("Load DataSet"))
         {
-            m_interactor->LoadCalibrations();
+            m_interactor->LoadDataset();
         }
-
-        if (m_interactor->IsCalibrationLoaded() == false)
-            ImGui::BeginDisabled();
-        if (ImGui::Button("Generate cameras"))
-        {
-            m_interactor->GenerateCameras();
-        }
-        if (m_interactor->IsCalibrationLoaded() == false)
-            ImGui::EndDisabled();
 
         ImGui::Spacing();
     };

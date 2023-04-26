@@ -8,6 +8,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include <cuda.h>
+#include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include <tgmath.h>
@@ -483,9 +485,10 @@ int main(void)
 
     // cudaTex.RunCUDA();
 
-    CudaSurface3D surface(100, 100, 100);
+    // CudaSurface3D surface(100, 100, 100);
 
     static float scale = 1.0f;
+    cudaSetDevice(0);
     while (!glfwWindowShouldClose(window))
     {
         pxl_glfw_fps(window);
@@ -546,9 +549,33 @@ int main(void)
             ImGui::EndMainMenuBar();
         }
 
-        ImGui::Button("Import Image Set");
-        bool check = true;
-        ImGui::Checkbox("Images uses same camera", &check);
+        ImGui::SeparatorText("Memory Usage: ");
+        
+        size_t free = 0, total = 0;
+        cudaError_t err = cudaMemGetInfo(&free,  &total);
+        free = free/1024/1024;
+        total = total/1024/1024;
+        
+        ImGui::Text("Free: ");
+        ImGui::SameLine();
+        ImGui::Text(std::to_string(free).c_str());
+        ImGui::SameLine();
+        ImGui::Text(" MB");
+        
+        ImGui::Text("Total: ");
+        ImGui::SameLine();
+        ImGui::Text(std::to_string(total).c_str());
+        ImGui::SameLine();
+        ImGui::Text(" MB");
+
+        ImGui::Text("Used: ");
+        ImGui::SameLine();
+        ImGui::Text(std::to_string(total - free).c_str());
+        ImGui::SameLine();
+        ImGui::Text(" MB");
+
+        ImGui::Separator();
+
         ImGui::Text(
             (std::string("Camera Mode: ") + std::string(sceneSettings->GetCameraModel() == CameraMovementModel::ARCBALL ? "ArcBall" : "Fps")).c_str());
         ImGui::Text(

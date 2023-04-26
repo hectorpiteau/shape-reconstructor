@@ -68,6 +68,12 @@ public:
      */
     bool LinkCameraSetToSceneObject(int id);
 
+    void ShowCenterLines();
+    void HideCenterLines();
+
+    float GetCenterLinesLength();
+    void SetCenterLinesLength(float length);
+
 private:
     /** out dep */
     Scene* m_scene;
@@ -75,4 +81,6 @@ private:
     /** in dep */
     std::shared_ptr<CameraSet> m_cameraSet;
     std::vector<std::shared_ptr<Camera>> m_dummyCameras;
+
+    float m_centerLinesLength = 1.0f; 
 };
