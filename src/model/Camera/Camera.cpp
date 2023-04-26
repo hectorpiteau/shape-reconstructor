@@ -466,7 +466,7 @@ const mat4 &Camera::GetExtrinsic()
     return m_viewMatrix;
 }
 
-const vec2 &Camera::GetResolution()
+const ivec2 &Camera::GetResolution()
 {
     return m_resolution;
 }

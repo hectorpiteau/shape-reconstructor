@@ -3,11 +3,11 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRenderer.hpp (c) 2023
 Desc: description
 Created:  2023-04-14T09:48:58.410Z
-Modified: 2023-04-26T09:37:54.284Z
+Modified: 2023-04-26T11:14:57.290Z
 */
 #pragma once
 
-// #include "RayCaster/RayCaster.hpp"
+#include "RayCaster/RayCaster.hpp"
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
@@ -64,6 +64,6 @@ private:
 
     /** in dep. */
     std::shared_ptr<OverlayPlane> m_outPlane;
-    // std::shared_ptr<RayCaster> m_rayCaster;
+    std::shared_ptr<RayCaster> m_rayCaster;
     std::shared_ptr<Texture2D> m_outTex;
 };

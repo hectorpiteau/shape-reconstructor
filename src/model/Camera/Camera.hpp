@@ -226,9 +226,9 @@ public:
     /**
      * @brief Get the Resolution of the camera in pixels. 
      * 
-     * @return const vec2& (x = width, y = height), amount of pixels in both axis.
+     * @return const ivec2& (x = width, y = height), amount of pixels in both axis.
      */
-    const vec2& GetResolution();
+    const ivec2& GetResolution();
 
     /**
      * @brief Render the camera in the scene. Render the gizmo, frustum and potentially 
@@ -319,7 +319,7 @@ private:
 
     float m_wireframeVertices[16*3] = {0.0f};
 
-    vec2 m_resolution;
+    ivec2 m_resolution;
 
     Lines* m_frustumLines;
     Gizmo* m_gizmo;

@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 Projection.cuh (c) 2023
 Desc: description
 Created:  2023-04-17T09:50:40.519Z
-Modified: 2023-04-24T17:45:06.102Z
+Modified: 2023-04-26T12:22:14.245Z
 */
 
 #ifndef PROJECTION_CUDA_H
@@ -176,18 +176,17 @@ CUDA_HOSTDEV inline vec2 GetPixelSizeVec(int width, int height, double sensorWid
  * @param height : The amount of pixels in the height.
  * @return vec2 : A vector in Normalized Device Coordinates ([-1, 1], [-1, 1])
  */
-CUDA_HOSTDEV inline vec2 PixelToNDC(const vec2 &pixelCoords, const mat4 &intrinsic, int width, int height)
+CUDA_HOSTDEV inline vec2 PixelToNDC(const vec2 &pixelCoords, int width, int height)
 {
-    vec2 tmp = (2.0f * pixelCoords / vec2(intrinsic[0][0], intrinsic[1][1])) - vec2(1.0f);
+    vec2 tmp = (2.0f * pixelCoords / vec2(width, height)) - vec2(1.0f);
     // Account for image aspect ratio
-    tmp.x *= (intrinsic[1][1] / intrinsic[0][0]); // TODO: division can be moved sooner in code.
+    tmp.x *= (height / width); // TODO: division can be moved sooner in code.
     return tmp;
 }
 
-CUDA_HOSTDEV inline vec3 PixelToWorld(const vec2 &pixelCoords, const mat4 &intrinsic, const mat4 &extrinsic, int width, int height)
+CUDA_HOSTDEV inline vec3 PixelToWorld(const vec2 &pixelCoords, const mat4 &intrinsic, const mat4 &extrinsic, size_t width, size_t height)
 {
     auto ndc = PixelToNDC(pixelCoords,
-                          intrinsic,
                           width,
                           height);
 
@@ -216,20 +215,20 @@ CUDA_HOSTDEV inline vec2 PixelToNDC(const vec2 &pixelCoords, const mat4 &intrins
 }
 
 /**
- * @brief
+ * @brief Convert NDC Coordinates to Pixel indices.
  *
- * @param ndcCoords
- * @param intrinsic
- * @param width
- * @param height
- * @return vec2
+ * @param ndcCoords : Coordinates of a point in the image plane expressed 
+ * using Normalized Device Coordinates (NDC) in range [-1, 1].
+ * @param width : The image's width resolution in pixels. 
+ * @param height : The image's height resolution in pixels. 
+ * @return vec2 : The pixel coordinates in continuous coordinates (not discretized).
  */
-CUDA_HOSTDEV inline vec2 NDCToPixel(const vec2 &ndcCoords, const mat4 &intrinsic, int width, int height)
+CUDA_HOSTDEV inline vec2 NDCToPixel(const vec2 &ndcCoords, size_t width, size_t height)
 {
     // Calculate pixel coordinates
     return vec2(
-        (ndcCoords.x + 1.0f) * (intrinsic[0][0] / 2.0f),
-        (ndcCoords.y + 1.0f) * (intrinsic[1][1] / 2.0f));
+        (ndcCoords.x + 1.0f) * (width / 2.0f),
+        (ndcCoords.y + 1.0f) * (height / 2.0f));
 }
 
 /**

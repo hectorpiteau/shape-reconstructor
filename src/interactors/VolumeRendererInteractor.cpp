@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRendererInteractor.hpp (c) 2023
 Desc: VolumeRendererInteractor
 Created:  2023-04-21T13:35:05.404Z
-Modified: 2023-04-26T09:20:59.020Z
+Modified: 2023-04-26T11:30:43.827Z
 */
 #include <memory>
 #include <vector>
@@ -27,8 +27,7 @@ void VolumeRendererInteractor::SetCurrentVolumeRenderer(std::shared_ptr<VolumeRe
 
 const vec2 VolumeRendererInteractor::GetRenderingZoneMinPixel(){
     return NDCToPixel(
-        m_volumeRenderer->GetRenderingZoneMinNDC(), 
-        m_volumeRenderer->GetTargetCamera()->GetIntrinsic(), //NULL because no camera assigned. TODO:
+        m_volumeRenderer->GetRenderingZoneMinNDC(),
         m_scene->GetSceneSettings()->GetViewportWidth(), 
         m_scene->GetSceneSettings()->GetViewportHeight()
         );
@@ -36,8 +35,7 @@ const vec2 VolumeRendererInteractor::GetRenderingZoneMinPixel(){
 
 const vec2 VolumeRendererInteractor::GetRenderingZoneMaxPixel(){
     return NDCToPixel(
-        m_volumeRenderer->GetRenderingZoneMaxNDC(), 
-        m_volumeRenderer->GetTargetCamera()->GetIntrinsic(), 
+        m_volumeRenderer->GetRenderingZoneMaxNDC(),
         m_scene->GetSceneSettings()->GetViewportWidth(), 
         m_scene->GetSceneSettings()->GetViewportHeight()
         );

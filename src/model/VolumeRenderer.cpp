@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRenderer.cpp (c) 2023
 Desc: Implementation for the VolumeRenderer
 Created:  2023-04-14T14:45:11.682Z
-Modified: 2023-04-26T09:43:48.710Z
+Modified: 2023-04-26T11:55:28.545Z
 */
 #include <memory>
 #include <vector>
@@ -23,6 +23,7 @@ Modified: 2023-04-26T09:43:48.710Z
 
 #include "../cuda/VolumeRendering.cuh"
 #include "../cuda/Projection.cuh"
+#include "RayCaster/RayCaster.hpp"
 
 #include "../../include/icons/IconsFontAwesome6.h"
 
@@ -36,11 +37,11 @@ VolumeRenderer::VolumeRenderer(Scene* scene)
     m_scene->Add(m_volume, true, true);
     m_children.push_back(m_volume);
 
-    m_outPlane = std::make_shared<OverlayPlane>();
-    // m_rayCaster = std::make_shared<SingleRayCaster>();
-    m_outTex = std::make_shared<Texture2D>();
+    // m_outTex = std::make_shared<Texture2D>();
+    // m_outPlane = std::make_shared<OverlayPlane>();
 
     m_camera = scene->GetDefaultCam();
+    m_rayCaster = std::make_shared<RayCaster>(m_camera);
 
     m_renderZoneLines = std::make_shared<Lines>(scene, m_renderingZoneVertices, 4 * 2 * 3);
     m_renderZoneLines->SetColor(vec4(0.0,1.0,0.0,1.0));

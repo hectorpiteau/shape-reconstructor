@@ -17,6 +17,7 @@ enum SceneObjectTypes
     MODEL,
     MESH,
     VOLUMERENDERER,
+    RAYCASTER,
     NONE
 };
 
@@ -32,6 +33,7 @@ static const std::vector<const char *> SceneObjectNames = {
     "Model",
     "Mesh",
     "Volume Renderer",
+    "Raycaster",
     "None"};
 
 class SceneObject : public Renderable
