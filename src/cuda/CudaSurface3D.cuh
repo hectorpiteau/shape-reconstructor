@@ -7,6 +7,10 @@
 #include "../utils/helper_cuda.h"
 
 
+/** 
+ * This class can be used to hold a 3D grid of voxels data.
+ * Each voxel is a float.
+*/
 class CudaSurface3D {
 public:
     /**

@@ -35,8 +35,9 @@ private:
         {
             if (m_useRefData) m_refData = data;
             else m_data = data;
-
+            
             GLenum format;
+            
             if (m_channels == 1)
                 format = GL_RED;
             else if (m_channels == 3)
@@ -48,17 +49,19 @@ private:
             glBindTexture(GL_TEXTURE_2D, m_ID);
 
             // Setup filtering parameters for display
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
 
             glTexImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, m_useRefData ? m_refData : m_data);
-            if(m_useRefData == false) stbi_image_free(data);
+            
+            if(m_useRefData == false) stbi_image_free(m_data);
         }
     }
 
 public:
+
     Texture2D(int width, int height, int channels, short bytesPerItems) : m_width(width), m_height(height), m_channels(channels), m_bytesPerItem(bytesPerItems)
     {
         m_data = nullptr;
@@ -89,10 +92,13 @@ public:
      */
     Texture2D(const std::string &path)
     {
+        stbi_set_flip_vertically_on_load(true);
         m_data = nullptr;
         m_refData = nullptr;
         m_useRefData = false;
         unsigned char *data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, 0);
+        
+
         LoadFromData(data);
     }
 
@@ -165,6 +171,10 @@ public:
     }
 
     GLenum GetID() { return m_ID; }
+
+    void BindTexture2D(){
+        glBindTexture(GL_TEXTURE_2D, m_ID);
+    }
 
     int GetWidth() { return m_width; }
     int GetHeight() { return m_height; }

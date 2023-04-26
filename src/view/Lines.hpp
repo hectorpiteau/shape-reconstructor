@@ -8,6 +8,10 @@
 #include "../model/ShaderPipeline.hpp"
 #include "SceneObject/SceneObject.hpp"
 
+#include "../controllers/Scene/Scene.hpp"
+
+class Scene;
+
 class Lines : public SceneObject
 {
 public:
@@ -18,7 +22,7 @@ public:
      * in the world space coordinate.
      * @param dataLength : The amount of floats in the data list.
      */
-    Lines(const float *data, int dataLength);
+    Lines(Scene* scene, const float *data, int dataLength);
 
     /**
      * @brief Construct a new Lines SceneObject.
@@ -36,7 +40,7 @@ public:
      *
      * @param vertices : a vector of glm::vec3.
      */
-    void UpdateVertices(const std::vector<glm::vec3> &vertices);
+    void UpdateVertices(const float* vertices);
 
     /**
      * @brief Set the color of the lines.
@@ -60,13 +64,11 @@ public:
     /**
      * @brief Render lines on screen.
      *
-     * @param projectionMatrix : The current camera projection matrix.
-     * @param viewMatrix : The current camera view matrix.
      */
-    void Render(const glm::mat4 &projectionMatrix, const glm::mat4 &viewMatrix);
-    void Render(const glm::mat4 &projectionMatrix, const glm::mat4 &viewMatrix, std::shared_ptr<SceneSettings> scene);
+    void Render();
 
 private:
+    Scene* m_scene;
     /** Vertex Buffer Object and Vertex Attribute Object identifiers. */
     unsigned int m_VBO, m_VAO;
 

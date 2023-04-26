@@ -6,21 +6,34 @@
 #include "../utils/Utils.hpp"
 #include "../utils/SceneSettings.hpp"
 #include "../view/Lines.hpp"
+#include "../view/Gizmo.hpp"
 #include "../view/SceneObject/SceneObject.hpp"
+#include "../controllers/Scene/Scene.hpp"
+#include "../Texture2D.hpp"
+#include "../view/Plane.hpp"
+
+class Scene;
+class Lines;
+class Gizmo;
+
+using namespace glm;
 
 class Camera : public SceneObject
 {
 
 public:
-    Camera(GLFWwindow *window, std::shared_ptr<SceneSettings> sceneSettings);
+    Camera(Scene *scene, const std::string& name, const vec3& position, const vec3& target);
+    Camera(Scene* scene);
     ~Camera();
+
+    void Initialize();
 
     /**
      * @brief Set the camera's position in world space coordinates.
      * 
      * @param position : The camera position in world space coordinates.
      */
-    void SetPosition(const glm::vec3& position);
+    void SetPosition(const vec3& position);
 
     /**
      * @brief Set the camera's position in world space coordinates.
@@ -34,46 +47,56 @@ public:
     /**
      * @brief Get the camera's position in world space.
      * 
-     * @return glm::vec3 : World position.
+     * @return vec3 : World position.
      */
-    const glm::vec3& GetPosition();
+    const vec3& GetPosition();
     
     /**
      * @brief Get the camera's right vector, in world space coordinates.
      * 
-     * @return glm::vec3 : Right vector.
+     * @return vec3 : Right vector.
      */
-    const glm::vec3& GetRight();
+    const vec3& GetRight();
+    void SetRight(const vec3& v);
 
     /**
      * @brief Get the camera's real up vector, (the one orthogonal to 
      * forward and right vectors), in world space coordinates. 
      * 
-     * @return glm::vec3 : Real up vector.
+     * @return vec3 : Real up vector.
      */
-    const glm::vec3& GetRealUp();
+    const vec3& GetRealUp();
 
     /**
      * @brief Get the camera's up vector in world space coordinates.
      * 
-     * @return glm::vec3 : Up vector.
+     * @return vec3 : Up vector.
      */
-    const glm::vec3& GetUp();
+    const vec3& GetUp();
+    void SetUp(const vec3&);
 
     /**
      * @brief Get the camera's forward vector in world space coordinates.
      * 
-     * @return glm::vec3 : Forward vector.
+     * @return vec3 : Forward vector.
      */
-    const glm::vec3& GetForward();
+    const vec3& GetForward();
+    void SetForward(const vec3& v);
 
     /**
      * @brief Get the camera's target (lookAt) in world space coordinates.
      * Where the camera is looking at.
      * 
-     * @return glm::vec3 : The camera lookAt point in world space coordinates.
+     * @return vec3 : The camera lookAt point in world space coordinates.
      */
-    const glm::vec3& GetTarget();
+    const vec3& GetTarget();
+    /**
+     * @brief Set the target's of the camera. The point that the camera
+     * is looking at.
+     * 
+     * @param target : A coordinate in world space coordinates.
+     */
+    void SetTarget(const vec3& target);
     
     /**
      * @brief Computes the View / Projection (extrinsic, intrinsic) matrices 
@@ -84,16 +107,16 @@ public:
     /**
      * @brief Get the View Matrix also known as the extrinsics matrix.
      * 
-     * @return const glm::mat4& : A constant reference to the matrix.
+     * @return const mat4& : A constant reference to the matrix.
      */
-    const glm::mat4& GetViewMatrix();
+    const mat4& GetViewMatrix();
 
     /**
      * @brief Get the Projection Matrix also known as the intrinsics matrix.
      * 
-     * @return const glm::mat4& 
+     * @return const mat4& 
      */
-    const glm::mat4& GetProjectionMatrix();
+    const mat4& GetProjectionMatrix();
 
     /**
      * @brief Get the camera's Wireframe representation.
@@ -103,6 +126,12 @@ public:
      * a list of lines (wireframe).
      */
     const float* GetWireframe();
+    
+    /**
+     * @brief Updates the wireframe with the current camera's parameters.
+     * 
+     */
+    void UpdateWireframe();
 
     /**
      * @brief Set the Field of View horizontal direction of the camera.
@@ -162,57 +191,121 @@ public:
     float GetFar();
 
     /**
-     * @brief Set the target's of the camera. The point that the camera
-     * is looking at.
+     * @brief Set the camera's intrinsic matrix.
      * 
-     * @param target : A coordinate in world space coordinates.
+     * @param intrinsic : K matrix (field of view, principal point, skew).
      */
-    void SetTarget(const glm::vec3& target);
-
-    void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
-
-    void SetIntrinsic(const glm::mat4& intrinsic);
-    void SetExtrinsic(const glm::mat4& extrinsic);
-    const glm::mat4& GetIntrinsic();
-    const glm::mat4& GetExtrinsic();
+    void SetIntrinsic(const mat4& intrinsic);
+    /**
+     * @brief Set the camera's extrinsic matrix.
+     * 
+     * @param extrinsic : Position and orientation with respect to the world.
+     */
+    void SetExtrinsic(const mat4& extrinsic);
     
+    /**
+     * @brief Get the camera's intrinsic matrix.
+     * 
+     * @return const mat4& : A ref to the intrinsic matrix.
+     */
+    const mat4& GetIntrinsic();
+
+    /**
+     * @brief Get the camera's extrinsic matrix. 
+     * 
+     * @return const mat4& A ref to the the camera's extrinsic matrix.
+     */
+    const mat4& GetExtrinsic();
+    
+    /**
+     * @brief TODO
+     * 
+     */
     void Update();
+    
+    /**
+     * @brief Get the Resolution of the camera in pixels. 
+     * 
+     * @return const ivec2& (x = width, y = height), amount of pixels in both axis.
+     */
+    const ivec2& GetResolution();
+
+    /**
+     * @brief Render the camera in the scene. Render the gizmo, frustum and potentially 
+     * image planes of the camera's images is activated. 
+     */
+    void Render();
+
+    /**
+     * @brief Set the Image dislpayed on the current image plane.
+     * 
+     * @param image : A pointer to the image to display.
+     */
+    void SetImage(Image* image);
+
+    bool IsCenterLineVisible();
+
+    void SetIsCenterLineVisible(bool visible);
+
+    void SetCenterLineLength(float length);
+
+    float GetCenterLineLength();
+
+    void SetShowFrustumLines(bool value);
+    bool ShowFrustumLines();
+
+    bool ShowImagePlane();
+    void SetShowImagePlane(bool visible);
+
+    /**
+     * @brief Filename releated to the source image of the camera. 
+     * 
+     */
+    std::string filename;
 
 private:
+    /** ext dep. */
+    Scene * m_scene;
     std::shared_ptr<SceneSettings> m_sceneSettings;
 
     /** Cursor */
-    glm::vec2 m_previousCursorPos;
+    vec2 m_previousCursorPos;
+    float m_prevScrollY = 0.0f;
     
     double yDeltaAngle;
 
     /** Camera position in world space coordinates. */
-    glm::vec3 m_pos;
+    vec3 m_pos;
     /** The target position in world space that the camera is looking at. */
-    glm::vec3 m_target;
+    vec3 m_target;
     /** The camera's up vector. */
-    glm::vec3 m_up;
+    vec3 m_up;
     /** Field of view, (x,y). */
-    glm::vec2 m_fov;
+    vec2 m_fov;
+
+    float m_near = 0.001f;
+    float m_far = 100.0f;
     
-    glm::vec3 m_forward;
-    glm::vec3 m_realUp;
-    glm::vec3 m_right;
+    /** Computed values. */
+    vec3 m_forward;
+    vec3 m_realUp;
+    vec3 m_right;
 
-    float m_near;
-    float m_far;
-
+    bool m_displayCenterLine = false;
+    bool m_showImagePlane = false;
+    bool m_showFrustumLines = true;
+    
     /**
      * @brief Also known as the extrinsic matrix.
      * Rotate and translate compare to world coordinates.
      */
-    glm::mat4 m_viewMatrix;
+    mat4 m_viewMatrix;
 
     /**
      * @brief Also known as the intrinsic matrix.
      * Projection of points from camera-space to image-space.
      */
-    glm::mat4 m_projectionMatrix;
+    mat4 m_projectionMatrix;
 
     float m_scroll = 0.0f;
     float m_speed = 3.0f;
@@ -220,12 +313,26 @@ private:
     // Initial vertical angle : none
     float m_verticalAngle = -3.14f * 0.2f;
     // Initial Field of View
-    float m_initialFoV = 90.0f;
+    float m_initialFoV = 65.0f;
 
     float m_mouseSpeed = 0.005f;
 
     float m_wireframeVertices[16*3] = {0.0f};
 
-    Lines m_frustumLines;
-    Gizmo m_gizmo;
+    ivec2 m_resolution;
+
+    Lines* m_frustumLines;
+    Gizmo* m_gizmo;
+    // float m_wireSize = 0.1f;
+    float m_wireSize = 1.0f;
+
+    /** Image plane. */
+    Texture2D* m_imageTex = nullptr;
+    Plane* m_imagePlane = nullptr;
+    /** Center line forward dir. */
+    Lines* m_centerLine;
+    float m_centerLineVertices[6] = {0.0f};
+    
+    float m_centerLineLength = 1.0f;
+
 };

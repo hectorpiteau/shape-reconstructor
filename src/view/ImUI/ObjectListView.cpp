@@ -22,8 +22,11 @@ void ObjectListView::SetInteractor(ObjectListInteractor* interactor){
 
 void ObjectListView::AddItem(std::shared_ptr<ObjectListItem> item)
 {
-    std::cout << "List add item: " << item->m_name << std::endl;
     m_items.push_back(item);
+}
+
+void ObjectListView::EmptyList(){
+    m_items.clear();
 }
 
 void ObjectListView::SetSelected(int id, const std::string &name)
@@ -37,6 +40,10 @@ void ObjectListView::Render()
     ImGui::Begin("Objects");
 
     ImGui::SeparatorText("Objects in Scene");
+
+    if(ImGui::Button(ICON_FA_ROTATE_RIGHT " Update")){
+        m_interactor->UpdateList();
+    }
 
     static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
 
@@ -57,7 +64,9 @@ void ObjectListView::Render()
         ImGui::TableNextColumn();
         ImGui::Text(std::string(ICON_FA_CAMERA " Camera 0 (main)").c_str());
         ImGui::TableNextColumn();
-        ImGui::Button(std::string(" " ICON_FA_GEAR " ").c_str());
+        if(ImGui::Button(std::string(" " ICON_FA_GEAR " ").c_str())){
+            m_interactor->SelectMainCamera();
+        }
 
         for (int i=0; i<m_items.size(); ++i)
         {

@@ -17,6 +17,6 @@ public:
      * @param view : The current camera's view matrix.
      * @param scene : A set of informations on the current scene / viewport.
      */
-    virtual void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene) = 0;
+    virtual void Render() = 0;
     virtual ~Renderable() {};
 };

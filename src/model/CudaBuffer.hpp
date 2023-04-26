@@ -2,7 +2,7 @@
 #include "Buffer/Buffer.hpp"
 
 template<typename T>
-class CudaBuffer : public Buffer{
+class CudaBuffer : public Buffer<T> {
 public:
     /**
      * @brief Construct a new Cuda Buffer object

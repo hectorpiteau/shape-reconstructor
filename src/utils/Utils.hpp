@@ -39,6 +39,12 @@ public:
             std::cout << std::fixed << mat[0][i] << ",\t" << mat[1][i] << ",\t" << mat[2][i] << ",\t" << mat[3][i] << std::endl;
     }
 
+    static void print(const glm::vec4 &vec)
+    {
+        std::cout.precision(5);
+        std::cout << std::fixed << "(" << vec[0] << ",\t" << vec[1] << ",\t" << vec[2] << ",\t" << vec[3] << ")" << std::endl;
+    }
+
     static void print(const glm::vec3 &vec)
     {
         std::cout.precision(5);

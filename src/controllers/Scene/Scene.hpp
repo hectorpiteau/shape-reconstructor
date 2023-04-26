@@ -7,6 +7,8 @@
 
 #include <vector>
 #include <memory>
+class SceneObject;
+class Camera;
 
 class Scene {
 public:
@@ -33,6 +35,8 @@ public:
      * 
      * @param object : The new SceneObject to add to the scene.
      * @param active=true : True if the object is active by default, false to set it directly inactive.
+     * @param isChild=false : If true, the object will not be added at the root is the scene because it is a child of another 
+     * object. If false, the object will be added in the Scene's root object list.
      * @return T : The object newly added to the scene. 
      */
     // template<typename T>
@@ -45,6 +49,9 @@ public:
      * @return std::shared_ptr<SceneObject> : The SceneObject if it exist, nullptr otherwise.
      */
     std::shared_ptr<SceneObject> Get(int id);
+
+    // template<typename T>
+    std::vector<std::shared_ptr<SceneObject>> GetAll(SceneObjectTypes type);
     
     /**
      * @brief Remove an object from the scene.
@@ -63,9 +70,14 @@ public:
      * 
      * @return const Camera& : A constant ref to the active camera.
      */
-    const std::shared_ptr<Camera>& GetActiveCam();
+    std::shared_ptr<Camera> GetActiveCam();
+    
+    std::shared_ptr<Camera> GetDefaultCam();
 
-    const std::vector<std::shared_ptr<SceneObject>>& GetSceneObjects();
+    std::vector<std::shared_ptr<SceneObject>>& GetSceneObjects();
+
+    GLFWwindow *GetWindow();
+    std::shared_ptr<SceneSettings> GetSceneSettings();
 
     GLFWwindow *GetWindow();
     std::shared_ptr<SceneSettings> GetSceneSettings();

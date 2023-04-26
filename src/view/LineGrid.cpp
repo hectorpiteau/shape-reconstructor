@@ -12,9 +12,14 @@
 
 #include "../../include/icons/IconsFontAwesome6.h"
 
-LineGrid::LineGrid() : SceneObject{std::string("LINEGRID"), SceneObjectTypes::LINEGRID}
+LineGrid::LineGrid(Scene* scene) : SceneObject{std::string("LINEGRID"), SceneObjectTypes::LINEGRID}, m_scene(scene)
 {
     SetName(std::string(ICON_FA_TABLE_CELLS " Grid"));
+    
+    Initialize();
+}
+
+void LineGrid::Initialize(){
     /** One line per cell in each direction, minus one for each axis (x-axis and z-axis). */
     // m_centerVerticesLength = (int(m_width / m_xCellSize) - 1 + int(m_width / m_zCellSize) - 1 - 2 - 2) * 3;
     m_centerVerticesLength = 16 * 2 * 3;
@@ -88,10 +93,10 @@ LineGrid::LineGrid() : SceneObject{std::string("LINEGRID"), SceneObjectTypes::LI
     }
 
     /** Allocates the lines renderers. */
-    m_borderLines = std::make_shared<Lines>(m_borderVertices, m_borderVerticesLength);
-    m_xLine = std::make_shared<Lines>(m_xVertices, m_xVerticesLength);
-    m_zLine = std::make_shared<Lines>(m_zVertices, m_zVerticesLength);
-    m_centerLines = std::make_shared<Lines>(m_centerVertices, m_centerVerticesLength);
+    m_borderLines = std::make_shared<Lines>(m_scene, m_borderVertices, m_borderVerticesLength);
+    m_xLine = std::make_shared<Lines>(m_scene, m_xVertices, m_xVerticesLength);
+    m_zLine = std::make_shared<Lines>(m_scene, m_zVertices, m_zVerticesLength);
+    m_centerLines = std::make_shared<Lines>(m_scene, m_centerVertices, m_centerVerticesLength);
 
     /** Propagate all colors to lines renderers. */
     m_borderLines->SetColor(m_borderLinesColor);
@@ -105,21 +110,15 @@ LineGrid::~LineGrid()
     delete[] m_centerVertices;
 }
 
-LineGrid::LineGrid(float width, float xCellSize, float zCellSize)
-    : m_width(width), m_xCellSize(xCellSize), m_zCellSize(zCellSize)
+LineGrid::LineGrid(Scene* scene, float width, float xCellSize, float zCellSize)
+    : m_scene(scene), m_width(width), m_xCellSize(xCellSize), m_zCellSize(zCellSize)
 {
-    LineGrid();
+    Initialize();
 };
-
-void LineGrid::UpdateWireFrame(const glm::mat4 &, const glm::mat4 &, std::shared_ptr<SceneSettings> scene)
+void LineGrid::Render()
 {
-    /** Don't change over time. */
-}
-
-void LineGrid::Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene)
-{
-    m_xLine->Render(projection, view);
-    m_zLine->Render(projection, view);
-    m_centerLines->Render(projection, view);
-    m_borderLines->Render(projection, view);
+    m_xLine->Render();
+    m_zLine->Render();
+    m_centerLines->Render();
+    m_borderLines->Render();
 }

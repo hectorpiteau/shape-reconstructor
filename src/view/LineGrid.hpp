@@ -1,30 +1,32 @@
 #pragma once
 
 #include "Lines.hpp"
-#include "Wireframe/Wireframe.hpp"
 #include "Renderable/Renderable.hpp"
 #include "../utils/Utils.hpp"
 #include "SceneObject/SceneObject.hpp"
+#include "../controllers/Scene/Scene.hpp"
 #include <memory>
 #include <glm/glm.hpp>
 #include <iostream>
+
+class Scene;
 
 /**
  * @brief Draw a wireframe grid in the scene.
  * This object is using opengl lines.
  */
-class LineGrid : public SceneObject, Wireframe
+class LineGrid : public SceneObject
 {
 public:
-    LineGrid(float width, float xCellSize, float zCellSize);
-    LineGrid();
+    LineGrid(Scene* scene, float width, float xCellSize, float zCellSize);
+    LineGrid(Scene* scene);
     ~LineGrid();
 
-    void UpdateWireFrame(const glm::mat4 &, const glm::mat4 &, std::shared_ptr<SceneSettings> scene);
-
-    void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
+    void Render();
+    void Initialize();
 
 private:
+    Scene* m_scene;
     /** The size of the grid. */
     float m_width = 10.0f;
 

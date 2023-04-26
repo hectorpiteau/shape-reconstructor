@@ -21,6 +21,7 @@ std::shared_ptr<ObjectListItem> CreateObjectListItem(const std::shared_ptr<Scene
 
     /** Loop trough children with the same function to generate an ObjectListItem per child. */
     for(const auto& child: sceneObject->GetChildren()){
+        if(child->IsVisibleInList() == false) continue;
         std::shared_ptr<ObjectListItem> childItem = CreateObjectListItem(child, interactor);
         childItem->SetLocked(true);
         result.push_back(childItem);
@@ -29,18 +30,25 @@ std::shared_ptr<ObjectListItem> CreateObjectListItem(const std::shared_ptr<Scene
     return std::make_shared<ObjectListItem>(sceneObject->GetName(), sceneObject->GetID(), sceneObject->IsActive(), result, interactor);
 }
 
-ObjectListInteractor::ObjectListInteractor(std::shared_ptr<Scene> &scene, std::shared_ptr<ObjectListView> listView, std::shared_ptr<SceneObjectInteractor>& sceneObjectInteractor)
+ObjectListInteractor::ObjectListInteractor(Scene* scene, std::shared_ptr<ObjectListView> listView, std::shared_ptr<SceneObjectInteractor>& sceneObjectInteractor)
     : m_scene(scene), m_objectListView(listView), m_selectedObject(nullptr), m_sceneObjectInteractor(sceneObjectInteractor)
 {
     listView->SetInteractor(this);
 
+    UpdateList();
+}
+
+void ObjectListInteractor::UpdateList(){
+    if(m_objectListView == nullptr) return;
+    
+    m_objectListView->EmptyList();
+    
     for (const auto &sceneObject : m_scene->GetSceneObjects())
     {
         if(sceneObject == nullptr || sceneObject->IsChild()) continue;
         m_objectListView->AddItem(CreateObjectListItem(sceneObject, this));
     }
 }
-
 
 
 ObjectListInteractor::~ObjectListInteractor(){}
@@ -64,8 +72,10 @@ void ObjectListInteractor::Select(int id)
         /** Update the sceneObject's interactor's selected SceneObject. */
         m_sceneObjectInteractor->SetSelectedSceneObject(tmp);
     }
+}
 
-
+void ObjectListInteractor::SelectMainCamera(){
+    Select(m_scene->GetDefaultCam()->GetID());
 }
 
 void ObjectListInteractor::Render()

@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 
 struct CameraCalibrationInformations {
-    glm::mat4 intrisic;
+    glm::mat4 intrinsic;
     glm::mat4 extrinsic;
 
     float fov;
@@ -31,7 +31,7 @@ struct CameraEntry {
  */
 class CameraSet : public SceneObject {
 public:
-    CameraSet();
+    CameraSet(Scene* scene);
     CameraSet(const CameraSet& ) = delete;
     ~CameraSet();   
 
@@ -74,7 +74,7 @@ public:
      */
     std::vector<std::shared_ptr<Camera>>& GetCameras();
 
-    bool LinkToImageSet(std::shared_ptr<ImageSet> imageSet, std::shared_ptr<Scene> scene);
+    bool LinkToImageSet(std::shared_ptr<ImageSet> imageSet);
     
     bool AreCamerasGenerated();
 
@@ -82,13 +82,18 @@ public:
 
     bool CalibrateFromInformations(const std::vector<struct CameraCalibrationInformations>& informations);
 
-    void Render(const glm::mat4 &projection, const glm::mat4 &view, std::shared_ptr<SceneSettings> scene);
+    void Render();
 
-private:
-    std::vector<std::shared_ptr<Camera>> m_cameras;
+    void ShowCenterLines();
+    void HideCenterLines();
+    void SetCenterLinesLength(float length);
 
     bool m_areCameraGenerated;
     bool m_areCalibrated;
-
     bool m_isLocked;
+    
+private:
+    Scene* m_scene;
+    std::vector<std::shared_ptr<Camera>> m_cameras;
+
 };

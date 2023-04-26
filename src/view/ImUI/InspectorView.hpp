@@ -14,6 +14,9 @@
 #include "Inspectors/ImageSetInspector.hpp"
 #include "Inspectors/CameraInspector.hpp"
 #include "Inspectors/NeRFInspector.hpp"
+#include "Inspectors/CameraSetInspector.hpp"
+#include "Inspectors/VolumeEditor.hpp"
+#include "Inspectors/VolumeRendererEditor.hpp"
 
 #include "../../interactors/SceneObjectInteractor.hpp"
 
@@ -56,7 +59,10 @@ private:
     /** Inspectors */
     ImageSetInspector* m_imageSetInspectorView;
     CameraInspector* m_cameraInspectorView;
+    CameraSetInspector* m_cameraSetInspectorView;
     NeRFInspector* m_nerfDatasetInspectorView;
+    VolumeEditor* m_volumeEditorView;
+    VolumeRendererEditor* m_volumeRendererEditorView;
 
     std::string m_selectedName;
     int m_selectedId;

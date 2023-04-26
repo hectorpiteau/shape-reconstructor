@@ -12,14 +12,15 @@
 #include "../view/ImUI/InspectorView.hpp"
 #include "../controllers/Scene/Scene.hpp"
 
-SceneObjectInteractor::SceneObjectInteractor(std::shared_ptr<Scene> scene)
+SceneObjectInteractor::SceneObjectInteractor(Scene* scene)
 : m_scene(scene)
 {
     imageSetInteractor = new ImageSetInteractor();
     cameraInteractor = new CameraInteractor();
     nerfInteractor = new NeRFInteractor();
     cameraSetInteractor = new CameraSetInteractor(m_scene);
-
+    volumeRendererInteractor = new VolumeRendererInteractor(m_scene);
+    volume3DInteractor = new Volume3DInteractor();
     m_inspectorView = new InspectorView(this);
 }
 
@@ -47,6 +48,12 @@ void SceneObjectInteractor::SetSelectedSceneObject(std::shared_ptr<SceneObject> 
             break;
         case SceneObjectTypes::NERFDATASET:
             nerfInteractor->SetNeRFDataset(std::dynamic_pointer_cast<NeRFDataset>(object));
+            break;
+        case SceneObjectTypes::VOLUME3D:
+            volume3DInteractor->SetActiveVolume3D(std::dynamic_pointer_cast<Volume3D>(object));
+            break;
+        case SceneObjectTypes::VOLUMERENDERER:
+            volumeRendererInteractor->SetCurrentVolumeRenderer(std::dynamic_pointer_cast<VolumeRenderer>(object));
             break;
         case SceneObjectTypes::CAMERASET:
             cameraSetInteractor->SetActiveCameraSet(std::dynamic_pointer_cast<CameraSet>(object));

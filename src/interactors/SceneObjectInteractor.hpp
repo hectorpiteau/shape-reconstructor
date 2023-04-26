@@ -9,6 +9,8 @@
 #include "CameraInteractor.hpp"
 #include "NeRFInteractor.hpp"
 #include "CameraSetInteractor.hpp"
+#include "Volume3DInteractor.hpp"
+#include "VolumeRendererInteractor.hpp"
 
 class InspectorView;
 
@@ -24,7 +26,7 @@ class InspectorView;
  */
 class SceneObjectInteractor {
 public:
-    SceneObjectInteractor(std::shared_ptr<Scene> m_scene);
+    SceneObjectInteractor(Scene* m_scene);
     SceneObjectInteractor(const SceneObjectInteractor&) = delete;
     ~SceneObjectInteractor();
 
@@ -65,9 +67,11 @@ public:
     CameraInteractor* cameraInteractor;
     NeRFInteractor* nerfInteractor;
     CameraSetInteractor* cameraSetInteractor;
+    Volume3DInteractor* volume3DInteractor;
+    VolumeRendererInteractor* volumeRendererInteractor;
 
 private:
-    std::shared_ptr<Scene> m_scene;
+    Scene* m_scene;
     /** The currently selected SceneObject. */
     std::shared_ptr<SceneObject> m_selectedSceneObject;
 
