@@ -17,6 +17,7 @@
 #include "Inspectors/CameraSetInspector.hpp"
 #include "Inspectors/VolumeEditor.hpp"
 #include "Inspectors/VolumeRendererEditor.hpp"
+#include "Inspectors/SimpleRayCasterEditor.hpp"
 
 #include "../../interactors/SceneObjectInteractor.hpp"
 
@@ -63,6 +64,7 @@ private:
     NeRFInspector* m_nerfDatasetInspectorView;
     VolumeEditor* m_volumeEditorView;
     VolumeRendererEditor* m_volumeRendererEditorView;
+    SimpleRayCasterEditor* m_simpleRayCasterEditorView;
 
     std::string m_selectedName;
     int m_selectedId;

@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRenderer.cpp (c) 2023
 Desc: Implementation for the VolumeRenderer
 Created:  2023-04-14T14:45:11.682Z
-Modified: 2023-04-26T11:55:28.545Z
+Modified: 2023-04-26T13:51:29.197Z
 */
 #include <memory>
 #include <vector>
@@ -41,7 +41,9 @@ VolumeRenderer::VolumeRenderer(Scene* scene)
     // m_outPlane = std::make_shared<OverlayPlane>();
 
     m_camera = scene->GetDefaultCam();
-    m_rayCaster = std::make_shared<RayCaster>(m_camera);
+    m_rayCaster = std::make_shared<RayCaster>(m_scene, m_camera);
+    m_scene->Add(m_rayCaster, true, true);
+    m_children.push_back(m_rayCaster);
 
     m_renderZoneLines = std::make_shared<Lines>(scene, m_renderingZoneVertices, 4 * 2 * 3);
     m_renderZoneLines->SetColor(vec4(0.0,1.0,0.0,1.0));
@@ -52,6 +54,8 @@ VolumeRenderer::~VolumeRenderer(){
 
 void VolumeRenderer::SetUseDefaultCamera(bool useDefaultCamera){
     m_useDefaultCamera = useDefaultCamera;
+    m_camera = m_scene->GetDefaultCam();
+    m_rayCaster->SetCamera(m_camera);
 }
 
 void VolumeRenderer::ComputeRenderingZone()
@@ -92,6 +96,7 @@ void VolumeRenderer::ComputeRenderingZone()
     WRITE_VEC3(m_renderingZoneVertices, 21, p00);
 
     m_renderZoneLines->UpdateVertices(m_renderingZoneVertices);
+    m_rayCaster->SetRenderingZoneNDC(m_renderZoneMinNDC, m_renderZoneMaxNDC);
 }
 
 void VolumeRenderer::Render(){
@@ -140,6 +145,7 @@ std::vector<std::shared_ptr<Camera>> VolumeRenderer::GetAvailableCameras(){
 
 void VolumeRenderer::SetTargetCamera(std::shared_ptr<Camera> cam){
     m_camera = cam;
+    m_rayCaster->SetCamera(m_camera);
 }
 
 std::shared_ptr<Camera> VolumeRenderer::GetTargetCamera(){

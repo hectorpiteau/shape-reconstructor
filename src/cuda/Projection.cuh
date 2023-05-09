@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 Projection.cuh (c) 2023
 Desc: description
 Created:  2023-04-17T09:50:40.519Z
-Modified: 2023-04-26T12:22:14.245Z
+Modified: 2023-04-26T13:48:51.464Z
 */
 
 #ifndef PROJECTION_CUDA_H
@@ -190,7 +190,7 @@ CUDA_HOSTDEV inline vec3 PixelToWorld(const vec2 &pixelCoords, const mat4 &intri
                           width,
                           height);
 
-    auto cam = vec4(NDCToCamera(ndc, intrinsic), 1.0f);
+    auto cam = vec4(NDCToCamera(ndc, intrinsic) * -1.0f, 1.0f);
 
     return CameraToWorld(cam, extrinsic);
 }

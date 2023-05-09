@@ -41,6 +41,11 @@ Camera::Camera(Scene *scene)
 
 void Camera::Initialize(){
     m_sceneSettings = m_scene->GetSceneSettings();
+    
+    /** Set the camera's resolution to the same as the viewport for now.*/
+    m_resolution.x = m_sceneSettings->GetViewportWidth(); 
+    m_resolution.y = m_sceneSettings->GetViewportHeight(); 
+    
     /** Initialize camera's properties. */
     m_up = vec3(0.0f, 1.0f, 0.0f);
     m_forward = normalize(m_target - m_pos);

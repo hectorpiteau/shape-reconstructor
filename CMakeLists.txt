@@ -22,6 +22,8 @@ add_subdirectory(include/nlohmann)
 add_subdirectory(include/glfw)
 add_subdirectory(include/assimp)
 add_subdirectory(include/glm)
+add_subdirectory(include/libraw)
+
 
 # find_package(glfw3 3.3 REQUIRED)
 # find_package(assimp REQUIRED)
@@ -70,6 +72,7 @@ cuda_add_executable(DRTMCS
     src/interactors/CameraSetInteractor.cpp
     src/interactors/Volume3DInteractor.cpp
     src/interactors/VolumeRendererInteractor.cpp
+    src/interactors/SimpleRayCasterInteractor.cpp
 
     src/controllers/Scene/Scene.cpp 
 

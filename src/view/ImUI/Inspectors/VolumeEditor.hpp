@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeEditor.hpp (c) 2023
 Desc: Editor panel of the Volume3D scene object.
 Created:  2023-04-21T12:12:19.078Z
-Modified: 2023-04-25T14:08:01.696Z
+Modified: 2023-04-26T12:50:09.798Z
 */
 #pragma once
 #include <glm/glm.hpp>
@@ -61,10 +61,5 @@ public:
         ImGui::InputFloat3("BBox 5", &bboxe[5][0]);
         ImGui::InputFloat3("BBox 6", &bboxe[6][0]);
         ImGui::InputFloat3("BBox 7", &bboxe[7][0]);
-        // ImGui::InputFloat3("BBox Maximum", &Rendering);
-
-
-
-         
     }
 };

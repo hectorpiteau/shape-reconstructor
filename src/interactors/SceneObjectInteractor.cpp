@@ -21,6 +21,8 @@ SceneObjectInteractor::SceneObjectInteractor(Scene* scene)
     cameraSetInteractor = new CameraSetInteractor(m_scene);
     volumeRendererInteractor = new VolumeRendererInteractor(m_scene);
     volume3DInteractor = new Volume3DInteractor();
+    simpleRayCasterInteractor = new SimpleRayCasterInteractor();
+    
     m_inspectorView = new InspectorView(this);
 }
 
@@ -33,6 +35,7 @@ SceneObjectInteractor::~SceneObjectInteractor(){
     delete cameraInteractor;
     delete nerfInteractor;
     delete cameraSetInteractor;
+    delete simpleRayCasterInteractor;
 }
 
 void SceneObjectInteractor::SetSelectedSceneObject(std::shared_ptr<SceneObject> &object)
@@ -54,6 +57,9 @@ void SceneObjectInteractor::SetSelectedSceneObject(std::shared_ptr<SceneObject> 
             break;
         case SceneObjectTypes::VOLUMERENDERER:
             volumeRendererInteractor->SetCurrentVolumeRenderer(std::dynamic_pointer_cast<VolumeRenderer>(object));
+            break;
+        case SceneObjectTypes::RAYCASTER:
+            simpleRayCasterInteractor->SetActiveRayCaster(std::dynamic_pointer_cast<RayCaster>(object));
             break;
         case SceneObjectTypes::CAMERASET:
             cameraSetInteractor->SetActiveCameraSet(std::dynamic_pointer_cast<CameraSet>(object));

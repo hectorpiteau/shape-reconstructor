@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRendererInteractor.hpp (c) 2023
 Desc: VolumeRendererInteractor
 Created:  2023-04-21T13:35:05.404Z
-Modified: 2023-04-26T11:30:43.827Z
+Modified: 2023-04-26T13:23:41.515Z
 */
 #include <memory>
 #include <vector>
@@ -62,5 +62,5 @@ void VolumeRendererInteractor::SetIsRenderingZoneVisible(bool visible){
 }
 
 bool VolumeRendererInteractor::IsRenderingZoneVisible(){
-    m_volumeRenderer->ShowRenderingZone();
+    return m_volumeRenderer->ShowRenderingZone();
 }

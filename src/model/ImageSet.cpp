@@ -44,7 +44,7 @@ size_t ImageSet::LoadImages() {
     for (const auto & entry : std::filesystem::directory_iterator(m_folderPath)){
         std::cout << entry.path() << std::endl;
         Image* img = new Image(entry.path().filename());
-        img->LoadPng(entry.path(), false, false);
+        img->LoadPng(entry.path(), true, false);
         m_images.push_back(img);
     }
     /** sort by filename. */

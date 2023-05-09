@@ -323,8 +323,8 @@ private:
 
     Lines* m_frustumLines;
     Gizmo* m_gizmo;
-    // float m_wireSize = 0.1f;
-    float m_wireSize = 1.0f;
+    float m_wireSize = 0.15f;
+    // float m_wireSize = 1.0f;
 
     /** Image plane. */
     Texture2D* m_imageTex = nullptr;

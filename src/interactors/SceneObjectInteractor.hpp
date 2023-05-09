@@ -11,6 +11,7 @@
 #include "CameraSetInteractor.hpp"
 #include "Volume3DInteractor.hpp"
 #include "VolumeRendererInteractor.hpp"
+#include "SimpleRayCasterInteractor.hpp"
 
 class InspectorView;
 
@@ -69,6 +70,7 @@ public:
     CameraSetInteractor* cameraSetInteractor;
     Volume3DInteractor* volume3DInteractor;
     VolumeRendererInteractor* volumeRendererInteractor;
+    SimpleRayCasterInteractor* simpleRayCasterInteractor;
 
 private:
     Scene* m_scene;

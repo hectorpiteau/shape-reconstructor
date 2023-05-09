@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 RayCaster.hpp (c) 2023
 Desc: Ray caster is used to define rays outgoing from a camera.
 Created:  2023-04-14T09:50:13.297Z
-Modified: 2023-04-26T12:20:42.525Z
+Modified: 2023-04-26T14:15:22.040Z
 */
 #pragma once
 
@@ -16,7 +16,7 @@ Modified: 2023-04-26T12:20:42.525Z
 #include "../../cuda/Projection.cuh"
 
 #include "../../view/SceneObject/SceneObject.hpp"
-
+#include "../../controllers/Scene/Scene.hpp"
 
 using namespace glm;
 
@@ -28,6 +28,7 @@ using namespace glm;
 class RayCaster : public SceneObject
 {
 protected:
+    Scene* m_scene;
     /** Camera used to cast rays in the scene. */
     std::shared_ptr<Camera> m_camera;
 
@@ -51,13 +52,13 @@ protected:
     /** Show the rays or not in the view.*/
     bool m_showRays = false;
 
-    std::shared_ptr<Lines> m_rayLines;
+    Lines* m_rayLines = nullptr;
     float* m_rayLinesVertices = nullptr;
 
 public:
-    RayCaster(std::shared_ptr<Camera> camera)   
+    RayCaster(Scene* scene, std::shared_ptr<Camera> camera)   
     : SceneObject{std::string("RayCaster"), SceneObjectTypes::RAYCASTER},
-    m_camera(camera) {
+    m_scene(scene), m_camera(camera) {
         SetName(std::string("Simple RayCaster"));
         renderingZoneNDCMin = vec2(-1.0, -1.0);
         renderingZoneNDCMax = vec2(1.0, 1.0);
@@ -65,28 +66,66 @@ public:
         renderingZonePixelMin = floor(NDCToPixel(renderingZoneNDCMin, m_camera->GetResolution().x, m_camera->GetResolution().y));
         renderingZonePixelMax = ceil(NDCToPixel(renderingZoneNDCMax, m_camera->GetResolution().x, m_camera->GetResolution().y));
 
+        std::cout << "Resolution: " << std::to_string(m_camera->GetResolution().x) << " " << std::to_string(m_camera->GetResolution().y) << std::endl;
+
+        std::cout << "renderingZoneNDCMin: " << std::to_string(renderingZoneNDCMin.x) << " " << std::to_string(renderingZoneNDCMin.y) << std::endl;
+        std::cout << "renderingZoneNDCMax: " << std::to_string(renderingZoneNDCMax.x) << " " << std::to_string(renderingZoneNDCMax.y) << std::endl;
+        std::cout << "renderingZonePixelMax: " << std::to_string(renderingZonePixelMax.x) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
+        std::cout << "renderingZonePixelMax: " << std::to_string(renderingZonePixelMax.x) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
+        
+
         renderingZoneWidth = renderingZonePixelMax.x - renderingZonePixelMin.x;
         renderingZoneHeight = renderingZonePixelMax.y - renderingZonePixelMin.y;
+        UpdateRays();
     };
 
     ~RayCaster() {
         if(m_rayLinesVertices != nullptr) delete [] m_rayLinesVertices;
+        if(m_rayLines != nullptr) delete m_rayLines;
     }
     
     RayCaster(const RayCaster&) = delete;
 
-    void SetCamera(std::shared_ptr<Camera> camera) { m_camera = camera;}
+    void SetCamera(std::shared_ptr<Camera> camera) { 
+        m_camera = camera;
+        UpdateRays();
+    }
 
     void SetRenderingZoneNDC(const vec2& zoneNDCMin, const vec2& zoneNDCMax){
-        renderingZoneNDCMin = zoneNDCMin;
-        renderingZoneNDCMax = zoneNDCMax;
+        bool ok = false;
+        if(any(notEqual(renderingZoneNDCMin, zoneNDCMin))){
+            renderingZoneNDCMin = zoneNDCMin;
+            ok = true;
+        }
+        if(any(notEqual(renderingZoneNDCMax, zoneNDCMax))){
+            renderingZoneNDCMax = zoneNDCMax;
+            ok = true;
+        }
+        if(!ok) return;
+        std::cout << "Update rendering zone sizes (NDC) : " << std::endl;
+
+        std::cout << std::to_string(zoneNDCMin.x) << " " << std::to_string(zoneNDCMin.y) << std::endl;
+        std::cout << std::to_string(zoneNDCMax.x) << " " << std::to_string(zoneNDCMax.y) << std::endl;
         
         renderingZonePixelMin = floor(NDCToPixel(zoneNDCMin, m_camera->GetResolution().x, m_camera->GetResolution().y));
         renderingZonePixelMax = ceil(NDCToPixel(zoneNDCMax, m_camera->GetResolution().x, m_camera->GetResolution().y));
+
+        renderingZoneWidth = renderingZonePixelMax.x - renderingZonePixelMin.x;
+        renderingZoneHeight = renderingZonePixelMax.y - renderingZonePixelMin.y;
+
+        UpdateRays();
     }
 
     size_t GetAmountOfRays(){
         return renderingZoneWidth * renderingZoneHeight;
+    }
+
+    size_t GetRenderZoneWidth(){
+        return renderingZoneWidth;
+    }
+    
+    size_t GetRenderZoneHeight(){
+        return renderingZoneHeight;
     }
 
     virtual Ray GetRay(const vec2& pixel) {
@@ -100,25 +139,34 @@ public:
 
     void UpdateRays(){
         if(m_rayLinesVertices != nullptr) delete [] m_rayLinesVertices;
-        
-        m_rayLinesVertices = new float[2 * 3 * GetAmountOfRays()];
+        if(m_rayLinesVertices != nullptr) delete  m_rayLines;
+
+        size_t dataLength = 2 * 3 * GetAmountOfRays();
+        m_rayLinesVertices = new float[dataLength];
 
         size_t index = 0;
         auto origin = m_camera->GetPosition();
+        
+        std::cout << "Creating rays, x: " << std::to_string(renderingZonePixelMin.x) << " " << std::to_string(renderingZonePixelMax.x) << std::endl;
+        std::cout << "Creating rays, y: " << std::to_string(renderingZonePixelMin.y) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
+        
         for(int x=renderingZonePixelMin.x; x < renderingZonePixelMax.x; ++x){
             for(int y=renderingZonePixelMin.y; y < renderingZonePixelMax.y; ++y){
                 WRITE_VEC3(m_rayLinesVertices, index, origin);
                 index += 3;
                 auto dest = PixelToWorld(vec2(x,y),
-                m_camera->GetIntrinsic(), m_camera->GetExtrinsic(), 
-                m_camera->GetResolution().x,
-                m_camera->GetResolution().y
+                    m_camera->GetIntrinsic(), m_camera->GetExtrinsic(), 
+                    m_camera->GetResolution().x,
+                    m_camera->GetResolution().y
                 );
+                
                 WRITE_VEC3(m_rayLinesVertices, index, dest);
                 index += 3;
             }
+            break;
         }
-        
+
+        m_rayLines = new Lines(m_scene, m_rayLinesVertices, dataLength);
     }
 
     void SetRaysVisible(bool visible){

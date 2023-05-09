@@ -26,6 +26,7 @@ InspectorView::InspectorView(SceneObjectInteractor* interactor) : m_interactor(i
     m_nerfDatasetInspectorView = new NeRFInspector(m_interactor->nerfInteractor);
     m_volumeEditorView = new VolumeEditor(m_interactor->volume3DInteractor);
     m_volumeRendererEditorView = new VolumeRendererEditor(m_interactor->volumeRendererInteractor);
+    m_simpleRayCasterEditorView = new SimpleRayCasterEditor(m_interactor->simpleRayCasterInteractor);
 }
 
 InspectorView::~InspectorView() {
@@ -82,6 +83,9 @@ void InspectorView::Render(){
             break;
         case SceneObjectTypes::VOLUMERENDERER:
             m_volumeRendererEditorView->Render();
+            break;
+        case SceneObjectTypes::RAYCASTER:
+            m_simpleRayCasterEditorView->Render();
             break;
         case SceneObjectTypes::NONE:
         default:

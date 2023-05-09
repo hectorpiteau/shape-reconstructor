@@ -111,7 +111,7 @@ GLint ShaderPipeline::AddUniform(const char* name){
 
 GLint ShaderPipeline::AddUniform(const std::string name)
 {
-    AddUniform(name.c_str());
+    return AddUniform(name.c_str());
 }
 
 GLint ShaderPipeline::GetUniform(std::string name)
