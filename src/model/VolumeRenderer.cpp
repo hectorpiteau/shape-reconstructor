@@ -19,6 +19,8 @@ Modified: 2023-04-26T13:51:29.197Z
 // #include "RayCaster/SingleRayCaster.hpp"
 #include "Volume3D.hpp"
 #include "Texture2D.hpp"
+#include "CudaTexture.hpp"
+
 #include "Camera/Camera.hpp"
 
 #include "../cuda/VolumeRendering.cuh"
@@ -37,9 +39,6 @@ VolumeRenderer::VolumeRenderer(Scene* scene)
     m_scene->Add(m_volume, true, true);
     m_children.push_back(m_volume);
 
-    // m_outTex = std::make_shared<Texture2D>();
-    // m_outPlane = std::make_shared<OverlayPlane>();
-
     m_camera = scene->GetDefaultCam();
     m_rayCaster = std::make_shared<RayCaster>(m_scene, m_camera);
     m_scene->Add(m_rayCaster, true, true);
@@ -47,6 +46,17 @@ VolumeRenderer::VolumeRenderer(Scene* scene)
 
     m_renderZoneLines = std::make_shared<Lines>(scene, m_renderingZoneVertices, 4 * 2 * 3);
     m_renderZoneLines->SetColor(vec4(0.0,1.0,0.0,1.0));
+
+    /** Create the overlay plane that will be used to display the volume rendering texture on. */
+    m_outPlane = std::make_shared<OverlayPlane>(
+        std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl", "../src/shaders/f_overlay_plane.glsl")
+    );
+
+    /** Create the cuda texture that will receive the result of the volume rendering process. */
+    m_cudaTex = std::make_shared<CudaTexture>(
+        scene->GetSceneSettings()->GetViewportWidth(),
+        scene->GetSceneSettings()->GetViewportHeight()
+    );
 }
 
 VolumeRenderer::~VolumeRenderer(){
@@ -100,15 +110,27 @@ void VolumeRenderer::ComputeRenderingZone()
 }
 
 void VolumeRenderer::Render(){
+    std::shared_ptr<Camera> cam = (m_useDefaultCamera || m_camera == nullptr)  ? m_scene->GetActiveCam() : m_camera;
 
+    RayCasterParams params  = {
+        .intrinsic = cam->GetIntrinsic(),
+        .extrinsic = cam->GetExtrinsic(),
+        .worldPos = cam->GetPosition(),
+        .width = cam->GetResolution().x,
+        .height = cam->GetResolution().y 
+    };
     /** Render volume using the raycaster. */
-    // volume_rendering_wrapper(
-    //     m_rayCaster,
-    //     m_volume,
-    //     m_outTex,
-    //     (m_useDefaultCamera || m_camera == nullptr)  ? m_scene->GetActiveCam()->GetResolution().x : m_camera->GetResolution().x,
-    //     (m_useDefaultCamera || m_camera == nullptr)  ? m_scene->GetActiveCam()->GetResolution().y : m_camera->GetResolution().y
+    // volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height);
+    // volume_rendering_wrapper_linear(
+    //     params,
+    //     m_volume->GetCudaVolume()->GetDevicePtr(),
+    //     out,
+    //     cam->GetResolution().x,
+    //     cam->GetResolution().y
     // ); 
+    
+    m_outPlane->Render(true, m_cudaTex->GetTex());
+    
 
     /** Rendering zone. */
     ComputeRenderingZone();
@@ -132,7 +154,7 @@ void VolumeRenderer::SetShowRenderingZone(bool visible){
     m_showRenderingZone = visible;
 }
 
-bool VolumeRenderer::ShowRenderingZone(){
+bool VolumeRenderer::GetShowRenderingZone(){
     return m_showRenderingZone;
 }
 

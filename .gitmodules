@@ -20,3 +20,9 @@
 [submodule "include/libraw"]
 	path = include/libraw
 	url = https://github.com/LibRaw/LibRaw.git
+[submodule "include/librawcmake"]
+	path = include/librawcmake
+	url = https://github.com/LibRaw/LibRaw-cmake.git
+[submodule "include/lcms2"]
+	path = include/lcms2
+	url = https://github.com/mm2/Little-CMS.git

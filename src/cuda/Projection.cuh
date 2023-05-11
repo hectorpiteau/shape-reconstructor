@@ -180,7 +180,7 @@ CUDA_HOSTDEV inline vec2 PixelToNDC(const vec2 &pixelCoords, int width, int heig
 {
     vec2 tmp = (2.0f * pixelCoords / vec2(width, height)) - vec2(1.0f);
     // Account for image aspect ratio
-    tmp.x *= (height / width); // TODO: division can be moved sooner in code.
+    // tmp.x *= (height / width); // TODO: division can be moved sooner in code.
     return tmp;
 }
 

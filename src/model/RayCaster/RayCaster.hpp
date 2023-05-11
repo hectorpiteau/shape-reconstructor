@@ -138,32 +138,38 @@ public:
     }
 
     void UpdateRays(){
+        if(m_showRays == false) return;
         if(m_rayLinesVertices != nullptr) delete [] m_rayLinesVertices;
         if(m_rayLinesVertices != nullptr) delete  m_rayLines;
 
         size_t dataLength = 2 * 3 * GetAmountOfRays();
         m_rayLinesVertices = new float[dataLength];
+        memset(m_rayLinesVertices, 0, dataLength * sizeof(float));
 
         size_t index = 0;
         auto origin = m_camera->GetPosition();
         
+        std::cout << "Updating rays.. (amount_of_points:" << std::to_string(dataLength) << ")" << std::endl;
         std::cout << "Creating rays, x: " << std::to_string(renderingZonePixelMin.x) << " " << std::to_string(renderingZonePixelMax.x) << std::endl;
         std::cout << "Creating rays, y: " << std::to_string(renderingZonePixelMin.y) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
         
-        for(int x=renderingZonePixelMin.x; x < renderingZonePixelMax.x; ++x){
-            for(int y=renderingZonePixelMin.y; y < renderingZonePixelMax.y; ++y){
+        for(int x=renderingZonePixelMin.x; x < renderingZonePixelMax.x; x += 1){
+            for(int y=renderingZonePixelMin.y; y < renderingZonePixelMax.y; y += 1){
                 WRITE_VEC3(m_rayLinesVertices, index, origin);
                 index += 3;
+
                 auto dest = PixelToWorld(vec2(x,y),
                     m_camera->GetIntrinsic(), m_camera->GetExtrinsic(), 
                     m_camera->GetResolution().x,
                     m_camera->GetResolution().y
                 );
+                // std::cout << "x: " << std::to_string(x) << " y:" << std::to_string(y) << " => (" << std::to_string(dest.x) << ", " << std::to_string(dest.y) << ", " << std::to_string(dest.z) << std::endl;
                 
                 WRITE_VEC3(m_rayLinesVertices, index, dest);
                 index += 3;
+                // break;
             }
-            break;
+            // break;
         }
 
         m_rayLines = new Lines(m_scene, m_rayLinesVertices, dataLength);
@@ -178,7 +184,7 @@ public:
     }
 
     void Render(){
-        if(m_showRays) m_rayLines->Render();
+        if(m_showRays && m_rayLines != nullptr && m_rayLinesVertices != nullptr) m_rayLines->Render();
     }
 };
 

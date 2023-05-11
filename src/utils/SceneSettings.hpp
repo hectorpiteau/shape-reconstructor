@@ -22,8 +22,8 @@ public:
 
     void Scroll(double xOffset, double yOffset)
     {
-        m_scrollOffsets.x += xOffset;
-        m_scrollOffsets.y += yOffset;
+        m_scrollOffsets.x += xOffset * m_scrollSpeed;
+        m_scrollOffsets.y += yOffset * m_scrollSpeed;
     };
 
     glm::vec2 GetScrollOffsets() { return m_scrollOffsets; }
@@ -48,6 +48,9 @@ public:
 
     float GetViewportRatio(){ return ((float)(m_viewportWidth))/((float)(m_viewportHeight));}
 
+    void IncreaseScrollSpeed(){ m_scrollSpeed += 0.01f; std::cout << "inc scroll" << std::endl;}
+    void DecreaseScrollSpeed(){ m_scrollSpeed -= 0.01f;std::cout << "dec scroll" << std::endl;}
+
 private:
 
     /** Viewport informations */
@@ -58,6 +61,10 @@ private:
 
     /** Scroll offsets. */
     glm::vec2 m_scrollOffsets = glm::vec2(0.0, 0.0);
+
+    /** speed factors */
+    float m_scrollSpeed = 1.0f;
+    float m_moveSpeed = 1.0f;
 
     /** Mouse click status. */
     bool m_mouseLeftClick = false, m_mouseRightClick = false;

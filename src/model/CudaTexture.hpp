@@ -39,6 +39,7 @@ private:
         void *buf((void *)malloc(size_x * size_y * sizeof(GLubyte) * 4));
 
         // Specify 2D texture
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8UI_EXT, size_x, size_y, 0, GL_RGBA8UI_EXT, GL_UNSIGNED_BYTE, buf); //TODO: Maybe use 8bits int 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8UI_EXT, size_x, size_y, 0, GL_RGBA_INTEGER_EXT, GL_UNSIGNED_BYTE, buf);
 
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -48,7 +49,7 @@ private:
         // Register this texture with CUDA
         cudaError_t err = cudaGraphicsGLRegisterImage(cuda_tex, *gl_tex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard);
         // SDK_CHECK_ERROR_GL();
-        printf("cudaGraphicsGLRegisterImage error [%d]:", err);
+        printf("cudaGraphicsGLRegisterImage error? [%d]:", err);
 
         if (err == cudaSuccess)
             printf("cudaSuccess\n");
@@ -83,6 +84,12 @@ public:
     GLuint GetTex(){
         return opengl_tex_cuda;
     }
+
+    unsigned int * GetCudaPtr(){
+        return cuda_dev_render_buffer;
+    }
+
+
 
     void RunCUDA()
     {

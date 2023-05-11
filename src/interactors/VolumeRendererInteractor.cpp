@@ -62,5 +62,5 @@ void VolumeRendererInteractor::SetIsRenderingZoneVisible(bool visible){
 }
 
 bool VolumeRendererInteractor::IsRenderingZoneVisible(){
-    return m_volumeRenderer->ShowRenderingZone();
+    return m_volumeRenderer->GetShowRenderingZone();
 }

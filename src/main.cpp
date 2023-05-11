@@ -164,6 +164,12 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     {
         switch (key)
         {
+        case GLFW_KEY_8:
+            sceneSettings->IncreaseScrollSpeed();
+            break;
+        case GLFW_KEY_2:
+            sceneSettings->DecreaseScrollSpeed();
+            break;
         case GLFW_KEY_Q: // A key on AZERTY
             /** ArcBall camera. */
             sceneSettings->SetCameraModel(CameraMovementModel::ARCBALL);
@@ -405,63 +411,7 @@ int main(void)
     //     glm::vec3(1.0, 1.0, 0.0),
     //     glm::vec3(2.0, 1.0, 0.0)
     // };
-    // glm::mat4 ext = scene->GetActiveCam()->GetViewMatrix();
-
-    // glm::mat3 R = glm::mat3(ext);
-
-    // glm::vec3 center = glm::vec3(ext[0][3], ext[1][3], ext[2][3]);
-    // glm::vec3 pos = scene->GetActiveCam()->GetPosition();
-
-    // glm::mat3x3 RT = glm::transpose(R);
-
-    // glm::vec3 cameraCoords = glm::vec3(-1.0 * sceneSettings->GetViewportRatio(), 1.0, -1.0);
-
-    // glm::vec3 res = RT * cameraCoords - RT * center + pos;
-
-    // glm::vec4 res1 = CameraToWorld(glm::vec4(cameraCoords, 1.0f), ext, pos);
-
-    // int width = 1080 / 32;
-    // int height = 720 / 32;
-    // double wres = 1.0 / (double)width;
-    // double hres = 1.0 / (double)height;
-
-    // glm::vec3 wwMin = glm::vec3(-1.0 * sceneSettings->GetViewportRatio(), -1.0, -1.0);
-    // glm::vec3 wwMax = glm::vec3(1.0 * sceneSettings->GetViewportRatio(), 1.0, -1.0);
-    // glm::vec3 wwDelta = wwMax - wwMin;
-    // glm::vec3 wwRes = wwDelta / (float)width;
-    // glm::vec3 wwResD2 = wwDelta / 2.0f;
-
-    // glm::mat4 intrinsics = scene->GetActiveCam()->GetProjectionMatrix();
-
-    // glm::vec4 res1 = CameraToWorld(glm::vec4(wwMax.x, 0.0, -1.0, 1.0f), ext);
-
-    // glm::vec3 adj = glm::vec3(0.0, 0.0, 1.0);
-    // glm::vec3 hypo = glm::vec3(pos.x - res1.x, pos.y - res1.y, pos.z - res1.z);
-
-    // std::cout << "Angle: (FOV):  " << glm::length(adj) << " / " << glm::length(hypo) << " | " << (acos(glm::length(adj) / glm::length(hypo))) << std::endl;
-
-    // float *vertices2 = new float[6]{
-    //     pos.x, pos.y, pos.z,
-    //     res1.x, res1.y, res1.z
-    // };
-
-    // float *vertices2 = new float[6 * 3]{
-    //     0.0, 0.0, 0.0,
-    //     4.0, 0.0, 0.0,
-
-    //     4.0, 0.0, 0.0,
-    //     4.0, 0.0, 4.0,
-
-    //     4.0, 0.0, 4.0,
-    //     4.0, 4.0, 4.0
-
-    // };
-
-    // std::cout << "Initialize rays. " << std::endl;
-
-    // Lines testLines(scene, vertices2, 6 * 3);
-    // Lines testLines(vertices2, 6 * width * height);
-
+    
     scene->GetActiveCam()->UpdateWireframe();
     Lines cameraLines(scene, scene->GetActiveCam()->GetWireframe(), 16 * 3);
     cameraLines.SetColor(1.0, 0.0, 0.0, 0.5);

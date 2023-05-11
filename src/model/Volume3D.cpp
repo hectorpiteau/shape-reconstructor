@@ -2,6 +2,7 @@
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtx/component_wise.hpp>
+#include "../../include/icons/IconsFontAwesome6.h"
 #include "Volume3D.hpp"
 
 #include "../view/Lines.hpp"
@@ -11,9 +12,8 @@
 
 #include "../controllers/Scene/Scene.hpp"
 
-#include "../../include/icons/IconsFontAwesome6.h"
-
 #include "../cuda/Projection.cuh"
+#include "../cuda/CudaLinearVolume3D.cuh"
 
 using namespace glm;
 
@@ -22,6 +22,7 @@ Volume3D::Volume3D(Scene *scene, ivec3 res) : SceneObject{std::string("VOLUME3D"
     SetName(std::string(ICON_FA_CUBES " Volume 3D"));
     m_lines = std::make_shared<Lines>(scene, m_wireframeVertices, 12 * 2 * 3);
     ComputeBBoxPoints();
+    m_cudaVolume = std::make_shared<CudaLinearVolume3D>(vec3(100, 100, 100));
 }
 
 void Volume3D::SetBBoxMin(const vec3 &bboxMin)
@@ -37,6 +38,7 @@ void Volume3D::SetBBoxMax(const vec3 &bboxMax)
 
 void Volume3D::InitializeVolume()
 {
+    m_cudaVolume->InitStub();
 }
 
 const ivec3 &Volume3D::GetResolution()
@@ -119,4 +121,9 @@ void Volume3D::Render()
 {
     /** nothing special here for now */
     m_lines->Render();
+}
+
+
+std::shared_ptr<CudaLinearVolume3D> Volume3D::GetCudaVolume(){
+    return m_cudaVolume;
 }

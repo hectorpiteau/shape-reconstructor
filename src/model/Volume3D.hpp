@@ -31,9 +31,24 @@ class Volume3D : public SceneObject
 public:
     Volume3D(Scene *scene, ivec3 res);
 
+    /**
+     * @brief Set the Volume Min Bounding-Box coordinates.
+     * 
+     * @param bboxMin : The min vec3 corner of the bbox.
+     */
     void SetBBoxMin(const vec3 &bboxMin);
+    
+    /**
+     * @brief Set the Volume Max Bounding-Box coordinates.
+     * 
+     * @param bboxMin : The max vec3 corner of the bbox.
+     */
     void SetBBoxMax(const vec3 &bboxMax);
 
+    /**
+     * @brief 
+     * 
+     */
     void InitializeVolume();
 
     void Render();
@@ -45,24 +60,24 @@ public:
     const vec3 &GetBboxMin();
     const vec3 &GetBboxMax();
 
+    std::shared_ptr<CudaLinearVolume3D> GetCudaVolume();
+
     vec3 m_bboxPoints[8] = {};
 private:
+    /** ext dep*/
     Scene *m_scene;
-    ivec3 m_res;
-
-    // CudaLinearVolume3D m_cudaVolume;
-
-    CudaBuffer<float> *m_buffer;
-
-    /** world coordinates. */
-    vec3 m_bboxMin = vec3(-0.5, -0.5, -0.5);
-    vec3 m_bboxMax = vec3(0.5, 0.5, 0.5);
-
+    
+    
+    /** in dep */
+    std::shared_ptr<CudaLinearVolume3D> m_cudaVolume;
     std::shared_ptr<Lines> m_lines;
 
-    /** coordinates. */
-    
+    /** bbox coordinates. */
+    vec3 m_bboxMin = vec3(-0.5, -0.5, -0.5);
+    vec3 m_bboxMax = vec3(0.5, 0.5, 0.5);
+    ivec3 m_res;
 
+    /** wireframe coordinates. */
     float m_wireframeVertices[12 * 2 * 3] = {
         -0.5f,
         -0.5f,

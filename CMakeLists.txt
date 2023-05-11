@@ -24,7 +24,6 @@ add_subdirectory(include/assimp)
 add_subdirectory(include/glm)
 add_subdirectory(include/libraw)
 
-
 # find_package(glfw3 3.3 REQUIRED)
 # find_package(assimp REQUIRED)
 # find_package(OpenEXR REQUIRED)
@@ -46,6 +45,7 @@ enable_language(CUDA)
 set(CUDA_SOURCE_FILES src/cuda/kernel.cu src/cuda/CudaSurface3D.cu src/cuda/VolumeRendering.cu )
 set(CUDA_ARCH "-arch=sm_61")
 set(CMAKE_CUDA_ARCHITECTURES "61")
+
 
 
 # add the executable
@@ -114,4 +114,5 @@ message(${CUDA_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 
 # OpenEXR::OpenEXR
-target_link_libraries(DRTMCS nlohmann_json::nlohmann_json OpenGL::GL GLEW::GLEW glfw glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
+# target_link_libraries(ProjectName PRIVATE libraw::libraw)
+target_link_libraries(DRTMCS libraw::libraw nlohmann_json::nlohmann_json OpenGL::GL GLEW::GLEW glfw glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
