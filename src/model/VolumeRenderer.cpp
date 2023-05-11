@@ -121,13 +121,13 @@ void VolumeRenderer::Render(){
     };
     /** Render volume using the raycaster. */
     // volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height);
-    // volume_rendering_wrapper_linear(
-    //     params,
-    //     m_volume->GetCudaVolume()->GetDevicePtr(),
-    //     out,
-    //     cam->GetResolution().x,
-    //     cam->GetResolution().y
-    // ); 
+    volume_rendering_wrapper_linear(
+        params,
+        m_volume->GetCudaVolume()->GetDevicePtr(),
+        m_cudaTex->GetCudaPtr(),
+        cam->GetResolution().x,
+        cam->GetResolution().y
+    ); 
     
     m_outPlane->Render(true, m_cudaTex->GetTex());
     

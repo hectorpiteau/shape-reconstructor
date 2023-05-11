@@ -28,5 +28,7 @@ extern "C" void volume_rendering_wrapper(RayCasterParams& params, cudaTextureObj
 
 extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height);
 
+extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, unsigned int* outTexture, size_t width, size_t height);
+
 // void volume_rendering_wrapper(cudaTextureObject_t& volume, cudaSurfaceObject_t& outTexture, size_t width, size_t height, size_t depth);
 #endif // VOLUME_RENDERING_H

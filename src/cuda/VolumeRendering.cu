@@ -136,6 +136,33 @@ __global__ void volumeRendering(RayCasterParams& params, cudaTextureObject_t& vo
     outTexture[x * height + y].z = result.b;
 }
 
+__global__ void volumeRenderingUI8(RayCasterParams& params, cudaTextureObject_t& volume, float4* outTexture, size_t width, size_t height)
+{
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if(x >= width)return;
+    if(y >= height)return;
+
+    /** Compute Ray. */
+    struct Ray ray = {
+        .origin = vec3(0.0, 0.0, 0.0), 
+        .dir = vec3(1.0, 0.0, 0.0), 
+        .tmin = 0.0f, 
+        .tmax = 1.0f
+    };
+    
+    ray = SingleRayCaster::GetRay(vec2(x, y), params);
+
+    /** Call forward. */
+    vec4 result = forward(ray, volume);
+
+    /** Store value in Out Memory. */
+    outTexture[x * height + y].x = result.r;
+    outTexture[x * height + y].y = result.g;
+    outTexture[x * height + y].z = result.b;
+}
+
 
 /**
  * @brief 
@@ -189,6 +216,20 @@ __global__ void testFillBlue(RayCasterParams& params, float4* volume, float4* ou
 }
 
 
+
+extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, unsigned int* outTexture, size_t width, size_t height){
+    /** Max 1024 per block. As each pixel is independant, may be useful to search for optimal size. */
+    dim3 threadsperBlock(16, 16); 
+    /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
+    dim3 numBlocks(
+        (width + threadsperBlock.x - 1) / threadsperBlock.x, 
+        (height + threadsperBlock.y - 1) / threadsperBlock.y
+    );
+
+    /** Call the main volumeRendering kernel. **/
+    volumeRendering<<<numBlocks, threadsperBlock>>>(params, volume, outTexture, width, height);
+    cudaDeviceSynchronize();
+}
 
 extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height){
     std::cout << "not implemented yet." << std::endl;
