@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRendering.cu (c) 2023
 Desc: Volume rendering algorithms.
 Created:  2023-04-13T12:33:22.433Z
-Modified: 2023-04-25T12:52:31.084Z
+Modified: 2023-05-11T22:28:51.324Z
 */
 
 #include <glm/glm.hpp>
@@ -136,7 +136,7 @@ __global__ void volumeRendering(RayCasterParams& params, cudaTextureObject_t& vo
     outTexture[x * height + y].z = result.b;
 }
 
-__global__ void volumeRenderingUI8(RayCasterParams& params, cudaTextureObject_t& volume, float4* outTexture, size_t width, size_t height)
+__global__ void volumeRenderingUI8(RayCasterParams& params, cudaTextureObject_t& volume, uint4* outTexture, size_t width, size_t height)
 {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -157,10 +157,11 @@ __global__ void volumeRenderingUI8(RayCasterParams& params, cudaTextureObject_t&
     /** Call forward. */
     vec4 result = forward(ray, volume);
 
+    /** Scale up. */
+    result *= 255.0f;
+
     /** Store value in Out Memory. */
-    outTexture[x * height + y].x = result.r;
-    outTexture[x * height + y].y = result.g;
-    outTexture[x * height + y].z = result.b;
+    outTexture[x * height + y] = make_uint4(result.x, result.y, result.z, result.w);
 }
 
 
@@ -217,7 +218,7 @@ __global__ void testFillBlue(RayCasterParams& params, float4* volume, float4* ou
 
 
 
-extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, unsigned int* outTexture, size_t width, size_t height){
+extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, uint4* outTexture, size_t width, size_t height){
     /** Max 1024 per block. As each pixel is independant, may be useful to search for optimal size. */
     dim3 threadsperBlock(16, 16); 
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
@@ -227,7 +228,7 @@ extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4*
     );
 
     /** Call the main volumeRendering kernel. **/
-    volumeRendering<<<numBlocks, threadsperBlock>>>(params, volume, outTexture, width, height);
+    volumeRenderingUI8<<<numBlocks, threadsperBlock>>>(params, volume, outTexture, width, height);
     cudaDeviceSynchronize();
 }
 
