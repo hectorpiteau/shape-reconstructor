@@ -85,8 +85,8 @@ public:
         return opengl_tex_cuda;
     }
 
-    unsigned int * GetCudaPtr(){
-        return cuda_dev_render_buffer;
+    uint4 * GetCudaPtr(){
+        return (uint4*)cuda_dev_render_buffer;
     }
 
 

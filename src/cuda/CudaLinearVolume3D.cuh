@@ -142,6 +142,10 @@ public:
     CUDA_HOSTDEV float4* GetDevicePtr(){
         return m_gpuData;
     }
+
+    CUDA_HOSTDEV ivec3 GetResolution(){
+        return m_res;
+    }
 };
 
 #endif //CUDA_LINEAR_VOLUME3D_H

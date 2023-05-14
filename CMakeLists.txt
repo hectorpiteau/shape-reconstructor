@@ -42,7 +42,11 @@ if(NOT DEFINED CMAKE_CUDA_STANDARD)
 endif()
 find_package(CUDA REQUIRED)
 enable_language(CUDA)
-set(CUDA_SOURCE_FILES src/cuda/kernel.cu src/cuda/CudaSurface3D.cu src/cuda/VolumeRendering.cu )
+set(CUDA_SOURCE_FILES 
+    src/cuda/kernel.cu 
+    src/cuda/CudaSurface3D.cu 
+    src/cuda/VolumeRendering.cu
+)
 set(CUDA_ARCH "-arch=sm_61")
 set(CMAKE_CUDA_ARCHITECTURES "61")
 
@@ -106,6 +110,7 @@ include_directories("include/imgui")
 include_directories("include/imgui/backends")
 include_directories("include/glfw/include")
 include_directories("src/cuda/")
+include_directories("src/utils/")
 
 
 message("Cuda include dirs: ")

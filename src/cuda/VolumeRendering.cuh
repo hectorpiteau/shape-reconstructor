@@ -23,12 +23,25 @@ struct VolumeData
     float4 data;
 };
 
-// Forward declaration of CUDA render
+/**
+ * @brief Volume Rendering Wrapper using Texture Allocation :
+ * volume : cuda Texture3D
+ * outTex : float4
+ */
 extern "C" void volume_rendering_wrapper(RayCasterParams& params, cudaTextureObject_t &volume, float4 *outTexture, size_t width, size_t height);
 
+/**
+ * @brief Volume Rendering Wrapper using Linear Memory Allocation :
+ * volume : float4
+ * outTex : float4
+ */
 extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height);
 
-extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, unsigned int* outTexture, size_t width, size_t height);
+/**
+ * @brief Volume Rendering Wrapper using Linear Memory Allocation :
+ * volume : float4
+ * outTex : unsigned int (uint4)
+ */
+extern "C" void volume_rendering_wrapper_linea_ui8(RayCasterParams& params, float4* volume, const ivec3& volumeResolution, uint4* outTexture, size_t width, size_t height);
 
-// void volume_rendering_wrapper(cudaTextureObject_t& volume, cudaSurfaceObject_t& outTexture, size_t width, size_t height, size_t depth);
 #endif // VOLUME_RENDERING_H

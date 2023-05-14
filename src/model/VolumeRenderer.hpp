@@ -19,6 +19,7 @@ Modified: 2023-04-26T11:14:57.290Z
 #include "../view/OverlayPlane.hpp"
 #include "../controllers/Scene/Scene.hpp"
 #include "../view/Lines.hpp"
+#include "CudaTexture.hpp"
 
 using namespace glm;
 
