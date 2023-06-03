@@ -105,9 +105,14 @@ public:
 
     bool AreCamerasGenerated();
 
+    std::shared_ptr<CameraSet> GetCameraSet();
+
 private:
 
     vec2 m_imageSize = vec2(800, 800);
+    
+    Scene* m_scene;
+
     enum NeRFDatasetModes m_mode;
     
     std::string m_trainJSONPath;
@@ -118,7 +123,6 @@ private:
 
     std::vector<NeRFImage> m_images;
     std::vector<CameraCalibrationInformations> m_imagesCalibration;
-    Scene* m_scene;
 
     bool m_isCalibrationLoaded;
     bool m_camerasGenerated;

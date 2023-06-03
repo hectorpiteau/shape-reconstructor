@@ -65,7 +65,7 @@ public:
      * @param id : The id of the desired camera.
      * @return std::shared_ptr<Camera> : The camera if it exist, nullptr otherwise.
      */
-    std::shared_ptr<Camera> GetCameraById(size_t id);
+    std::shared_ptr<Camera> GetCameraById(int id);
 
     /**
      * @brief Get the list of all the cameras. 

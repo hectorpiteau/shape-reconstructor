@@ -12,6 +12,9 @@ Modified: 2023-05-11T22:28:51.324Z
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <surface_functions.h>
+
+#include <cuda_gl_interop.h>
+
 #include "../utils/helper_cuda.h"
 // #include "../utils/helper_math.h"
 #include <device_launch_parameters.h>
@@ -21,7 +24,12 @@ Modified: 2023-05-11T22:28:51.324Z
 #include "../model/RayCaster/Ray.h"
 #include "SingleRayCaster.cuh"
 
-static const float MIN_TRANSMITTANCE = 0.001f;
+#include "Common.cuh"
+
+// static const float MIN_TRANSMITTANCE = 0.001f;
+
+// surface<void, cudaSurfaceType2D> surfaceWrite;
+
 
 using namespace glm;
 
@@ -67,7 +75,17 @@ inline __device__ float4 vec4ToFloat4(vec4 a)
  * @param resolution : The volume resolution in each direction.
  * @return bool : 
  */
-__device__ bool ReadVolume(struct VolumeData& data, vec3& pos, float4* volume, const ivec3& resolution){
+__device__ float4 ReadVolume(vec3& pos, float4* volume, const ivec3& resolution){
+    float4 res = make_float4(255.0, 0.0, 0.0, 0.0);
+    // if(pos.x < 0.0 || pos.z < 0.0 || pos.z < 0.0) return res;
+    // if(pos.x > 1.0 || pos.z > 1.0 || pos.z > 1.0) return res;
+    res.x = pos.x * 255.0;
+    res.y = pos.y * 255.0; 
+    res.z = pos.z * 255.0; 
+    res.w = (pos - vec3(0.5, 0.5, 0.5)).length()- 0.2;
+    
+    return res;
+
     /** Manual tri-linear interpolation. */
     vec3 full_coords = pos * vec3(resolution);
     ivec3 min = floor(full_coords); // first project [0,1] to [0, resolution], then take the floor index.
@@ -100,9 +118,9 @@ __device__ bool ReadVolume(struct VolumeData& data, vec3& pos, float4* volume, c
     vec4 c0 = mix(c00, c10, wy);
     vec4 c1 = mix(c01, c11, wy);
 
-    data.data = vec4ToFloat4(mix(c0, c1, wz));
+    // data.data = vec4ToFloat4(mix(c0, c1, wz));
     
-    return true;
+    return res;
 }
 
 __device__ bool ReadVolume(struct VolumeData& data, vec3& pos, cudaTextureObject_t& volume){
@@ -131,148 +149,233 @@ __device__ float tsdfToAlpha(float tsdf, float previousTsdf, float density){
 //     bool gradWritten = false;
 // }
 
-__device__ vec4 forward(Ray ray, float4* volume, const ivec3& resolution)
+__device__ vec4 forward(Ray& ray, VolumeDescriptor* volume) //, float4* volume, const ivec3& resolution)
 {
     /** Partial transmittance. */
     float Tpartial = 1.0f;
     /** Partial color. */
     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
 
-    float previousTsdf = 1.0f;
-    float step = 0.001f;
-    float density = 1.0f;
-    
+    // float previousTsdf = 1.0f;
+    float step = 0.01f;
+    // float density = 1.0f;
+
+    const uint MAX_ITER = 100;
+    uint cpt = 0;
+
+    uint inside_counter = 0;
+
     /** The ray's min must be strictly smaller than max. */
     if (ray.tmin < ray.tmax)
     {
+        
         /** Travel through the ray from it's min to max. */
         for (float t = ray.tmin; t < ray.tmax; t += step)
         {
-            vec3 worldPos = ray.origin + t * ray.dir;
-
-            struct VolumeData data = {};
-
-            // Read from input surface
-            if(ReadVolume(data, worldPos, volume, resolution)){
-                vec3 color = vec3(data.data.x, data.data.y, data.data.z);
-
-                // sample exactly on the zero_crossing.
-                // if(){}
-
-                float alpha = tsdfToAlpha(data.data.w, previousTsdf, density);
-                previousTsdf = data.data.w;
-
-                Cpartial += color * (1.0f - alpha) * Tpartial;
-                Tpartial *= alpha;
-
-                if(Tpartial < MIN_TRANSMITTANCE){
-                    Tpartial = 0.0f;
-                    break;
-                }
+            if(cpt > MAX_ITER){
+                // return vec4(255, 0, 255, 255);
+                break;
             }
+            cpt++;
+            vec3 pos = ray.origin + t * ray.dir;
+
+            inside_counter += 1; //IsPointInVolume(pos);
+
+            // struct VolumeData data = { };
+            // data.data = make_float4(0.0, 0.0, 0.0, 0.0);
+            // float4 data = ReadVolume(pos, volume, resolution);
+            // float4 data;
+            // data.x = pos.x * 255.0;
+            // data.y = pos.y * 255.0; 
+            // data.z = pos.z * 255.0; 
+            // data.w = (pos - vec3(0.5, 0.5, 0.5)).length()- 0.2;
+            // // Read from input surface
+            // // if(ReadVolume(data, pos, volume, resolution)){
+            //     vec3 color = vec3(data.x, data.y, data.z);
+                
+            //     // // sample exactly on the zero_crossing.
+            //     // // if(){}
+
+            //     float alpha =  data.w; //tsdfToAlpha(data.w, previousTsdf, density);
+            //     previousTsdf = data.w;
+
+            //     Cpartial += color;// * (1.0f - alpha) * Tpartial;
+            //     Tpartial *= alpha;
+
+            //     if(Tpartial < MIN_TRANSMITTANCE){
+            //         Tpartial = 0.0f;
+            //         return vec4(0,0,255,255);
+            //         break;
+            //     }
+            // }
         }
+        return vec4(cpt, inside_counter, 0, 255);
+
+        // auto val = floor((inside_counter/MAX_ITER) * 255.0);
+        // return vec4(val, val, val, 255);
     }
+    return vec4(255,0,0,255);
     return vec4(Cpartial, Tpartial);
 }
 
-__device__ vec4 forward(Ray ray, cudaTextureObject_t& volume)
-{
-    /** Partial transmittance. */
-    float Tpartial = 1.0f;
-    /** Partial color. */
-    vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
+// __device__ vec4 forward(Ray ray, cudaTextureObject_t& volume)
+// {
+//     /** Partial transmittance. */
+//     float Tpartial = 1.0f;
+//     /** Partial color. */
+//     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
 
-    float previousTsdf = 1.0f;
-    float step = 0.001f;
-    float density = 1.0f;
+//     float previousTsdf = 1.0f;
+//     float step = 0.001f;
+//     float density = 1.0f;
     
-    /** The ray's min must be strictly smaller than max. */
-    if (ray.tmin < ray.tmax)
-    {
-        /** Travel through the ray from it's min to max. */
-        for (float t = ray.tmin; t < ray.tmax; t += step)
-        {
-            vec3 worldPos = ray.origin + t * ray.dir;
+//     /** The ray's min must be strictly smaller than max. */
+//     if (ray.tmin < ray.tmax)
+//     {
+//         /** Travel through the ray from it's min to max. */
+//         for (float t = ray.tmin; t < ray.tmax; t += step)
+//         {
+//             vec3 worldPos = ray.origin + t * ray.dir;
 
-            struct VolumeData data = {};
+//             struct VolumeData data = {};
 
-            // Read from input surface
-            if(ReadVolume(data, worldPos, volume)){
-                vec3 color = vec3(data.data.x, data.data.y, data.data.z);
+//             // Read from input surface
+//             if(ReadVolume(data, worldPos, volume)){
+//                 vec3 color = vec3(data.data.x, data.data.y, data.data.z);
 
-                // sample exactly on the zero_crossing.
-                // if(){}
+//                 // sample exactly on the zero_crossing.
+//                 // if(){}
 
-                float alpha = tsdfToAlpha(data.data.w, previousTsdf, density);
-                previousTsdf = data.data.w;
+//                 float alpha = tsdfToAlpha(data.data.w, previousTsdf, density);
+//                 previousTsdf = data.data.w;
 
-                Cpartial += color * (1.0f - alpha) * Tpartial;
-                Tpartial *= alpha;
+//                 Cpartial += color * (1.0f - alpha) * Tpartial;
+//                 Tpartial *= alpha;
 
-                if(Tpartial < MIN_TRANSMITTANCE){
-                    Tpartial = 0.0f;
-                    break;
-                }
-            }
-        }
-    }
-    return vec4(Cpartial, Tpartial);
-}
+//                 if(Tpartial < MIN_TRANSMITTANCE){
+//                     Tpartial = 0.0f;
+//                     break;
+//                 }
+//             }
+//         }
+//     }
+//     return vec4(Cpartial, Tpartial);
+// }
 
 /** 2D kernel that project rays in the volume. */
-__global__ void volumeRendering(RayCasterParams& params, cudaTextureObject_t& volume, float4* outTexture, size_t width, size_t height)
+// __global__ void volumeRendering(RayCasterParams& params, cudaTextureObject_t& volume, float4* outTexture, size_t width, size_t height)
+// {
+//     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+//     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+//     if(x >= width)return;
+//     if(y >= height)return;
+
+//     /** Compute Ray. */
+//     struct Ray ray = {
+//         .origin = vec3(0.0, 0.0, 0.0), 
+//         .dir = vec3(1.0, 0.0, 0.0), 
+//         .tmin = 0.0f, 
+//         .tmax = 1.0f
+//     };
+    
+//     ray = SingleRayCaster::GetRay(vec2(x, y), params);
+
+//     /** Call forward. */
+//     vec4 result = forward(ray, volume);
+
+//     /** Store value in Out Memory. */
+//     outTexture[x * height + y].x = result.r;
+//     outTexture[x * height + y].y = result.g;
+//     outTexture[x * height + y].z = result.b;
+// }
+
+__global__ void volumeRenderingUI8(RayCasterDescriptor* raycaster, CameraDescriptor* camera, VolumeDescriptor* volume)
 {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if(x >= width)return;
-    if(y >= height)return;
+
+    if(x >= raycaster->width)return;
+    if(y >= raycaster->height)return;
+    
+    uint minpx = raycaster->width - raycaster->minPixelX;
+    uint minpy = raycaster->width - raycaster->minPixelY;
+    
+    uint maxpx = raycaster->width - raycaster->maxPixelX;
+    uint maxpy = raycaster->width - raycaster->maxPixelY;
+
+    uint4 a = make_uint4(maxpx, maxpy, minpx, minpy);
+    minpx = a.x;
+    minpy = a.y;
+    maxpx = a.z;
+    maxpy = a.w;
+
+    if(x < 2){
+        surf2Dwrite<uchar4>(make_uchar4(255, 0, 0, 255), raycaster->surface, x*sizeof(uchar4), y);
+        return;
+    }
+
+    if(x > minpx - 5 && x < minpx + 5
+    && y > minpy - 5 && y < minpy + 5){
+        surf2Dwrite<uchar4>(make_uchar4(255, 255, 0, 255), raycaster->surface, x*sizeof(uchar4), y);
+        return;
+    }
+
+    if(x > maxpx - 5 && x < maxpx + 5
+    && y > maxpy - 5 && y < maxpy + 5){
+        surf2Dwrite<uchar4>(make_uchar4(0, 255, 255, 255), raycaster->surface, x*sizeof(uchar4), y);
+        return;
+    }
+
+
+    if(y < 2){
+        surf2Dwrite<uchar4>(make_uchar4(0, 0, 255, 255), raycaster->surface, x*sizeof(uchar4), y);
+        return;
+    }
+
+    if(x < minpx || x > maxpx || y < minpy || y > maxpy ){
+        uchar4 element = make_uchar4(0, 0, 0, 0);
+	    surf2Dwrite<uchar4>(element, raycaster->surface, x*sizeof(uchar4), y);
+        return;
+    }
 
     /** Compute Ray. */
-    struct Ray ray = {
-        .origin = vec3(0.0, 0.0, 0.0), 
-        .dir = vec3(1.0, 0.0, 0.0), 
-        .tmin = 0.0f, 
-        .tmax = 1.0f
-    };
+    // struct Ray ray = {
+    //     .origin = vec3(-0.5, -0.5, -0.5), 
+    //     // .dir = dir, 
+    //     .dir = vec3(0.5, 0.5, 0.5), 
+    //     .tmin = 0.0f, 
+    //     .tmax = 1.0f
+    // };
     
-    ray = SingleRayCaster::GetRay(vec2(x, y), params);
+    Ray ray = SingleRayCaster::GetRay(vec2(x, y), camera);
 
     /** Call forward. */
     vec4 result = forward(ray, volume);
 
-    /** Store value in Out Memory. */
-    outTexture[x * height + y].x = result.r;
-    outTexture[x * height + y].y = result.g;
-    outTexture[x * height + y].z = result.b;
-}
+    uchar4 element = make_uchar4(result.x, result.y, result.z, 255);
 
-__global__ void volumeRenderingUI8(RayCasterParams& params, float4* volume, const ivec3& volumeResolution, uint4* outTexture, size_t width, size_t height)
-{
-    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+    // struct VolumeData data = {.data = make_float4(0, 0, 0, 255)};
 
-    if(x >= width)return;
-    if(y >= height)return;
-
-    /** Compute Ray. */
-    struct Ray ray = {
-        .origin = vec3(0.0, 0.0, 0.0), 
-        .dir = vec3(1.0, 0.0, 0.0), 
-        .tmin = 0.0f, 
-        .tmax = 1.0f
-    };
+    // vec3 fakepos = vec3(0.2, 0.2, 0.2);
+    // Read from input surface
+    // size_t x_step = volumeResolution.y*volumeResolution.z;
+    // size_t y_step = volumeResolution.z;
+    // float4 bres = volume[y];
     
-    ray = SingleRayCaster::GetRay(vec2(x, y), params);
-
-    /** Call forward. */
-    vec4 result = forward(ray, volume, volumeResolution);
+    // element = make_uchar4(bres.x, bres.y, bres.z, 255);
+    
 
     /** Scale up. */
-    result *= 255.0f;
+    // result *= 255.0f;
 
     /** Store value in Out Memory. */
-    outTexture[x * height + y] = make_uint4(result.x, result.y, result.z, result.w);
+    // outTexture[x * height + y] = make_uint4(result.x, result.y, result.z, result.w);
+    
+    // uchar4 element = make_uchar4(16*(x%16) , 100, 16*(y%16), 255);
+    
+	surf2Dwrite<uchar4>(element, raycaster->surface, (x)*sizeof(uchar4), y);
 }
 
 
@@ -284,64 +387,67 @@ __global__ void volumeRenderingUI8(RayCasterParams& params, float4* volume, cons
  * @param outTexture : A 2D texture in which the volume rendering is rendered.
  * 
  */
-extern "C" void volume_rendering_wrapper(RayCasterParams& params, cudaTextureObject_t &volume, float4* outTexture, size_t width, size_t height)
-{
-    /** Max 1024 per block. As each pixel is independant, may be useful to search for optimal size. */
-    dim3 threadsperBlock(16, 16); 
-    /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
-    dim3 numBlocks(
-        (width + threadsperBlock.x - 1) / threadsperBlock.x, 
-        (height + threadsperBlock.y - 1) / threadsperBlock.y
-    );
+// extern "C" void volume_rendering_wrapper(RayCasterParams& params, cudaTextureObject_t &volume, float4* outTexture, size_t width, size_t height)
+// {
+//     /** Max 1024 per block. As each pixel is independant, may be useful to search for optimal size. */
+//     dim3 threadsperBlock(16, 16); 
+//     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
+//     dim3 numBlocks(
+//         (width + threadsperBlock.x - 1) / threadsperBlock.x, 
+//         (height + threadsperBlock.y - 1) / threadsperBlock.y
+//     );
 
-    /** Call the main volumeRendering kernel. **/
-    volumeRendering<<<numBlocks, threadsperBlock>>>(params, volume, outTexture, width, height);
-    cudaDeviceSynchronize();
-}
+//     /** Call the main volumeRendering kernel. **/
+//     volumeRendering<<<numBlocks, threadsperBlock>>>(params, volume, outTexture, width, height);
+//     cudaDeviceSynchronize();
+// }
 
 
-__global__ void testFillBlue(RayCasterParams& params, float4* volume, float4* outTexture, size_t width, size_t height)
-{
-    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+// __global__ void testFillBlue(RayCasterParams& params, float4* volume, float4* outTexture, size_t width, size_t height)
+// {
+//     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+//     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if(x >= width)return;
-    if(y >= height)return;
+//     if(x >= width)return;
+//     if(y >= height)return;
 
-    /** Compute Ray. */
-    struct Ray ray = {
-        .origin = vec3(0.0, 0.0, 0.0), 
-        .dir = vec3(1.0, 0.0, 0.0), 
-        .tmin = 0.0f, 
-        .tmax = 1.0f
-    };
+//     /** Compute Ray. */
+//     struct Ray ray = {
+//         .origin = vec3(0.0, 0.0, 0.0), 
+//         .dir = vec3(1.0, 0.0, 0.0), 
+//         .tmin = 0.0f, 
+//         .tmax = 1.0f
+//     };
     
-    ray = SingleRayCaster::GetRay(vec2(x, y), params);
+//     ray = SingleRayCaster::GetRay(vec2(x, y), params);
 
-    /** Call forward. */
-    vec4 result = vec4(0.0, 0.0, 1.0, 1.0);
+//     /** Call forward. */
+//     vec4 result = vec4(0.0, 0.0, 1.0, 1.0);
 
-    /** Store value in Out Memory. */
-    outTexture[x * height + y].x = result.r;
-    outTexture[x * height + y].y = result.g;
-    outTexture[x * height + y].z = result.b;
-}
+//     /** Store value in Out Memory. */
+//     outTexture[x * height + y].x = result.r;
+//     outTexture[x * height + y].y = result.g;
+//     outTexture[x * height + y].z = result.b;
+//     outTexture[x * height + y].w = result.a;
+// }
 
 
-extern "C" void volume_rendering_wrapper_linea_ui8(RayCasterParams& params, float4* volume, const ivec3& volumeResolution, uint4* outTexture, size_t width, size_t height){
+extern "C" void volume_rendering_wrapper_linea_ui8(RayCasterDescriptor* raycaster, CameraDescriptor* camera, VolumeDescriptor* volume){
     /** Max 1024 per block. As each pixel is independant, may be useful to search for optimal size. */
     dim3 threadsperBlock(16, 16);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
     dim3 numBlocks(
-        (width + threadsperBlock.x - 1) / threadsperBlock.x, 
-        (height + threadsperBlock.y - 1) / threadsperBlock.y
+        (raycaster->width + threadsperBlock.x - 1) / threadsperBlock.x, 
+        (raycaster->height + threadsperBlock.y - 1) / threadsperBlock.y
     );
 
     /** Call the main volumeRendering kernel. **/
-    volumeRenderingUI8<<<numBlocks, threadsperBlock>>>(params, volume, volumeResolution, outTexture, width, height);
-    cudaDeviceSynchronize();
-}
+    volumeRenderingUI8<<<numBlocks, threadsperBlock>>>(raycaster, camera, volume);
+    
+    /** Get last error after rendering. */
+    cudaError_t err = cudaGetLastError();
+    if(err != cudaSuccess) {
+        std::cerr << "ERROR: " << cudaGetErrorString(err) << std::endl;
+    }
 
-extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height){
-    std::cout << "not implemented yet." << std::endl;
 }

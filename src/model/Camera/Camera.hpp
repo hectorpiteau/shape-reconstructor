@@ -269,7 +269,7 @@ private:
     std::shared_ptr<SceneSettings> m_sceneSettings;
 
     /** Cursor */
-    vec2 m_previousCursorPos;
+    vec2 m_previousCursorPos = vec2(0.0, 0.0);
     float m_prevScrollY = 0.0f;
     
     double yDeltaAngle;

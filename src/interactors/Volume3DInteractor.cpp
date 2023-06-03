@@ -51,6 +51,14 @@ const vec3& Volume3DInteractor::GetBboxMax(){
     return m_volume->GetBboxMax();
 }
 
+void Volume3DInteractor::SetBboxMin(const vec3& min){
+    m_volume->SetBBoxMin(min);
+}
+
+void Volume3DInteractor::SetBboxMax(const vec3& max){
+    m_volume->SetBBoxMax(max);
+}
+
 const vec3* Volume3DInteractor::GetBBox(){
     return m_volume->m_bboxPoints;
 }

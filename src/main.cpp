@@ -56,8 +56,8 @@ using namespace cv;
 using namespace glm;
 
 #define GLSL(src) #src
-#define WINDOW_WIDTH 1080
-#define WINDOW_HEIGHT 720
+#define WINDOW_WIDTH 1920
+#define WINDOW_HEIGHT 1080
 
 /**
  * @brief
@@ -81,7 +81,6 @@ static void pxl_glfw_fps(GLFWwindow *window)
         const double fps = (double)frame_count / elapsed;
 
         int width, height;
-        char tmp[64];
 
         std::ostringstream oss;
         glfwGetFramebufferSize(window, &width, &height);
@@ -96,10 +95,10 @@ static void pxl_glfw_fps(GLFWwindow *window)
     frame_count++;
 }
 
-static void render(GLFWwindow *window, GLuint shaderProgram)
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-}
+// static void render(GLFWwindow *window, GLuint shaderProgram)
+// {
+//     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
+// }
 
 static void error_callback(int error, const char *description)
 {
@@ -385,9 +384,9 @@ int main(void)
     auto cubePipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_shader.glsl", "../src/shaders/f_shader.glsl");
     UnitCube cube(cubePipeline);
 
-    auto meshPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_mesh.glsl", "../src/shaders/f_mesh.glsl");
+    // auto meshPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_mesh.glsl", "../src/shaders/f_mesh.glsl");
     // Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/data/sphere.obj");
-    Model model(scene, meshPipeline, "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/bust/marble_bust_01_4k.fbx");
+    // Model model(scene, meshPipeline, "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/bust/marble_bust_01_4k.fbx");
 
     // auto skyboxPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_skybox.glsl", "../src/shaders/f_skybox.glsl");
 
@@ -437,7 +436,7 @@ int main(void)
 
     // CudaSurface3D surface(100, 100, 100);
 
-    static float scale = 1.0f;
+    // static float scale = 1.0f;
     cudaSetDevice(0);
     while (!glfwWindowShouldClose(window))
     {
@@ -490,7 +489,6 @@ int main(void)
 
             if (ImGui::BeginMenu("Setups"))
             {
-                bool test;
                 ImGui::MenuItem("Setup for Simple Stereo");
                 ImGui::MenuItem("Setup for MultiView");
                 ImGui::EndMenu();
@@ -502,37 +500,38 @@ int main(void)
         ImGui::SeparatorText("Memory Usage: ");
         
         size_t free = 0, total = 0;
-        cudaError_t err = cudaMemGetInfo(&free,  &total);
+        // cudaError_t err = 
+        cudaMemGetInfo(&free,  &total);
         free = free/1024/1024;
         total = total/1024/1024;
         
         ImGui::Text("Free: ");
         ImGui::SameLine();
-        ImGui::Text(std::to_string(free).c_str());
+        ImGui::TextUnformatted(std::to_string(free).c_str());
         ImGui::SameLine();
         ImGui::Text(" MB");
         
         ImGui::Text("Total: ");
         ImGui::SameLine();
-        ImGui::Text(std::to_string(total).c_str());
+        ImGui::TextUnformatted(std::to_string(total).c_str());
         ImGui::SameLine();
         ImGui::Text(" MB");
 
         ImGui::Text("Used: ");
         ImGui::SameLine();
-        ImGui::Text(std::to_string(total - free).c_str());
+        ImGui::TextUnformatted(std::to_string(total - free).c_str());
         ImGui::SameLine();
         ImGui::Text(" MB");
 
         ImGui::Separator();
 
-        ImGui::Text(
+        ImGui::TextUnformatted(
             (std::string("Camera Mode: ") + std::string(sceneSettings->GetCameraModel() == CameraMovementModel::ARCBALL ? "ArcBall" : "Fps")).c_str());
-        ImGui::Text(
+        ImGui::TextUnformatted(
             (std::string("Mouse Left: ") + std::string(sceneSettings->GetMouseLeftClick() ? "Pressed" : "Released")).c_str());
-        ImGui::Text(
+        ImGui::TextUnformatted(
             (std::string("Mouse Right: ") + std::string(sceneSettings->GetMouseRightClick() ? "Pressed" : "Released")).c_str());
-        ImGui::Text(
+        ImGui::TextUnformatted(
             (std::string("Scroll offsets: ") + std::to_string(sceneSettings->GetScrollOffsets().x) + std::string(", ") + std::to_string(sceneSettings->GetScrollOffsets().y)).c_str());
 
         float inf[3] = {scene->GetActiveCam()->GetPosition().x, scene->GetActiveCam()->GetPosition().y, scene->GetActiveCam()->GetPosition().z};

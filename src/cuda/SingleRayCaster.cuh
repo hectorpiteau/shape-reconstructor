@@ -14,6 +14,7 @@ Modified: 2023-04-17T11:39:56.003Z
 #include <glm/glm.hpp>
 #include "Projection.cuh"
 #include "RayCasterParams.cuh"
+#include "Common.cuh"
 
 using namespace glm;
 
@@ -28,16 +29,17 @@ public:
 
     ~SingleRayCaster() {};
     
-    __device__ static Ray GetRay(const glm::vec2 &pixel, RayCasterParams params){
+    __device__ static Ray GetRay(const glm::vec2 &pixel, CameraDescriptor* camera){
         vec3 dir = vec3(0.0);
         /** Compute ray from camera to pixel. Undistort. */
-        dir = PixelToWorld(pixel, params.intrinsic, params.extrinsic, params.width, params.height);
+        dir = PixelToWorld(pixel, camera->camInt, camera->camExt, camera->width, camera->height);
 
         Ray ray = {
-            .origin = params.worldPos,
+            .origin = camera->camPos,
             .dir = dir,
-            .tmin = 0,
-            .tmax = 1};
+            .tmin = 0.0f,
+            .tmax = 10.0f
+        };
 
         return ray;
     }

@@ -59,9 +59,12 @@ public:
         ImGui::InputFloat2("Maximum", &renderZoneMaxPixel[0]);
         ImGui::EndDisabled();
         ImGui::Separator();
-
+        ImGui::Spacing();
+        ImGui::Checkbox("Render", &showRenderingZone);
+        ImGui::Separator();
         ImGui::Spacing();
         ImGui::Checkbox("Show rendering zone on camera", &showRenderingZone);
+        
 
         static ImGuiComboFlags flags = 0;
 
@@ -72,7 +75,7 @@ public:
 
             if (ImGui::BeginCombo("Target Camera", combo_preview, flags))
             {
-                for (int i = 0; i < m_comboBoxCameras.size(); ++i)
+                for (size_t i = 0; i < m_comboBoxCameras.size(); ++i)
                 {
 
                     const bool is_selected = (m_comboBoxCurrent == i);

@@ -33,7 +33,7 @@ public:
      */
     int GetAmountOfImages();
 
-    Image *GetImage(int index);
+    Image *GetImage(size_t index);
     Image *GetImage(const std::string &filename);
 
     std::vector<Image *> &GetImages();

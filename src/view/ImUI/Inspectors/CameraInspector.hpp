@@ -52,7 +52,7 @@ public:
             return;
         }
 
-        ImGui::Text(m_interactor->GetCamera()->filename.c_str());
+        ImGui::TextUnformatted(m_interactor->GetCamera()->filename.c_str());
 
         ImGui::Checkbox("Display Image Plane", &dispImagePlane);
         ImGui::Checkbox("Display Frustum", &dispFrustLines);

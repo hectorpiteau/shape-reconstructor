@@ -9,8 +9,13 @@
 
 #define ID_XX "##"
 
-ObjectListItem::ObjectListItem(const std::string &name, int id, bool checked, std::vector<std::shared_ptr<ObjectListItem>>& children, ObjectListInteractor* interactor) 
-: m_name(name), m_id(id), m_checked(checked), m_children(children), m_interactor(interactor)
+ObjectListItem::ObjectListItem(const std::string &name, int id, bool checked, std::vector<std::shared_ptr<ObjectListItem>>& children, ObjectListInteractor* interactor) : 
+m_name(name), 
+m_checked(checked), 
+m_id(id), 
+m_locked(false),
+m_interactor(interactor), 
+m_children(children) 
 {
 }
 
@@ -25,6 +30,7 @@ void ObjectListItem::SetLocked(bool locked){
 
 void ObjectListItem::Render()
 {
+    bool islok = m_locked;
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
 
@@ -37,7 +43,7 @@ void ObjectListItem::Render()
 
     ImGui::TableNextColumn();
 
-    if(m_locked){
+    if(islok){
         ImGui::Text(ICON_FA_CARET_RIGHT " ");
         ImGui::SameLine();
         ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));    
@@ -50,7 +56,7 @@ void ObjectListItem::Render()
         m_interactor->Select(m_id);
     }
 
-    if(m_locked){
+    if(islok){
         ImGui::PopStyleColor(3);
     }
 

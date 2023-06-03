@@ -37,11 +37,13 @@ public:
     // constructor, expects a filepath to a 3D model.
     Model(Scene* scene, std::shared_ptr<ShaderPipeline> pipeline, std::string const &path, bool gamma = false) 
     : SceneObject{std::string("Model"), SceneObjectTypes::MODEL}, 
+    texturesLoaded(),
+    meshes(),
+    directory(""),
+    gammaCorrection(gamma),
     m_scene(scene),
-    gammaCorrection(gamma)
+    m_pipeline(pipeline)
     {
-        m_pipeline = pipeline;
-
         m_modelLocation = m_pipeline->AddUniform("model");
         m_viewLocation = m_pipeline->AddUniform("view");
         m_projectionLocation = m_pipeline->AddUniform("projection");
@@ -70,10 +72,10 @@ public:
 
 private:
     Scene* m_scene;
+    std::shared_ptr<ShaderPipeline> m_pipeline;
     GLint m_modelLocation;
     GLint m_viewLocation;
     GLint m_projectionLocation;
-    std::shared_ptr<ShaderPipeline> m_pipeline;
 
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(std::string const &path)

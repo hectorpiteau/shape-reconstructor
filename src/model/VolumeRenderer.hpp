@@ -21,6 +21,11 @@ Modified: 2023-04-26T11:14:57.290Z
 #include "../view/Lines.hpp"
 #include "CudaTexture.hpp"
 
+#include "../cuda/Common.cuh"
+
+#include "RayCaster/RayCaster.hpp"
+#include "GPUDataStruct/GPUData.hpp"
+
 using namespace glm;
 
 class VolumeRenderer : public SceneObject {
@@ -119,4 +124,12 @@ private:
     std::shared_ptr<OverlayPlane> m_outPlane;
     std::shared_ptr<RayCaster> m_rayCaster;
     std::shared_ptr<CudaTexture> m_cudaTex;
+
+    /* Descriptors. */
+    GPUData<CameraDescriptor> m_cameraDesc;
+    GPUData<VolumeDescriptor> m_volumeDesc;
+    GPUData<RayCasterDescriptor> m_raycasterDesc;
+    
+    RayCasterParams m_params;
+    // void RunKernel(cudaArray *image_array, uint width, uint height);
 };

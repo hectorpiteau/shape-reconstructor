@@ -8,7 +8,14 @@ Target: DRTMCS (Digital Real-Time Motion Capture System)
 
 ## Build
 
+```sh
+export CC=/usr/bin/gcc-8
+export CXX=/usr/bin/g++-8
+export CUDAHOSTCXX=/usr/bin/g++-8
+```
+
 - `mkdir build`
 - `cd build`
 - `cmake ..`
 - `make -j`
+

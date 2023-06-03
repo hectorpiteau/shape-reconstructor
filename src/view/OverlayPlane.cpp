@@ -4,18 +4,19 @@
 #include "OverlayPlane.hpp"
 #include "../model/ShaderPipeline.hpp"
 #include "../model/Texture2D.hpp"
+#include "../utils/SceneSettings.hpp"
 
-OverlayPlane::OverlayPlane(){
+OverlayPlane::OverlayPlane(std::shared_ptr<SceneSettings> sceneSettings){
     m_pipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl", "../src/shaders/f_overlay_plane.glsl");
-    Initialize();
+    Initialize(sceneSettings->GetViewportWidth(), sceneSettings->GetViewportHeight());
 }
 
-OverlayPlane::OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline) : m_pipeline(pipeline)
+OverlayPlane::OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline, std::shared_ptr<SceneSettings> sceneSettings) : m_pipeline(pipeline)
 {
-    Initialize();
+    Initialize(sceneSettings->GetViewportWidth(), sceneSettings->GetViewportHeight());
 }
 
-void OverlayPlane::Initialize(){
+void OverlayPlane::Initialize(int width, int height){
     m_scaleLocation = m_pipeline->AddUniform("scale");
 
     glGenBuffers(1, &m_VBO);
@@ -31,7 +32,7 @@ void OverlayPlane::Initialize(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (GLvoid*)(sizeof(float) * 3));
     glEnableVertexAttribArray(1);
 
-    m_texture0 = std::make_shared<Texture2D>(1080, 720, 4, 1);
+    m_texture0 = std::make_shared<Texture2D>(width, height, 4, 1);
 }
 
 OverlayPlane::~OverlayPlane()

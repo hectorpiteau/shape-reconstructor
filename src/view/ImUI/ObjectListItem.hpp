@@ -30,9 +30,9 @@ private:
 
     int m_id;
 
-    ObjectListInteractor* m_interactor;
-
     bool m_locked;
+
+    ObjectListInteractor* m_interactor;
 
     std::vector<std::shared_ptr<ObjectListItem>> m_children;
 };

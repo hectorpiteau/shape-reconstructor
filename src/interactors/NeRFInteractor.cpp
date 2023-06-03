@@ -37,9 +37,10 @@ bool NeRFInteractor::IsCalibrationLoaded() {
     return m_nerf->IsCalibrationLoaded();
 }
 
-std::vector<Camera> &NeRFInteractor::GetCameras() {
-    
-}
+// std::vector<Camera> &NeRFInteractor::GetCameras() {
+
+//     return m_nerf->GetCameraSet()->GetCameras();
+// }
 
 const std::string& NeRFInteractor::GetCurrentJsonPath(){
     return m_nerf->GetCurrentJsonPath();

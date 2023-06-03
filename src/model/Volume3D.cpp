@@ -21,24 +21,30 @@ Volume3D::Volume3D(Scene *scene, ivec3 res) : SceneObject{std::string("VOLUME3D"
 {
     SetName(std::string(ICON_FA_CUBES " Volume 3D"));
     m_lines = std::make_shared<Lines>(scene, m_wireframeVertices, 12 * 2 * 3);
+    m_lines->SetActive(true);
     ComputeBBoxPoints();
     m_cudaVolume = std::make_shared<CudaLinearVolume3D>(vec3(100, 100, 100));
+    m_cudaVolume->InitStub();
+    m_cudaVolume->ToGPU();
 }
 
 void Volume3D::SetBBoxMin(const vec3 &bboxMin)
 {
     m_bboxMin = bboxMin;
+    ComputeBBoxPoints();
+    m_lines->UpdateVertices(m_wireframeVertices);
 }
 
 void Volume3D::SetBBoxMax(const vec3 &bboxMax)
 {
     m_bboxMax = bboxMax;
     ComputeBBoxPoints();
+    m_lines->UpdateVertices(m_wireframeVertices);
 }
 
 void Volume3D::InitializeVolume()
 {
-    m_cudaVolume->InitStub();
+    
 }
 
 const ivec3 &Volume3D::GetResolution()
@@ -49,6 +55,7 @@ const ivec3 &Volume3D::GetResolution()
 void Volume3D::ComputeBBoxPoints()
 {
     m_bboxPoints[0] = m_bboxMin;
+    
 
     m_bboxPoints[1] = m_bboxMin;
     m_bboxPoints[1].x = m_bboxMax.x;
@@ -69,6 +76,39 @@ void Volume3D::ComputeBBoxPoints()
     m_bboxPoints[6].x = m_bboxMin.x;
 
     m_bboxPoints[7] = m_bboxMax;
+
+    WRITE_VEC3(m_wireframeVertices, 0, m_bboxPoints[0]); //front face, toward negative z
+    WRITE_VEC3(m_wireframeVertices, 3, m_bboxPoints[1]);
+
+    WRITE_VEC3(m_wireframeVertices, 6, m_bboxPoints[1]);
+    WRITE_VEC3(m_wireframeVertices, 9, m_bboxPoints[3]);
+
+    WRITE_VEC3(m_wireframeVertices, 12, m_bboxPoints[3]);
+    WRITE_VEC3(m_wireframeVertices, 15, m_bboxPoints[2]);
+    
+    WRITE_VEC3(m_wireframeVertices, 18, m_bboxPoints[2]);
+    WRITE_VEC3(m_wireframeVertices, 21, m_bboxPoints[0]);
+    
+    WRITE_VEC3(m_wireframeVertices, 24, m_bboxPoints[4]); //back face, toward positive z
+    WRITE_VEC3(m_wireframeVertices, 27, m_bboxPoints[5]);
+
+    WRITE_VEC3(m_wireframeVertices, 30, m_bboxPoints[5]);
+    WRITE_VEC3(m_wireframeVertices, 33, m_bboxPoints[7]);
+    
+    WRITE_VEC3(m_wireframeVertices, 36, m_bboxPoints[7]);
+    WRITE_VEC3(m_wireframeVertices, 39, m_bboxPoints[6]);
+
+    WRITE_VEC3(m_wireframeVertices, 42, m_bboxPoints[6]);
+    WRITE_VEC3(m_wireframeVertices, 45, m_bboxPoints[4]);
+
+    WRITE_VEC3(m_wireframeVertices, 48, m_bboxPoints[0]); //connecting two faces
+    WRITE_VEC3(m_wireframeVertices, 51, m_bboxPoints[4]); 
+    WRITE_VEC3(m_wireframeVertices, 54, m_bboxPoints[1]);
+    WRITE_VEC3(m_wireframeVertices, 57, m_bboxPoints[5]);
+    WRITE_VEC3(m_wireframeVertices, 60, m_bboxPoints[2]);
+    WRITE_VEC3(m_wireframeVertices, 63, m_bboxPoints[6]);
+    WRITE_VEC3(m_wireframeVertices, 66, m_bboxPoints[3]);
+    WRITE_VEC3(m_wireframeVertices, 69, m_bboxPoints[7]);
 }
 
 // void Volume3D::ComputeRenderingZone()

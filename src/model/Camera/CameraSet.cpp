@@ -10,7 +10,11 @@
 #include "../../include/icons/IconsFontAwesome6.h"
 
 CameraSet::CameraSet(Scene *scene)
-    : SceneObject{std::string("CameraSet"), SceneObjectTypes::CAMERASET}, m_scene(scene), m_areCameraGenerated(false), m_isLocked(false)
+    : SceneObject{std::string("CameraSet"), SceneObjectTypes::CAMERASET}, 
+    m_areCameraGenerated(false),
+    m_areCalibrated(false),
+    m_isLocked(false),
+    m_scene(scene)
 {
     SetName(std::string("Camera Set"));
 }
@@ -35,7 +39,7 @@ std::shared_ptr<Camera> &CameraSet::operator[](size_t index)
     return m_cameras[index];
 }
 
-std::shared_ptr<Camera> CameraSet::GetCameraById(size_t id)
+std::shared_ptr<Camera> CameraSet::GetCameraById(int id)
 {
     for (std::shared_ptr<Camera> &cam : m_cameras)
     {
@@ -98,7 +102,7 @@ bool CameraSet::CalibrateFromInformations(const std::vector<CameraCalibrationInf
 
     std::cout << "CameraSet:: Calibrate cameras from informations. " << std::endl;
 
-    for (int i = 0; i < informations.size(); ++i)
+    for (size_t i = 0; i < informations.size(); ++i)
     {
         CameraCalibrationInformations info = informations[i];
         std::shared_ptr<Camera> cam = m_cameras[i];

@@ -6,7 +6,7 @@ project(DRTMCS VERSION 0.1 LANGUAGES CXX CUDA)
 # Cpp standards
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-# set(CMAKE_CXX_FLAGS "-std=c++14 -lstdc++fs" )
+set(CMAKE_CXX_FLAGS "-Wall -O0" )
 
 # GLFW Settings 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -40,15 +40,18 @@ if(NOT DEFINED CMAKE_CUDA_STANDARD)
     set(CMAKE_CUDA_STANDARD 11)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 endif()
+
 find_package(CUDA REQUIRED)
+
 enable_language(CUDA)
+
 set(CUDA_SOURCE_FILES 
     src/cuda/kernel.cu 
     src/cuda/CudaSurface3D.cu 
     src/cuda/VolumeRendering.cu
 )
-set(CUDA_ARCH "-arch=sm_61")
-set(CMAKE_CUDA_ARCHITECTURES "61")
+set(CUDA_ARCH "-arch=sm_75")
+set(CMAKE_CUDA_ARCHITECTURES "75")
 
 
 
@@ -104,6 +107,12 @@ cuda_add_executable(DRTMCS
 
     ${CUDA_SOURCE_FILES})
 
+target_compile_options(DRTMCS PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+                    -G
+                    # --use_fast_math
+                    --relocatable-device-code=true
+                    >)
+
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 include_directories("include/")
 include_directories("include/imgui")
@@ -111,6 +120,7 @@ include_directories("include/imgui/backends")
 include_directories("include/glfw/include")
 include_directories("src/cuda/")
 include_directories("src/utils/")
+
 
 
 message("Cuda include dirs: ")
@@ -121,3 +131,5 @@ include_directories(${CUDA_INCLUDE_DIRS})
 # OpenEXR::OpenEXR
 # target_link_libraries(ProjectName PRIVATE libraw::libraw)
 target_link_libraries(DRTMCS libraw::libraw nlohmann_json::nlohmann_json OpenGL::GL GLEW::GLEW glfw glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
+
+

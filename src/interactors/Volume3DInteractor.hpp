@@ -28,6 +28,9 @@ public:
     const vec3& GetBboxMin();
     const vec3& GetBboxMax();
 
+    void SetBboxMin(const vec3& min);
+    void SetBboxMax(const vec3& max);
+
     const vec3* GetBBox();
 
 private:

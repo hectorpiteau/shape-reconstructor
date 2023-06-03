@@ -39,11 +39,11 @@ public:
         ImGui::BeginDisabled();
         ImGui::Text("Render zone width (pixels) :");
         ImGui::SameLine();
-        ImGui::Text(std::to_string(rWidth).c_str());
+        ImGui::TextUnformatted(std::to_string(rWidth).c_str());
 
         ImGui::Text("Render zone height (pixels) :");
         ImGui::SameLine();
-        ImGui::Text(std::to_string(rHeight).c_str());
+        ImGui::TextUnformatted(std::to_string(rHeight).c_str());
 
         ImGui::InputInt("Amount of rays", &amountOfRays);
         ImGui::EndDisabled();

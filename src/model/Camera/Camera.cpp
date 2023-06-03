@@ -74,6 +74,8 @@ void Camera::Initialize(){
     /** Center line. */
     m_centerLine = new Lines(m_scene, m_centerLineVertices, 6);
     m_centerLine->SetColor(0.0, 1.0, 1.0, 1.0);
+
+    UpdateWireframe();
 }
 
 Camera::~Camera()
@@ -137,10 +139,10 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window)
     /** Compute time difference between current and last frame */
     double currentTime = glfwGetTime();
 
-    float deltaTime = float(currentTime - lastTime);
+    // float deltaTime = float(currentTime - lastTime);
 
     // Get mouse position
-    double xpos, ypos;
+    double xpos = 0, ypos = 0;
     glfwGetCursorPos(window, &xpos, &ypos);
 
     // Reset mouse position for next frame

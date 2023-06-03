@@ -3,12 +3,13 @@
 #include <memory>
 #include "../model/ShaderPipeline.hpp"
 #include "../model/Texture2D.hpp"
+#include "../utils/SceneSettings.hpp"
 
 class OverlayPlane
 {
 public:
-    OverlayPlane();
-    OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline);
+    OverlayPlane(std::shared_ptr<SceneSettings> sceneSettings);
+    OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline,std::shared_ptr<SceneSettings> sceneSettings);
     ~OverlayPlane();
 
     void Render(bool useTex, GLuint tex);
@@ -16,7 +17,7 @@ public:
     void SetTextureData(const unsigned char *data);
 
 private:
-    void Initialize();
+    void Initialize(int width, int height);
     
     int m_width;
     int m_height;

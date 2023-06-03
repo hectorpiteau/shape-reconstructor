@@ -50,7 +50,7 @@ public:
         }
 
         /** Retrieve images names for combobox. */
-        for (int i = 0; i < m_interactor->GetImageSet()->size(); ++i)
+        for (size_t i = 0; i < m_interactor->GetImageSet()->size(); ++i)
         {
             const Image *img = (*m_interactor->GetImageSet())[i];
 
@@ -77,7 +77,7 @@ public:
 
         ImGui::SeparatorText(ICON_FA_INFO " ImageSet - Informations");
         /** SceneObject id. */
-        ImGui::Text((std::string("Images count: ") + std::to_string(m_interactor->GetImageSet()->GetAmountOfImages())).c_str());
+        ImGui::TextUnformatted((std::string("Images count: ") + std::to_string(m_interactor->GetImageSet()->GetAmountOfImages())).c_str());
 
         /** Image tab with load status. */
         ImGui::Spacing();
@@ -91,13 +91,13 @@ public:
             if (count > 0)
                 m_loadStatus = std::string("loaded");
             else
-                std::string("not loaded");
+                m_loadStatus = std::string("not loaded");
 
             Update();
         }
 
         ImGui::SameLine();
-        ImGui::Text(m_loadStatus.c_str());
+        ImGui::TextUnformatted(m_loadStatus.c_str());
 
         ImGui::Spacing();
         ImGui::SeparatorText(ICON_FA_IMAGE " Image Preview");
@@ -116,9 +116,8 @@ public:
 
                 if (ImGui::BeginCombo("Preview Image", combo_preview, flags))
                 {
-                    for (int i = 0; i < m_comboBoxImagesName.size(); ++i)
+                    for (size_t i = 0; i < m_comboBoxImagesName.size(); ++i)
                     {
-
                         const bool is_selected = (m_comboBoxCurrent == i);
 
                         if (ImGui::Selectable(m_comboBoxImagesName[i], is_selected)){
@@ -140,7 +139,6 @@ public:
 
                     ImGuiIO &io = ImGui::GetIO();
 
-                    static float dispSize[2] = {800, 800};
                     static float dsize = 0.4;
                     ImGui::SliderFloat("Displayed Size", &dsize, 0.001f, 2.0f);
                     ImGui::Checkbox("Hovered Zoom", &m_enableZoom);
@@ -205,7 +203,7 @@ private:
 
     std::vector<char *> m_comboBoxImagesName;
 
-    int m_comboBoxCurrent = 0;
+    size_t m_comboBoxCurrent = 0;
 
     const Image *m_image = nullptr;
     Texture2D m_imageTex;

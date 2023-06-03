@@ -25,8 +25,10 @@ Modified: 2023-04-26T13:51:29.197Z
 
 #include "../cuda/VolumeRendering.cuh"
 #include "../cuda/Projection.cuh"
-#include "RayCaster/RayCaster.hpp"
+#include "../cuda/Common.cuh"
 
+#include "RayCaster/RayCaster.hpp"
+#include "GPUDataStruct/GPUData.hpp"
 #include "../../include/icons/IconsFontAwesome6.h"
 
 using namespace glm;
@@ -49,7 +51,8 @@ VolumeRenderer::VolumeRenderer(Scene* scene)
 
     /** Create the overlay plane that will be used to display the volume rendering texture on. */
     m_outPlane = std::make_shared<OverlayPlane>(
-        std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl", "../src/shaders/f_overlay_plane.glsl")
+        std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl", "../src/shaders/f_overlay_plane.glsl"),
+        scene->GetSceneSettings()
     );
 
     /** Create the cuda texture that will receive the result of the volume rendering process. */
@@ -111,35 +114,63 @@ void VolumeRenderer::ComputeRenderingZone()
 
 void VolumeRenderer::Render(){
     std::shared_ptr<Camera> cam = (m_useDefaultCamera || m_camera == nullptr)  ? m_scene->GetActiveCam() : m_camera;
-
-    RayCasterParams params  = {
-        .intrinsic = cam->GetIntrinsic(),
-        .extrinsic = cam->GetExtrinsic(),
-        .worldPos = cam->GetPosition(),
-        .width = cam->GetResolution().x,
-        .height = cam->GetResolution().y 
-    };
-    /** Render volume using the raycaster. */
-    // volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height);
-    volume_rendering_wrapper_linea_ui8(
-        params,
-        m_volume->GetCudaVolume()->GetDevicePtr(),
-        m_volume->GetCudaVolume()->GetResolution(),
-        m_cudaTex->GetCudaPtr(),
-        cam->GetResolution().x,
-        cam->GetResolution().y
-    ); 
     
-    m_outPlane->Render(true, m_cudaTex->GetTex());
-    
-
-    /** Rendering zone. */
     ComputeRenderingZone();
-    m_renderZoneLines->Render();
 
+    // m_params  = {
+    //     .intrinsic = cam->GetIntrinsic(),
+    //     .extrinsic = cam->GetExtrinsic(),
+    //     .worldPos = cam->GetPosition(),
+    //     .width = cam->GetResolution().x,
+    //     .height = cam->GetResolution().y,
+    //     .minPixel = m_rayCaster->GetRenderingZoneMinPixel(),
+    //     .maxPixel = m_rayCaster->GetRenderingZoneMaxPixel(),
+    //     .windowSize = ivec2(m_scene->GetSceneSettings()->GetViewportWidth(), m_scene->GetSceneSettings()->GetViewportHeight())
+    // };
+
+    m_cameraDesc.Host()->camExt = cam->GetExtrinsic();
+    m_cameraDesc.Host()->camInt = cam->GetIntrinsic();
+    m_cameraDesc.Host()->camPos = cam->GetPosition();
+    m_cameraDesc.Host()->width = cam->GetResolution().x;
+    m_cameraDesc.Host()->height = cam->GetResolution().y;
+    
+    m_raycasterDesc.Host()->width = cam->GetResolution().x;
+    m_raycasterDesc.Host()->height = cam->GetResolution().y;
+    m_raycasterDesc.Host()->minPixelX = m_rayCaster->GetRenderingZoneMinPixel().x;
+    m_raycasterDesc.Host()->minPixelY = m_rayCaster->GetRenderingZoneMinPixel().y;
+    m_raycasterDesc.Host()->maxPixelX = m_rayCaster->GetRenderingZoneMaxPixel().x;
+    m_raycasterDesc.Host()->maxPixelY = m_rayCaster->GetRenderingZoneMaxPixel().y;
+    
+    m_volumeDesc.Host()->bboxMin;
+    m_volumeDesc.Host()->bboxMax;
+
+    /** result of bboxmin and max. gives the real world size. */
+    m_volumeDesc.Host()->worldSize;
+
+    /** volume resolution. */
+    m_volumeDesc.Host()->res = m_volume;
+
+    /** volume's data pointer. */
+    float4* data;
+
+
+
+    /** Render volume using the raycaster. */
+    m_cudaTex->RunKernel(m_raycasterDesc, m_cameraDesc, m_volumeDesc);
+
+    // /** Rendering zone. */
+    
+
+    if(m_showRenderingZone){
+        m_renderZoneLines->Render();
+    }
+
+    
     for(auto& child : m_children){
         if(child->IsActive()) child->Render();
     }
+    
+    m_outPlane->Render(true, m_cudaTex->GetTex());
 }
 
 

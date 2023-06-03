@@ -2,12 +2,16 @@
 
 #include <string>
 #include <iostream>
+// #include <experimental/filesystem>
 #include <filesystem>
+
 #include <algorithm>
 
 #include "ImageSet.hpp"
 #include "../controllers/Scene/Scene.hpp"
 #include "../../include/icons/IconsFontAwesome6.h"
+
+// using namespace std::experimental::filesystem::v1;
 
 ImageSet::ImageSet(Scene* scene) : SceneObject{std::string("IMAGESET"), SceneObjectTypes::IMAGESET}, m_folderPath("") {
     SetName(std::string(ICON_FA_IMAGES " ImageSet"));
@@ -38,6 +42,7 @@ const std::string& ImageSet::GetFolderPath(){
 bool imageSort(Image* a, Image* b){
     return strcmp(a->filename.c_str(), b->filename.c_str()) > 0 ? false : true;
 }
+
 size_t ImageSet::LoadImages() {
     if(m_folderPath.length() <= 0) return 0;
     
@@ -56,13 +61,13 @@ int ImageSet::GetAmountOfImages() {
     return m_images.size();
 }
 
-Image* ImageSet::GetImage(int index) {
+Image* ImageSet::GetImage(size_t index) {
     if(index < m_images.size()) return m_images[index];
     return nullptr;
 }
 
 Image* ImageSet::GetImage(const std::string& filename) {
-    for(int i=0; i<m_images.size(); ++i){
+    for(size_t i=0; i<m_images.size(); ++i){
         if(strcmp(filename.c_str(), m_images[i]->filename.c_str()) == 0) return m_images[i];
     }
     return nullptr;

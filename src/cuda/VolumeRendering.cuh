@@ -16,6 +16,7 @@ Modified: 2023-04-25T12:53:31.894Z
 
 #include "../model/RayCaster/Ray.h"
 #include "RayCasterParams.cuh"
+#include "Common.cuh"
 using namespace glm;
 
 struct VolumeData
@@ -28,20 +29,19 @@ struct VolumeData
  * volume : cuda Texture3D
  * outTex : float4
  */
-extern "C" void volume_rendering_wrapper(RayCasterParams& params, cudaTextureObject_t &volume, float4 *outTexture, size_t width, size_t height);
+// extern "C" void volume_rendering_wrapper(RayCasterParams& params, cudaTextureObject_t &volume, float4 *outTexture, size_t width, size_t height);
 
 /**
  * @brief Volume Rendering Wrapper using Linear Memory Allocation :
  * volume : float4
  * outTex : float4
  */
-extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height);
+// extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height);
 
 /**
  * @brief Volume Rendering Wrapper using Linear Memory Allocation :
- * volume : float4
- * outTex : unsigned int (uint4)
+ 
  */
-extern "C" void volume_rendering_wrapper_linea_ui8(RayCasterParams& params, float4* volume, const ivec3& volumeResolution, uint4* outTexture, size_t width, size_t height);
+extern "C" void volume_rendering_wrapper_linea_ui8(RayCasterDescriptor* raycaster, CameraDescriptor* camera, VolumeDescriptor* volume);
 
 #endif // VOLUME_RENDERING_H

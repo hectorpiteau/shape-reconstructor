@@ -30,8 +30,11 @@ std::shared_ptr<ObjectListItem> CreateObjectListItem(const std::shared_ptr<Scene
     return std::make_shared<ObjectListItem>(sceneObject->GetName(), sceneObject->GetID(), sceneObject->IsActive(), result, interactor);
 }
 
-ObjectListInteractor::ObjectListInteractor(Scene* scene, std::shared_ptr<ObjectListView> listView, std::shared_ptr<SceneObjectInteractor>& sceneObjectInteractor)
-    : m_scene(scene), m_objectListView(listView), m_selectedObject(nullptr), m_sceneObjectInteractor(sceneObjectInteractor)
+ObjectListInteractor::ObjectListInteractor(Scene* scene, std::shared_ptr<ObjectListView> listView, std::shared_ptr<SceneObjectInteractor>& sceneObjectInteractor) : 
+m_scene(scene), 
+m_objectListView(listView), 
+m_sceneObjectInteractor(sceneObjectInteractor),
+m_selectedObject(nullptr) 
 {
     listView->SetInteractor(this);
 

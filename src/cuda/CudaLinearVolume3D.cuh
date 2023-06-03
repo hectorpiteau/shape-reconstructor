@@ -36,17 +36,16 @@ class CudaLinearVolume3D
 private:
     float4 *m_hostData = nullptr;
     float4 *m_gpuData  = nullptr;
-    ivec3 m_res;
+    ivec3 m_res = ivec3(100, 100, 100);
 
-    bool m_isInGpu;
-    size_t m_size;
-    size_t m_cellSize = sizeof(unsigned char) * 4;
+    bool m_isInGpu = false;
+    size_t m_size = 0;
+    size_t m_cellSize = sizeof(float4);
 
 public:
     CudaLinearVolume3D(vec3 res)
     {
-        m_isInGpu = false;
-        m_size = res.x * res.y * res.z * 4 * sizeof(float);
+        m_size = res.x * res.y * res.z * sizeof(float4);
         
         /** Declare Host buffer. */
         m_hostData = (float4*)malloc(m_size);
@@ -63,48 +62,53 @@ public:
         if(m_gpuData != nullptr) cudaFree(m_gpuData);
     }
 
+    CUDA_HOST inline size_t GetIndex(ivec3 loc ){
+        if(loc.x < 0 || loc.y < 0 || loc.z < 0 || loc.x > m_res.x || loc.y > m_res.y || loc.z > m_res.z){
+            std::cout << "Error : trying to get index out of range. " << std::endl;
+            return 0;
+        }
+        return loc.x * (m_res.y * m_res.z) + loc.y * (m_res.z) + loc.z;
+    }
+
     CUDA_HOST void InitStub()
     {
+        std::cout << "init stub: " << std::to_string(m_res.x) << " " << std::to_string(m_res.y) << " " << std::to_string(m_res.z) << std::endl;
+
         for (int x = 0; x < m_res.x; ++x)
             for (int y = 0; y < m_res.y; ++y)
                 for (int z = 0; z < m_res.z; ++z)
-                    HSet(ivec3(x, y, z), x, y, z, 255);
+                    HSet(ivec3(x, y, z), vec4(x/m_res.x, y/m_res.y, z/m_res.z, 1.0));
+
+        std::cout << "init stub end : " << std::to_string(m_res.x) << " " << std::to_string(m_res.y) << " " << std::to_string(m_res.z) << std::endl;
     }
 
     CUDA_DEV void DSet(ivec3 loc, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
     {
-        float4 tmp = make_float4(r,g,b,a);
-        m_gpuData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z] = tmp;
-        // m_gpuData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 1] = g;
-        // m_gpuData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 2] = b;
-        // m_gpuData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 3] = a;
+        float4 tmp = make_float4(r,g,b,a);m_gpuData[GetIndex(loc)] = tmp;
     }
 
     CUDA_DEV void DSet(ivec3 loc, cell data)
     {
         float4 tmp = make_float4(data.r, data.g, data.b, data.a);
-        m_gpuData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z] = tmp;
-        // m_gpuData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 1] = data.g;
-        // m_gpuData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 2] = data.b;
-        // m_gpuData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 3] = data.a;
+        m_gpuData[GetIndex(loc)] = tmp;
     }
 
     CUDA_HOST void HSet(ivec3 loc, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
     {
         float4 tmp = make_float4(r,g,b,a);
-        m_hostData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z] = tmp;
-        // m_hostData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 1] = g;
-        // m_hostData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 2] = b;
-        // m_hostData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 3] = a;
+        m_hostData[GetIndex(loc)] = tmp;
+    }
+
+    CUDA_HOST void HSet(ivec3 loc, vec4 data)
+    {
+        float4 tmp = make_float4(data.x,data.y,data.z,data.w);
+        m_hostData[GetIndex(loc)] = tmp;
     }
 
     CUDA_HOST void HSet(ivec3 loc, cell data)
     {
         float4 tmp = make_float4(data.r, data.g, data.b, data.a);
-        m_hostData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z] = tmp;
-        // m_hostData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 1] = data.g;
-        // m_hostData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 2] = data.b;
-        // m_hostData[loc.x * (m_res.y * m_res.z * m_cellSize) + loc.y * (m_res.z * m_cellSize) + loc.z + 3] = data.a;
+        m_hostData[GetIndex(loc)] = tmp;
     }
 
     /**

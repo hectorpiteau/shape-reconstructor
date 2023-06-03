@@ -31,7 +31,7 @@ public:
      * 
      * @return std::vector<Camera>& 
      */
-    std::vector<Camera>& GetCameras();
+    // std::vector<Camera>& GetCameras();
 
     /**
      * @brief Get the Current Json Path string.

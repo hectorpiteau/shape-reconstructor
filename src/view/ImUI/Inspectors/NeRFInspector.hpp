@@ -58,7 +58,7 @@ public:
 
         if (ImGui::BeginCombo("Dataset Type", combo_preview, flags))
         {
-            for (int i = 0; i < NeRFDatasetModesNames.size(); ++i)
+            for (size_t i = 0; i < NeRFDatasetModesNames.size(); ++i)
             {
                 const bool is_selected = (m_comboBoxCurrent == i);
                 if (ImGui::Selectable(NeRFDatasetModesNames[i], is_selected))
@@ -76,7 +76,7 @@ public:
         }
 
         ImGui::TextColored(ImVec4(8.0f, 0.0f, 8.0f, 1.0f), "- JSON path: ");
-        ImGui::TextWrapped(m_interactor->GetCurrentJsonPath().c_str());
+        ImGui::TextUnformatted(m_interactor->GetCurrentJsonPath().c_str());
         ImGui::Spacing();
 
         ImGui::SeparatorText(ICON_FA_GEARS " Actions");
@@ -93,5 +93,5 @@ private:
     NeRFInteractor *m_interactor;
 
     /** Combo */
-    int m_comboBoxCurrent = 0;
+    size_t m_comboBoxCurrent = 0;
 };

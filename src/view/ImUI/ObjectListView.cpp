@@ -62,13 +62,13 @@ void ObjectListView::Render()
         ImGui::Checkbox("", &test);
         ImGui::EndDisabled();
         ImGui::TableNextColumn();
-        ImGui::Text(std::string(ICON_FA_CAMERA " Camera 0 (main)").c_str());
+        ImGui::TextUnformatted(std::string(ICON_FA_CAMERA " Camera 0 (main)").c_str());
         ImGui::TableNextColumn();
         if(ImGui::Button(std::string(" " ICON_FA_GEAR " ").c_str())){
             m_interactor->SelectMainCamera();
         }
 
-        for (int i=0; i<m_items.size(); ++i)
+        for (size_t i=0; i<m_items.size(); ++i)
         {
             m_items[i]->Render();
         }

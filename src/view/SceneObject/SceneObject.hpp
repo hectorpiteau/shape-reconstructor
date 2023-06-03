@@ -38,8 +38,32 @@ static const std::vector<const char *> SceneObjectNames = {
 
 class SceneObject : public Renderable
 {
+protected:
+    bool m_isChild;
+    /** A uniq-id that identify this SceneObject. */
+    int m_id;
+    /** True if the object is active in the scene (visible) or not. */
+    bool m_active;
+    bool m_listVisible;
+    /** The Object's name. */
+    std::string m_name;
+    /** The Object's type, stored as a string in order to be easily extended. */
+    const std::string m_typeName;
+    /** The Object's type as the enum, used for fast comparison. */
+    enum SceneObjectTypes m_type;
+
+    /** Chilren SceneObjects (dependencies). */
+    std::vector<std::shared_ptr<SceneObject>> m_children;
+
 public:
-    SceneObject(const std::string typeName, enum SceneObjectTypes type) : m_typeName(typeName), m_type(type), m_id(-1), m_listVisible(true) {}
+    SceneObject(const std::string typeName, enum SceneObjectTypes type) : 
+    m_isChild(false), 
+    m_id(-1), 
+    m_active(true), 
+    m_listVisible(true), 
+    m_name("none"), 
+    m_typeName(typeName), 
+    m_type(type) {}
 
     /**
      * @brief Get the uniq-id that identify this object.
@@ -130,8 +154,7 @@ public:
         return nullptr;
     }
 
-    
-    std::vector<std::shared_ptr<SceneObject>> GetAll(SceneObjectTypes type)
+        std::vector<std::shared_ptr<SceneObject>> GetAll(SceneObjectTypes type)
     {
         std::vector<std::shared_ptr<SceneObject>> tab = std::vector<std::shared_ptr<SceneObject>>();
         for (auto obj : m_children)
@@ -153,20 +176,5 @@ public:
     void SetIsVisibleInList(bool visible) { m_listVisible = visible; }
     bool IsVisibleInList() { return m_listVisible; }
 
-protected:
-    bool m_isChild;
-    /** A uniq-id that identify this SceneObject. */
-    int m_id;
-    /** True if the object is active in the scene (visible) or not. */
-    bool m_active;
-    bool m_listVisible;
-    /** The Object's name. */
-    std::string m_name;
-    /** The Object's type, stored as a string in order to be easily extended. */
-    const std::string m_typeName;
-    /** The Object's type as the enum, used for fast comparison. */
-    enum SceneObjectTypes m_type;
 
-    /** Chilren SceneObjects (dependencies). */
-    std::vector<std::shared_ptr<SceneObject>> m_children;
 };

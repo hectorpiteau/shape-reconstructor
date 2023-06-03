@@ -66,12 +66,12 @@ public:
         renderingZonePixelMin = floor(NDCToPixel(renderingZoneNDCMin, m_camera->GetResolution().x, m_camera->GetResolution().y));
         renderingZonePixelMax = ceil(NDCToPixel(renderingZoneNDCMax, m_camera->GetResolution().x, m_camera->GetResolution().y));
 
-        std::cout << "Resolution: " << std::to_string(m_camera->GetResolution().x) << " " << std::to_string(m_camera->GetResolution().y) << std::endl;
+        // std::cout << "Resolution: " << std::to_string(m_camera->GetResolution().x) << " " << std::to_string(m_camera->GetResolution().y) << std::endl;
 
-        std::cout << "renderingZoneNDCMin: " << std::to_string(renderingZoneNDCMin.x) << " " << std::to_string(renderingZoneNDCMin.y) << std::endl;
-        std::cout << "renderingZoneNDCMax: " << std::to_string(renderingZoneNDCMax.x) << " " << std::to_string(renderingZoneNDCMax.y) << std::endl;
-        std::cout << "renderingZonePixelMax: " << std::to_string(renderingZonePixelMax.x) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
-        std::cout << "renderingZonePixelMax: " << std::to_string(renderingZonePixelMax.x) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
+        // std::cout << "renderingZoneNDCMin: " << std::to_string(renderingZoneNDCMin.x) << " " << std::to_string(renderingZoneNDCMin.y) << std::endl;
+        // std::cout << "renderingZoneNDCMax: " << std::to_string(renderingZoneNDCMax.x) << " " << std::to_string(renderingZoneNDCMax.y) << std::endl;
+        // std::cout << "renderingZonePixelMax: " << std::to_string(renderingZonePixelMax.x) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
+        // std::cout << "renderingZonePixelMax: " << std::to_string(renderingZonePixelMax.x) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
         
 
         renderingZoneWidth = renderingZonePixelMax.x - renderingZonePixelMin.x;
@@ -91,6 +91,14 @@ public:
         UpdateRays();
     }
 
+    ivec2 GetRenderingZoneMinPixel(){
+        return renderingZonePixelMin;
+    }
+
+    ivec2 GetRenderingZoneMaxPixel(){
+        return renderingZonePixelMax;
+    }
+
     void SetRenderingZoneNDC(const vec2& zoneNDCMin, const vec2& zoneNDCMax){
         bool ok = false;
         if(any(notEqual(renderingZoneNDCMin, zoneNDCMin))){
@@ -102,10 +110,10 @@ public:
             ok = true;
         }
         if(!ok) return;
-        std::cout << "Update rendering zone sizes (NDC) : " << std::endl;
+        // std::cout << "Update rendering zone sizes (NDC) : " << std::endl;
 
-        std::cout << std::to_string(zoneNDCMin.x) << " " << std::to_string(zoneNDCMin.y) << std::endl;
-        std::cout << std::to_string(zoneNDCMax.x) << " " << std::to_string(zoneNDCMax.y) << std::endl;
+        // std::cout << std::to_string(zoneNDCMin.x) << " " << std::to_string(zoneNDCMin.y) << std::endl;
+        // std::cout << std::to_string(zoneNDCMax.x) << " " << std::to_string(zoneNDCMax.y) << std::endl;
         
         renderingZonePixelMin = floor(NDCToPixel(zoneNDCMin, m_camera->GetResolution().x, m_camera->GetResolution().y));
         renderingZonePixelMax = ceil(NDCToPixel(zoneNDCMax, m_camera->GetResolution().x, m_camera->GetResolution().y));
@@ -163,13 +171,12 @@ public:
                     m_camera->GetResolution().x,
                     m_camera->GetResolution().y
                 );
-                // std::cout << "x: " << std::to_string(x) << " y:" << std::to_string(y) << " => (" << std::to_string(dest.x) << ", " << std::to_string(dest.y) << ", " << std::to_string(dest.z) << std::endl;
-                
-                WRITE_VEC3(m_rayLinesVertices, index, dest);
+                auto dir =  dest - origin;
+                auto dest2 = dest + dir* 8.0f;
+
+                WRITE_VEC3(m_rayLinesVertices, index, dest2);
                 index += 3;
-                // break;
             }
-            // break;
         }
 
         m_rayLines = new Lines(m_scene, m_rayLinesVertices, dataLength);
@@ -177,6 +184,7 @@ public:
 
     void SetRaysVisible(bool visible){
         m_showRays = visible;
+        if(m_showRays) UpdateRays();
     }
 
     bool AreRaysVisible(){
@@ -184,7 +192,9 @@ public:
     }
 
     void Render(){
-        if(m_showRays && m_rayLines != nullptr && m_rayLinesVertices != nullptr) m_rayLines->Render();
+        if(m_showRays && m_rayLines != nullptr && m_rayLinesVertices != nullptr){
+            m_rayLines->Render();
+        }
     }
 };
 

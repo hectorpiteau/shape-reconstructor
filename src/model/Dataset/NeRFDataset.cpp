@@ -18,11 +18,17 @@ using json = nlohmann::json;
 using namespace glm;
 
 NeRFDataset::NeRFDataset(Scene *scene)
-    : Dataset{std::string("NeRFDataset")}, SceneObject{std::string("NeRFDataset"), SceneObjectTypes::NERFDATASET}, m_scene(scene),
+    : Dataset{std::string("NeRFDataset")}, SceneObject{std::string("NeRFDataset"), SceneObjectTypes::NERFDATASET}, 
+      m_scene(scene),
+      m_mode(NeRFDatasetModes::TRAIN),
       m_trainJSONPath("../data/nerf/transforms_train.json"),
-      m_validJSONPath("../data/nerf/transforms_val.json"),
       m_trainImagesPath("../data/nerf/train/"),
-      m_validImagesPath("../data/nerf/val/")
+      m_validJSONPath("../data/nerf/transforms_val.json"),
+      m_validImagesPath("../data/nerf/val/"),
+      m_images(),
+      m_imagesCalibration(),
+      m_isCalibrationLoaded(false),
+      m_camerasGenerated(false)
 {
     SetName(std::string(ICON_FA_DATABASE " Nerf Dataset"));
     m_children = std::vector<std::shared_ptr<SceneObject>>();
@@ -37,10 +43,6 @@ NeRFDataset::NeRFDataset(Scene *scene)
     m_cameraSet = std::make_shared<CameraSet>(m_scene);
     m_scene->Add(m_cameraSet, true, true);
     m_children.push_back(m_cameraSet);
-
-
-    m_isCalibrationLoaded = false;
-    m_camerasGenerated = false;
 }
 
 NeRFDataset::~NeRFDataset()
@@ -142,8 +144,8 @@ bool NeRFDataset::LoadCalibrations()
         tmp.extrinsic[2][2] = -tmp.extrinsic[2][2];
         tmp.extrinsic[3][2] = -tmp.extrinsic[3][2];
         
-        mat3x3 R = mat3x3(tmp.extrinsic);
-        vec4 T = vec4(tmp.extrinsic[3]);
+        // mat3x3 R = mat3x3(tmp.extrinsic);
+        // vec4 T = vec4(tmp.extrinsic[3]);
 
         tmp.extrinsic = glm::rotate(tmp.extrinsic, glm::half_pi<float>(), glm::vec3(1.0, 0.0, 0.0));
 
@@ -263,7 +265,7 @@ void NeRFDataset::GenerateCameras()
     
     int cpt = 0;
     
-    for(int i=0; i<m_imagesCalibration.size(); ++i){
+    for(size_t i=0; i<m_imagesCalibration.size(); ++i){
         NeRFImage imgInfo = m_images[i];
         CameraCalibrationInformations calibInfo = m_imagesCalibration[i];
         std::shared_ptr<Camera> cam = std::make_shared<Camera>(m_scene);
@@ -296,4 +298,8 @@ void NeRFDataset::GenerateCameras()
 bool NeRFDataset::AreCamerasGenerated()
 {
     return m_camerasGenerated;
+}
+
+std::shared_ptr<CameraSet> NeRFDataset::GetCameraSet(){
+    return m_cameraSet;
 }

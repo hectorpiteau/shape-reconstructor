@@ -22,6 +22,11 @@ struct RayCasterParams {
     
     /** Camera's image plane resolution width / height. */
     int width, height;
+
+    ivec2 minPixel;
+    ivec2 maxPixel;
+
+    ivec2 windowSize;
 };
 
 #endif //RAY_CASTER_PARAMS_H

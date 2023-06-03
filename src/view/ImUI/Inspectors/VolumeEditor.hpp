@@ -7,6 +7,7 @@ Modified: 2023-04-26T12:50:09.798Z
 */
 #pragma once
 #include <glm/glm.hpp>
+#include <glm/gtc/epsilon.hpp>
 
 #include "../../../include/imgui/imgui.h"
 #include "../../../include/imgui/backends/imgui_impl_glfw.h"
@@ -48,11 +49,17 @@ public:
         
         ImGui::SeparatorText(ICON_FA_INFO " Volume3D - Informations");
         
-        ImGui::InputFloat3("BBox Minimum", &bboxMinimum[0]);
-        ImGui::InputFloat3("BBox Maximum", &bboxMaximum[0]);
+        if(ImGui::DragFloat3("BBox Minimum", &bboxMinimum[0], 0.1f)){
+            m_interactor->SetBboxMin(bboxMinimum);
+        }
+        
+        
+        if(ImGui::DragFloat3("BBox Maximum", &bboxMaximum[0], 0.1f)){
+            m_interactor->SetBboxMax(bboxMaximum);
+        }
 
         ImGui::Separator();
-        
+        ImGui::BeginDisabled();
         ImGui::InputFloat3("BBox 0", &bboxe[0][0]);
         ImGui::InputFloat3("BBox 1", &bboxe[1][0]);
         ImGui::InputFloat3("BBox 2", &bboxe[2][0]);
@@ -61,5 +68,11 @@ public:
         ImGui::InputFloat3("BBox 5", &bboxe[5][0]);
         ImGui::InputFloat3("BBox 6", &bboxe[6][0]);
         ImGui::InputFloat3("BBox 7", &bboxe[7][0]);
+        ImGui::EndDisabled();
+
+
+        /** Check for updates. */
+
+
     }
 };

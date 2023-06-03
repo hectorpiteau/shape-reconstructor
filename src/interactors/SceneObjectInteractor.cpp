@@ -64,6 +64,13 @@ void SceneObjectInteractor::SetSelectedSceneObject(std::shared_ptr<SceneObject> 
         case SceneObjectTypes::CAMERASET:
             cameraSetInteractor->SetActiveCameraSet(std::dynamic_pointer_cast<CameraSet>(object));
             break;
+        case SceneObjectTypes::LINEGRID:
+        case SceneObjectTypes::GIZMO:
+        case SceneObjectTypes::MODEL:
+        case SceneObjectTypes::MESH:
+        case SceneObjectTypes::NONE:
+        default:
+            break;
     }
 }
 
