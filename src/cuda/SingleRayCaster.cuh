@@ -33,12 +33,12 @@ public:
         vec3 dir = vec3(0.0);
         /** Compute ray from camera to pixel. Undistort. */
         dir = PixelToWorld(pixel, camera->camInt, camera->camExt, camera->width, camera->height);
-
+        dir = dir - camera->camPos;
         Ray ray = {
             .origin = camera->camPos,
-            .dir = dir,
+            .dir =  dir,
             .tmin = 0.0f,
-            .tmax = 10.0f
+            .tmax = 20.0f
         };
 
         return ray;

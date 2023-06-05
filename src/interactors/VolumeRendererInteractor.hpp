@@ -40,5 +40,9 @@ public:
     void SetIsRenderingZoneVisible(bool visible);
     bool IsRenderingZoneVisible();
 
+
+    bool IsRendering();
+    void SetIsRendering(bool value);
+
     void SetCurrentVolumeRenderer(std::shared_ptr<VolumeRenderer> volumeRenderer);
 };

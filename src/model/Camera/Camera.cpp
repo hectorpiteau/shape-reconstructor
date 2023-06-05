@@ -216,6 +216,21 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window)
         /** If the shift key is pressed, move is enabled and replaces the rotation. */
         float scrollSpeedCoef = max(1.5f / (0.5f + exp(0.2f * m_sceneSettings->GetScrollOffsets().y)), 0.2f);
 
+        if(m_sceneSettings->GetAltKey()){
+            float deltaX = scrollSpeedCoef * 3.0f / m_sceneSettings->GetViewportWidth();
+
+            float xDisplacement = (m_previousCursorPos.x - xpos) * deltaX;
+
+            m_pos += xDisplacement * (m_pos-m_target);
+
+            m_viewMatrix = lookAt(m_pos, m_target, m_up);
+
+            m_previousCursorPos.x = xpos;
+            m_previousCursorPos.y = ypos;
+            lastTime = currentTime;
+            return;
+        }
+        
         if (m_sceneSettings->GetShiftKey())
         {
 
@@ -238,7 +253,6 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window)
 
             m_previousCursorPos.x = xpos;
             m_previousCursorPos.y = ypos;
-
             lastTime = currentTime;
             return;
         }

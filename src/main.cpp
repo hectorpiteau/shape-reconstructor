@@ -189,6 +189,10 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_RIGHT_ALT:
             sceneSettings->SetAltKey(true);
             break;
+        case GLFW_KEY_V:
+            /** Enable / Disable Volume Rendering. **/
+            sceneSettings->SetVariable(SceneGlobalVariables::VOLUME_RENDERING, false);
+            break;
         case GLFW_KEY_P:
             char path[64] = {"screen.png"};
             Utils::SaveImage(path, window, sceneSettings->GetViewportWidth(), sceneSettings->GetViewportHeight());

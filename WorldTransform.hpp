@@ -19,6 +19,6 @@ private:
     double _scale = 1.0;
     glm::vec3 _rotation = glm::vec3(0, 0, 0);
     glm::vec3 _position = glm::vec3(0, 0, 0);
-}
+};
 
 #endif //_WORLD_TRANSFORM_H_

@@ -19,7 +19,7 @@
 
 #include "../utils/helper_cuda.h"
 
-#include "GPUDataStruct/GPUData.hpp"
+#include "../cuda/GPUData.cuh"
 #include "../cuda/Common.cuh"
 
 class CudaTexture
@@ -103,26 +103,6 @@ public:
         return (uint4 *)cuda_dev_render_buffer;
     }
 
-    // void RunCUDA()
-    // {
-    //     /** calculate grid size */
-    //     dim3 block(16, 16, 1);
-    //     dim3 grid(m_width / block.x, m_height / block.y, 1);                               // 2D grid, every thread will compute a pixel
-    //     kernel_wrapper_2(grid, block, 0, (unsigned int *)cuda_dev_render_buffer, m_width); // launch with 0 additional shared memory allocated
-
-    //     /** We want to copy cuda_dev_render_buffer data to the texture */
-    //     /** Map buffer objects to get CUDA device pointers */
-    //     cudaArray *texture_ptr;
-    //     checkCudaErrors(cudaGraphicsMapResources(1, &cuda_image_resource, 0));
-    //     checkCudaErrors(cudaGraphicsSubResourceGetMappedArray(&texture_ptr, cuda_image_resource, 0, 0));
-
-    //     int num_texels = m_width * m_height;
-    //     int num_values = num_texels * 4;
-    //     int size_tex_data = sizeof(GLubyte) * num_values;
-    //     checkCudaErrors(cudaMemcpyToArray(texture_ptr, 0, 0, cuda_dev_render_buffer, size_tex_data, cudaMemcpyDeviceToDevice));
-    //     checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_image_resource, 0));
-    // }
-
     CudaTexture(uint width, uint height) : m_width(width), m_height(height)
     {
         /** Init OpenGL Texture **/
@@ -165,22 +145,14 @@ public:
         checkCudaErrors(cudaCreateSurfaceObject(&cuda_texture_surface, &cuda_texture_resource_desc));
         // cuda Kernel here to deal with everything
 
-        /** kernel */
-        // volume_rendering_wrapper_linea_ui8(
-        //     params,
-        //     mat4(cam->GetIntrinsic()),
-        //     mat4(cam->GetExtrinsic()),
-        //     cuda_texture_surface,
-        //     volume->GetCudaVolume()->GetDevicePtr(),
-        //     volume->GetCudaVolume()->GetResolution()
-        // );
+
+        raycasterDesc.Host()->surface = cuda_texture_surface; // 64bits 
+        raycasterDesc.ToDevice();
         cameraDesc.ToDevice();
         volumeDesc.ToDevice();
         
-        raycasterDesc.Host()->surface = cuda_texture_surface; // 64bits 
-        raycasterDesc.ToDevice();
-
-        volume_rendering_wrapper_linea_ui8(raycasterDesc.Device(), cameraDesc.Device(), volumeDesc.Device());
+        /** kernel */
+        volume_rendering_wrapper_linea_ui8(raycasterDesc, cameraDesc, volumeDesc, cuda_texture_surface);
         
         checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_image_resource, 0));
     }

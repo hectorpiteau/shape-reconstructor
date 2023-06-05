@@ -157,9 +157,9 @@ public:
         size_t index = 0;
         auto origin = m_camera->GetPosition();
         
-        std::cout << "Updating rays.. (amount_of_points:" << std::to_string(dataLength) << ")" << std::endl;
-        std::cout << "Creating rays, x: " << std::to_string(renderingZonePixelMin.x) << " " << std::to_string(renderingZonePixelMax.x) << std::endl;
-        std::cout << "Creating rays, y: " << std::to_string(renderingZonePixelMin.y) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
+        // std::cout << "Updating rays.. (amount_of_points:" << std::to_string(dataLength) << ")" << std::endl;
+        // std::cout << "Creating rays, x: " << std::to_string(renderingZonePixelMin.x) << " " << std::to_string(renderingZonePixelMax.x) << std::endl;
+        // std::cout << "Creating rays, y: " << std::to_string(renderingZonePixelMin.y) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
         
         for(int x=renderingZonePixelMin.x; x < renderingZonePixelMax.x; x += 1){
             for(int y=renderingZonePixelMin.y; y < renderingZonePixelMax.y; y += 1){

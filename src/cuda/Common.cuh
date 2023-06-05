@@ -83,9 +83,5 @@ struct CameraDescriptor {
 
 
 
-// CUDA_DEV int IsPointInVolume(const vec3& point){
-//     if(any(lessThan(point, vec3(-0.5, -0.5, -0.5))) || any(greaterThan(point, vec3(0.5, 0.5, 0.5)))) return 0;
-//     return 1;
-// }
 
 #endif //CUDA_COMMON_H

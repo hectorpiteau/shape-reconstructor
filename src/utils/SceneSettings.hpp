@@ -1,15 +1,40 @@
 #ifndef SCENE_SETTINGS_H
 #define SCENE_SETTINGS_H
 #include <iostream>
-
+#include "SceneGlobalVariables.hpp"
 enum CameraMovementModel
 {
     FPS,
     ARCBALL
 };
 
+
 class SceneSettings
 {
+private:
+
+    /** Viewport informations */
+    int m_viewportWidth, m_viewportHeight;
+
+    /** Camera movement model to be used by the active camera. */
+    enum CameraMovementModel m_cameraModel = CameraMovementModel::ARCBALL;
+
+    /** Scroll offsets. */
+    glm::vec2 m_scrollOffsets = glm::vec2(0.0, 0.0);
+
+    /** speed factors */
+    float m_scrollSpeed = 1.0f;
+    float m_moveSpeed = 1.0f;
+
+    /** Mouse click status. */
+    bool m_mouseLeftClick = false, m_mouseRightClick = false;
+
+    bool m_shiftKey = false;
+    bool m_ctrlKey = false;
+    bool m_altKey = false;
+
+    bool m_volumeRendering = true;
+
 public:
     SceneSettings(int viewportWidth, int viewportHeight) : m_viewportWidth(viewportWidth), m_viewportHeight(viewportHeight) {};
 
@@ -51,28 +76,24 @@ public:
     void IncreaseScrollSpeed(){ m_scrollSpeed += 0.01f; std::cout << "inc scroll" << std::endl;}
     void DecreaseScrollSpeed(){ m_scrollSpeed -= 0.01f;std::cout << "dec scroll" << std::endl;}
 
-private:
+    void SetVariable(SceneGlobalVariables var, bool value){
+        switch(var){
+            case SceneGlobalVariables::VOLUME_RENDERING:
+                m_volumeRendering = !m_volumeRendering;
+                break;
+        }
+    }
 
-    /** Viewport informations */
-    int m_viewportWidth, m_viewportHeight;
+    bool GetVariable(SceneGlobalVariables var){
+        switch(var){
+            case SceneGlobalVariables::VOLUME_RENDERING:
+                return m_volumeRendering;
+                break;
+            
+        }
+        return false;
 
-    /** Camera movement model to be used by the active camera. */
-    enum CameraMovementModel m_cameraModel = CameraMovementModel::ARCBALL;
-
-    /** Scroll offsets. */
-    glm::vec2 m_scrollOffsets = glm::vec2(0.0, 0.0);
-
-    /** speed factors */
-    float m_scrollSpeed = 1.0f;
-    float m_moveSpeed = 1.0f;
-
-    /** Mouse click status. */
-    bool m_mouseLeftClick = false, m_mouseRightClick = false;
-
-    bool m_shiftKey = false;
-    bool m_ctrlKey = false;
-    bool m_altKey = false;
-    
+    }
 };
 
 #endif // SCENE_SETTINGS_H

@@ -252,4 +252,16 @@ CUDA_HOSTDEV inline vec2 CamToCamHomography(
     return vec2(0.0, 0.0);
 }
 
+
+CUDA_HOSTDEV inline vec3 VectorPlaneIntersection(const vec3& vecO, const vec3& vecD, const vec3& planeO, const vec3& planeU, const vec3& planeV ){
+    /** Check determinant. */
+    float det = dot(- vecD, (planeU * planeV));
+    if(det > -0.00001f && det < 0.00001f) return vec3(0,0,0);
+
+    /** Compute intersection. */
+    vec3 uv = planeU * planeV;
+    float t = dot(uv, (vecO - planeO))/dot(-vecD, uv);
+    return vecO + t * vecD;
+}
+
 #endif //PROJECTION_CUDA_H

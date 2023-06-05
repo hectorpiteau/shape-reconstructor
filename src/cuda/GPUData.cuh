@@ -1,7 +1,11 @@
-#pragma once
+#ifndef GPU_DATA_H
+#define GPU_DATA_H
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
+#include <iostream>
+
+#include "../utils/helper_cuda.h"
 
 template <class T>
 class GPUData {
@@ -29,6 +33,7 @@ public:
     T* Host() {return m_host;}
 
     void ToDevice(){
+        // std::cout << "Copy to device: size: " << std::to_string(sizeof(T)) << std::endl; 
         checkCudaErrors(
             cudaMemcpy((void*)m_device, (void*)m_host, sizeof(T), cudaMemcpyHostToDevice)
         );
@@ -41,3 +46,5 @@ public:
     }
 
 };
+
+#endif //GPU_DATA_H

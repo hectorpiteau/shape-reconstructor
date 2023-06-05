@@ -17,6 +17,8 @@ Modified: 2023-04-25T12:53:31.894Z
 #include "../model/RayCaster/Ray.h"
 #include "RayCasterParams.cuh"
 #include "Common.cuh"
+#include "GPUData.cuh"
+
 using namespace glm;
 
 struct VolumeData
@@ -42,6 +44,6 @@ struct VolumeData
  * @brief Volume Rendering Wrapper using Linear Memory Allocation :
  
  */
-extern "C" void volume_rendering_wrapper_linea_ui8(RayCasterDescriptor* raycaster, CameraDescriptor* camera, VolumeDescriptor* volume);
+extern "C" void volume_rendering_wrapper_linea_ui8(GPUData<RayCasterDescriptor>& raycaster, GPUData<CameraDescriptor>& camera, GPUData<VolumeDescriptor>& volume, cudaSurfaceObject_t surface);
 
 #endif // VOLUME_RENDERING_H

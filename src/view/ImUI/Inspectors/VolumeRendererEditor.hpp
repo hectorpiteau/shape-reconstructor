@@ -45,6 +45,7 @@ public:
         vec2 renderZoneMaxPixel = m_interactor->GetRenderingZoneMaxPixel();
 
         bool showRenderingZone = m_interactor->IsRenderingZoneVisible();
+        bool isRendering = m_interactor->IsRendering();
 
         m_comboBoxCameras = m_interactor->GetAvailableCameras();
 
@@ -60,7 +61,7 @@ public:
         ImGui::EndDisabled();
         ImGui::Separator();
         ImGui::Spacing();
-        ImGui::Checkbox("Render", &showRenderingZone);
+        ImGui::Checkbox("Render [v]", &isRendering);
         ImGui::Separator();
         ImGui::Spacing();
         ImGui::Checkbox("Show rendering zone on camera", &showRenderingZone);
@@ -77,7 +78,6 @@ public:
             {
                 for (size_t i = 0; i < m_comboBoxCameras.size(); ++i)
                 {
-
                     const bool is_selected = (m_comboBoxCurrent == i);
 
                     if (ImGui::Selectable(m_comboBoxCameras[i]->GetName().c_str(), is_selected))
@@ -99,6 +99,10 @@ public:
             if (showRenderingZone != m_interactor->IsRenderingZoneVisible())
             {
                 m_interactor->SetIsRenderingZoneVisible(showRenderingZone);
+            }
+
+            if(isRendering != m_interactor->IsRendering()){
+                m_interactor->SetIsRendering(isRendering);
             }
 
             ImGui::Separator();

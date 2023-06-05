@@ -24,7 +24,7 @@ Modified: 2023-04-26T11:14:57.290Z
 #include "../cuda/Common.cuh"
 
 #include "RayCaster/RayCaster.hpp"
-#include "GPUDataStruct/GPUData.hpp"
+#include "../cuda/GPUData.cuh"
 
 using namespace glm;
 
@@ -70,6 +70,9 @@ public:
      */
     bool GetShowRenderingZone();
 
+    bool IsRendering();
+    void SetIsRendering(bool value);
+
     /**
      * @brief Compute the zone based on both the camera parameters and 
      * the volume configuration.
@@ -112,6 +115,7 @@ public:
     vec2 m_renderZoneMaxNDC;
 
 private:
+    bool m_isRendering = true;
     bool m_useDefaultCamera = true;
     bool m_showRenderingZone = true;
 

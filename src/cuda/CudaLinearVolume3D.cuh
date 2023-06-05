@@ -43,9 +43,11 @@ private:
     size_t m_cellSize = sizeof(float4);
 
 public:
-    CudaLinearVolume3D(vec3 res)
+    CudaLinearVolume3D(const ivec3& res)
     {
-        m_size = res.x * res.y * res.z * sizeof(float4);
+        m_res = res;
+
+        m_size = m_res.x * m_res.y * m_res.z * sizeof(float4);
         
         /** Declare Host buffer. */
         m_hostData = (float4*)malloc(m_size);
@@ -72,14 +74,17 @@ public:
 
     CUDA_HOST void InitStub()
     {
-        std::cout << "init stub: " << std::to_string(m_res.x) << " " << std::to_string(m_res.y) << " " << std::to_string(m_res.z) << std::endl;
-
         for (int x = 0; x < m_res.x; ++x)
             for (int y = 0; y < m_res.y; ++y)
-                for (int z = 0; z < m_res.z; ++z)
-                    HSet(ivec3(x, y, z), vec4(x/m_res.x, y/m_res.y, z/m_res.z, 1.0));
-
-        std::cout << "init stub end : " << std::to_string(m_res.x) << " " << std::to_string(m_res.y) << " " << std::to_string(m_res.z) << std::endl;
+                for (int z = 0; z < m_res.z; ++z){
+                    float xf = ((float)x/(float)m_res.x);
+                    float yf = ((float)y/(float)m_res.y);
+                    float zf = ((float)z/(float)m_res.z);
+                    vec3 tmp = vec3(xf, yf, zf) - vec3(0.5f, 0.5f, 0.5f);
+                    
+                    float sdf = length(tmp) - 0.40f;
+                    HSet(ivec3(x, y, z), vec4( 255.0f * xf, 255.0f * yf, 255.0f * zf, sdf));
+                }
     }
 
     CUDA_DEV void DSet(ivec3 loc, unsigned char r, unsigned char g, unsigned char b, unsigned char a)

@@ -20,9 +20,10 @@ void main()
     // }else{
     //     FragColor.r = tex_res.r / 255.0;
     // }
-    FragColor.r = tex_res.r;
-    FragColor.g = tex_res.g;
-    FragColor.b = tex_res.b;// + 0.1;
-    FragColor.w = tex_res.a * 0.6;
+    FragColor = tex_res;
+    // FragColor.r = tex_res.r;
+    // FragColor.g = tex_res.g;
+    // FragColor.b = tex_res.b;// + 0.1;
+    // FragColor.w = tex_res.a;// * 1.0;
     // FragColor = vec4(1.0, 0.0, 1.0, 0.8);
 }

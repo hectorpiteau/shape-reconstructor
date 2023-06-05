@@ -64,3 +64,11 @@ void VolumeRendererInteractor::SetIsRenderingZoneVisible(bool visible){
 bool VolumeRendererInteractor::IsRenderingZoneVisible(){
     return m_volumeRenderer->GetShowRenderingZone();
 }
+
+bool VolumeRendererInteractor::IsRendering(){
+    return m_volumeRenderer->IsRendering();
+}
+
+void VolumeRendererInteractor::SetIsRendering(bool value){
+    return m_volumeRenderer->SetIsRendering(value);
+}
