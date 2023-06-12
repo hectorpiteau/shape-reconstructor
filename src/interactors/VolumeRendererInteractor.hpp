@@ -35,7 +35,7 @@ public:
     std::vector<std::shared_ptr<Camera>>& GetAvailableCameras();
     
     void SetTargetCamera(std::shared_ptr<Camera> cam);
-    std::shared_ptr<Camera> GetTargetCamera();
+    // std::shared_ptr<Camera> GetTargetCamera();
 
     void SetIsRenderingZoneVisible(bool visible);
     bool IsRenderingZoneVisible();

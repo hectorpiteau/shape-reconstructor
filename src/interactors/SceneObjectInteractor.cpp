@@ -2,10 +2,13 @@
 
 #include "SceneObjectInteractor.hpp"
 
+#include "../model/PlaneCut.hpp"
 #include "ImageSetInteractor.hpp"
 #include "CameraInteractor.hpp"
 #include "NeRFInteractor.hpp"
 #include "CameraSetInteractor.hpp"
+#include "PlaneCutInteractor.hpp"
+#include "AdamInteractor.hpp"
 #include "../model/Camera/CameraSet.hpp"
 #include "../model/ImageSet.hpp"
 #include "../model/Dataset/NeRFDataset.hpp"
@@ -22,7 +25,9 @@ SceneObjectInteractor::SceneObjectInteractor(Scene* scene)
     volumeRendererInteractor = new VolumeRendererInteractor(m_scene);
     volume3DInteractor = new Volume3DInteractor();
     simpleRayCasterInteractor = new SimpleRayCasterInteractor();
-    
+    planeCutInteractor = new PlaneCutInteractor();
+    adamInteractor = new AdamInteractor();
+
     m_inspectorView = new InspectorView(this);
 }
 
@@ -36,6 +41,7 @@ SceneObjectInteractor::~SceneObjectInteractor(){
     delete nerfInteractor;
     delete cameraSetInteractor;
     delete simpleRayCasterInteractor;
+    delete planeCutInteractor;
 }
 
 void SceneObjectInteractor::SetSelectedSceneObject(std::shared_ptr<SceneObject> &object)
@@ -63,6 +69,12 @@ void SceneObjectInteractor::SetSelectedSceneObject(std::shared_ptr<SceneObject> 
             break;
         case SceneObjectTypes::CAMERASET:
             cameraSetInteractor->SetActiveCameraSet(std::dynamic_pointer_cast<CameraSet>(object));
+            break;
+        case SceneObjectTypes::PLANECUT:
+            planeCutInteractor->SetActivePlaneCut(std::dynamic_pointer_cast<PlaneCut>(object));
+            break;
+        case SceneObjectTypes::ADAMOPTIMIZER:
+            adamInteractor->SetAdamOptimizer(std::dynamic_pointer_cast<AdamOptimizer>(object));
             break;
         case SceneObjectTypes::LINEGRID:
         case SceneObjectTypes::GIZMO:

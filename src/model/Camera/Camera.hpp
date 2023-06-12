@@ -23,8 +23,8 @@ class Camera : public SceneObject
 
 public:
     Camera(Scene *scene, const std::string& name, const vec3& position, const vec3& target);
-    Camera(Scene* scene);
-    ~Camera();
+    explicit Camera(Scene* scene);
+    ~Camera() override;
 
     void Initialize();
 
@@ -60,28 +60,12 @@ public:
     void SetRight(const vec3& v);
 
     /**
-     * @brief Get the camera's real up vector, (the one orthogonal to 
-     * forward and right vectors), in world space coordinates. 
-     * 
-     * @return vec3 : Real up vector.
-     */
-    const vec3& GetRealUp();
-
-    /**
      * @brief Get the camera's up vector in world space coordinates.
      * 
      * @return vec3 : Up vector.
      */
     const vec3& GetUp();
     void SetUp(const vec3&);
-
-    /**
-     * @brief Get the camera's forward vector in world space coordinates.
-     * 
-     * @return vec3 : Forward vector.
-     */
-    const vec3& GetForward();
-    void SetForward(const vec3& v);
 
     /**
      * @brief Get the camera's target (lookAt) in world space coordinates.
@@ -105,7 +89,7 @@ public:
     void ComputeMatricesFromInputs(GLFWwindow *window);
 
     /**
-     * @brief Get the View Matrix also known as the extrinsics matrix.
+     * @brief Get the View Matrix also known as the extrinsic matrix.
      * 
      * @return const mat4& : A constant reference to the matrix.
      */
@@ -120,7 +104,7 @@ public:
 
     /**
      * @brief Get the camera's Wireframe representation.
-     * //TODO: Move in the view. (Detach dependencie). 
+     * //TODO: Move in the view. (Detach dependencies).
      * 
      * @return const float* : A constant list of floats that represents points in space that defines
      * a list of lines (wireframe).
@@ -146,7 +130,7 @@ public:
      * 
      * @return float : The angle in radian. 
      */
-    float GetFovX();
+    [[nodiscard]] float GetFovX() const;
     
     /**
      * @brief Set the Field of View vertical direction of the camera.
@@ -160,7 +144,7 @@ public:
      * 
      * @return float : The angle in radian.
      */
-    float GetFovY();
+    [[nodiscard]] float GetFovY() const;
 
     /**
      * @brief Set the Near clip plane of the camera.
@@ -174,7 +158,7 @@ public:
      * 
      * @return float : Near clip plane distance.
      */
-    float GetNear();
+    [[nodiscard]] float GetNear() const;
 
     /**
      * @brief Set the Far clip plane distance.
@@ -188,7 +172,7 @@ public:
      * 
      * @return float : The far clip plane distance.
      */
-    float GetFar();
+    [[nodiscard]] float GetFar() const;
 
     /**
      * @brief Set the camera's intrinsic matrix.
@@ -218,12 +202,6 @@ public:
     const mat4& GetExtrinsic();
     
     /**
-     * @brief TODO
-     * 
-     */
-    void Update();
-    
-    /**
      * @brief Get the Resolution of the camera in pixels. 
      * 
      * @return const ivec2& (x = width, y = height), amount of pixels in both axis.
@@ -234,31 +212,33 @@ public:
      * @brief Render the camera in the scene. Render the gizmo, frustum and potentially 
      * image planes of the camera's images is activated. 
      */
-    void Render();
+    void Render() override;
 
     /**
-     * @brief Set the Image dislpayed on the current image plane.
+     * @brief Set the Image displayed on the current image plane.
      * 
      * @param image : A pointer to the image to display.
      */
     void SetImage(Image* image);
 
-    bool IsCenterLineVisible();
+    [[nodiscard]] bool IsCenterLineVisible() const;
 
     void SetIsCenterLineVisible(bool visible);
 
     void SetCenterLineLength(float length);
 
-    float GetCenterLineLength();
+    [[nodiscard]] float GetCenterLineLength() const;
 
     void SetShowFrustumLines(bool value);
-    bool ShowFrustumLines();
+    [[nodiscard]] bool ShowFrustumLines() const;
 
-    bool ShowImagePlane();
+    [[nodiscard]] bool ShowImagePlane() const;
     void SetShowImagePlane(bool visible);
 
+    void SetFrustumSize(float value);
+
     /**
-     * @brief Filename releated to the source image of the camera. 
+     * @brief Filename related to the source image of the camera.
      * 
      */
     std::string filename;
@@ -272,24 +252,24 @@ private:
     vec2 m_previousCursorPos = vec2(0.0, 0.0);
     float m_prevScrollY = 0.0f;
     
-    double yDeltaAngle;
+    double yDeltaAngle{};
 
     /** Camera position in world space coordinates. */
-    vec3 m_pos;
+    vec3 m_pos{};
     /** The target position in world space that the camera is looking at. */
-    vec3 m_target;
+    vec3 m_target{};
     /** The camera's up vector. */
-    vec3 m_up;
+    vec3 m_up{};
     /** Field of view, (x,y). */
-    vec2 m_fov;
+    vec2 m_fov{};
 
     float m_near = 0.001f;
     float m_far = 100.0f;
     
     /** Computed values. */
-    vec3 m_forward;
-    vec3 m_realUp;
-    vec3 m_right;
+    vec3 m_forward{};
+    vec3 m_realUp{};
+    vec3 m_right{};
 
     bool m_displayCenterLine = false;
     bool m_showImagePlane = false;
@@ -299,13 +279,13 @@ private:
      * @brief Also known as the extrinsic matrix.
      * Rotate and translate compare to world coordinates.
      */
-    mat4 m_viewMatrix;
+    mat4 m_viewMatrix{};
 
     /**
      * @brief Also known as the intrinsic matrix.
      * Projection of points from camera-space to image-space.
      */
-    mat4 m_projectionMatrix;
+    mat4 m_projectionMatrix{};
 
     float m_scroll = 0.0f;
     float m_speed = 3.0f;
@@ -319,10 +299,10 @@ private:
 
     float m_wireframeVertices[16*3] = {0.0f};
 
-    ivec2 m_resolution;
+    ivec2 m_resolution{};
 
-    Lines* m_frustumLines;
-    Gizmo* m_gizmo;
+    Lines* m_frustumLines{};
+    Gizmo* m_gizmo{};
     // float m_wireSize = 0.1f;
     float m_wireSize = 1.0f;
 
@@ -330,9 +310,8 @@ private:
     Texture2D* m_imageTex = nullptr;
     Plane* m_imagePlane = nullptr;
     /** Center line forward dir. */
-    Lines* m_centerLine;
+    Lines* m_centerLine{};
     float m_centerLineVertices[6] = {0.0f};
-    
     float m_centerLineLength = 1.0f;
 
 };

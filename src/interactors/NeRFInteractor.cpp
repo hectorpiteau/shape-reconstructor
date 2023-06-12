@@ -1,34 +1,26 @@
 #include <memory>
+#include <utility>
 #include "NeRFInteractor.hpp"
 #include "../model/Dataset/NeRFDataset.hpp"
 
-NeRFInteractor::NeRFInteractor()
-{
-
-}
-
-NeRFInteractor::~NeRFInteractor()
-{
-}
-
 void NeRFInteractor::SetNeRFDataset(std::shared_ptr<NeRFDataset> nerf)
 {
-    m_nerf = nerf;
+    m_nerf = std::move(nerf);
 }
 
 bool NeRFInteractor::IsImageSetLoaded()
 {
-    std::shared_ptr<ImageSet> imgset = m_nerf->GetImageSet();
-    if(imgset != nullptr){
-        return imgset->GetAmountOfImages() == 0 ? false : true;
+    std::shared_ptr<ImageSet> imageSet = m_nerf->GetImageSet();
+    if(imageSet != nullptr){
+        return imageSet->size() != 0;
     }
     return false;
 }
 
 int NeRFInteractor::GetImageSetId() {
-    std::shared_ptr<ImageSet> imgset = m_nerf->GetImageSet();
-    if(imgset != nullptr){
-        return imgset->GetID();
+    std::shared_ptr<ImageSet> imageSet = m_nerf->GetImageSet();
+    if(imageSet != nullptr){
+        return imageSet->GetID();
     }
     return -1;
 }
@@ -65,4 +57,5 @@ bool NeRFInteractor::AreCamerasGenerated(){
 
 void NeRFInteractor::LoadDataset(){
     m_nerf->Load();
+
 }

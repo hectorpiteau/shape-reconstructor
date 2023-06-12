@@ -18,11 +18,11 @@
 class NeRFInspector
 {
 public:
-    NeRFInspector(NeRFInteractor *interactor) : m_interactor(interactor){};
+    explicit NeRFInspector(NeRFInteractor *interactor) : m_interactor(interactor) {};
 
     NeRFInspector(const NeRFInspector &) = delete;
 
-    ~NeRFInspector(){};
+    ~NeRFInspector() = default;
 
     void Render()
     {
@@ -31,7 +31,7 @@ public:
             ImGui::Text("Error: interactor is null.");
             return;
         }
-        ImGui::SeparatorText(ICON_FA_INFO " NeRF Dataset - Informations");
+        ImGui::SeparatorText(ICON_FA_INFO " NeRF Dataset - Information");
         
         ImGui::Text("ImageSet linked: Yes");
         ImGui::Text("Calibrations: ");

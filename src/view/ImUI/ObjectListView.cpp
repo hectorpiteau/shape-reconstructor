@@ -13,8 +13,7 @@
 
 
 ObjectListView::ObjectListView()
-{
-}
+= default;
 
 void ObjectListView::SetInteractor(ObjectListInteractor* interactor){
     m_interactor = interactor;
@@ -68,9 +67,9 @@ void ObjectListView::Render()
             m_interactor->SelectMainCamera();
         }
 
-        for (size_t i=0; i<m_items.size(); ++i)
+        for (auto & m_item : m_items)
         {
-            m_items[i]->Render();
+            m_item->Render();
         }
 
         ImGui::EndTable();

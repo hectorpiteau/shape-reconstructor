@@ -59,10 +59,18 @@ void CameraSetInteractor::HideCenterLines(){
     m_cameraSet->HideCenterLines();
 }
 
-float CameraSetInteractor::GetCenterLinesLength(){
+float CameraSetInteractor::GetCenterLinesLength() const{
     return m_centerLinesLength;
 }
 void CameraSetInteractor::SetCenterLinesLength(float length){
     m_centerLinesLength = length;
     m_cameraSet->SetCenterLinesLength(length);
+}
+
+float CameraSetInteractor::GetFrustumSize() {
+    return m_cameraSet->GetFrustumSize();
+}
+
+void CameraSetInteractor::SetFrustumSize(float value) {
+    return m_cameraSet->SetFrustumSize(value);
 }

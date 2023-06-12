@@ -15,8 +15,8 @@ public:
      * 
      * @param projection : The current camera's projection matrix.
      * @param view : The current camera's view matrix.
-     * @param scene : A set of informations on the current scene / viewport.
+     * @param scene : A set of information on the current scene / viewport.
      */
     virtual void Render() = 0;
-    virtual ~Renderable() {};
+    virtual ~Renderable() = default;
 };

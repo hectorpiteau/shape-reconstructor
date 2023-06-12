@@ -27,7 +27,7 @@ class Utils
 {
 public:
     template <typename T>
-    static int Sign(T val)
+    static T Sign(T val)
     {
         return (T(0) < val) - (val < T(0));
     }

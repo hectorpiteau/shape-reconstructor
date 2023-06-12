@@ -7,18 +7,22 @@
 
 #include "../utils/helper_cuda.h"
 
+
 template <class T>
 class GPUData {
-private:
+protected:
     T* m_host;
     T* m_device;
 
-    bool isDeviceUpToDate;
+    bool m_isDeviceUpToDate;
 
 public:
-    GPUData() : m_host(nullptr), m_device(nullptr), isDeviceUpToDate(false) {
+    GPUData() : m_host(nullptr), m_device(nullptr), m_isDeviceUpToDate(false) {
         m_host = (T*) malloc(sizeof(T));
-        
+        if(m_host == nullptr){
+            std::cerr << "GPUData: Malloc error." << std::endl;
+            exit(1);
+        }
         checkCudaErrors(cudaMalloc((void **)&m_device, sizeof(T)));
     }
 
@@ -33,10 +37,10 @@ public:
     T* Host() {return m_host;}
 
     void ToDevice(){
-        // std::cout << "Copy to device: size: " << std::to_string(sizeof(T)) << std::endl; 
         checkCudaErrors(
             cudaMemcpy((void*)m_device, (void*)m_host, sizeof(T), cudaMemcpyHostToDevice)
         );
+        m_isDeviceUpToDate = true;
     }
 
     void ToHost(){

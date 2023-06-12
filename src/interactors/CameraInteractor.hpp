@@ -14,7 +14,9 @@ public:
     /**
      * @brief Construct a new Camera Interactor object.
      */
-    CameraInteractor();
+    CameraInteractor() = default;
+    CameraInteractor(const CameraInteractor&) = delete;
+    ~CameraInteractor() = default;
 
     /**
      * @brief Set the Camera to be edited.

@@ -51,6 +51,7 @@
 #include "../../include/icons/IconsFontAwesome6.h"
 
 #include "cuda/CudaSurface3D.cuh"
+#include "utils/filesystem.h"
 
 using namespace cv;
 using namespace glm;
@@ -358,6 +359,7 @@ void GLInitialization()
 
     // Set colors used when calling clear.
     GLclampf red = 0.2f, green = 0.2f, blue = 0.2f, alpha = 0.2f;
+//    GLclampf red = 0.95f, green = 0.95f, blue = 0.95f, alpha = 1.0f;
     glClearColor(red, green, blue, alpha);
 
     // Cull triangles which normal is not towards the camera

@@ -35,8 +35,6 @@ Plane::Plane(Scene* scene) : m_scene(scene), m_pipeline("../src/shaders/v_plane.
     glEnableVertexAttribArray(1);
 }
 
-Plane::~Plane(){}
-
 void Plane::SetVertices(const vec3& top_left, const vec3& top_right, const vec3& bot_left, const vec3& bot_right){
     WRITE_VEC3(m_vertices, 0, top_left);
     WRITE_VEC3(m_vertices, 5, top_right);
@@ -47,7 +45,7 @@ void Plane::SetVertices(const vec3& top_left, const vec3& top_right, const vec3&
     WRITE_VEC3(m_vertices, 25, bot_left);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, m_size * sizeof(float), m_vertices, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (int)(m_size * sizeof(float)), m_vertices, GL_STREAM_DRAW);
 }
 
 void Plane::Render(){
@@ -63,7 +61,7 @@ void Plane::Render(){
 
     glBindVertexArray(m_VAO);
 
-    glDrawArrays(GL_TRIANGLES, 0, m_size);
+    glDrawArrays(GL_TRIANGLES, 0, (int)m_size);
     glEnable(GL_CULL_FACE);
 }
 

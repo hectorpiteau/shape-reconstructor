@@ -17,6 +17,8 @@
 #include "../../model/Dataset/NeRFDataset.hpp"
 #include "../../model/Volume3D.hpp"
 #include "../../model/VolumeRenderer.hpp"
+#include "../../model/PlaneCut.hpp"
+#include "../../model/AdamOptimizer.hpp"
 
 class AppController
 {
@@ -36,7 +38,12 @@ public:
         
         m_scene->Add(std::make_shared<NeRFDataset>(m_scene));
 
-        m_scene->Add(std::make_shared<VolumeRenderer>(m_scene));
+        auto volumeRenderer1 = std::make_shared<VolumeRenderer>(m_scene);
+        m_scene->Add(volumeRenderer1);
+
+        m_scene->Add(std::make_shared<PlaneCut>(m_scene, volumeRenderer1->GetVolume3D()));
+
+        m_scene->Add(std::make_shared<AdamOptimizer>(volumeRenderer1->GetVolume3D()->GetResolution()));
 
         /** Create Views and Interactors */
         m_objectListView = std::make_shared<ObjectListView>();

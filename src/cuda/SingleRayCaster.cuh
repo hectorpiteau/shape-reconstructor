@@ -19,28 +19,25 @@ Modified: 2023-04-17T11:39:56.003Z
 using namespace glm;
 
 
-
-class SingleRayCaster
-{
+class SingleRayCaster {
 private:
-    
-public:
-    SingleRayCaster(){};
 
-    ~SingleRayCaster() {};
-    
-    __device__ static Ray GetRay(const glm::vec2 &pixel, CameraDescriptor* camera){
+public:
+    SingleRayCaster() = default;
+
+    ~SingleRayCaster() = default;
+
+    __device__ static Ray GetRay(const glm::vec2 &pixel, CameraDescriptor *camera) {
         vec3 dir = vec3(0.0);
-        /** Compute ray from camera to pixel. Undistort. */
+        /** Compute ray from camera to pixel. Undistorted. */
         dir = PixelToWorld(pixel, camera->camInt, camera->camExt, camera->width, camera->height);
         dir = dir - camera->camPos;
         Ray ray = {
-            .origin = camera->camPos,
-            .dir =  dir,
-            .tmin = 0.0f,
-            .tmax = 20.0f
+                .origin = camera->camPos,
+                .dir =  dir,
+                .tmin = 0.0f,
+                .tmax = 20.0f
         };
-
         return ray;
     }
 };

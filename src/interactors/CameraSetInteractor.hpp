@@ -13,7 +13,7 @@
  */
 class CameraSetInteractor {
 public:
-    CameraSetInteractor(Scene* scene);
+    explicit CameraSetInteractor(Scene* scene);
     CameraSetInteractor(const CameraSetInteractor &) = delete;
     ~CameraSetInteractor();
 
@@ -71,8 +71,11 @@ public:
     void ShowCenterLines();
     void HideCenterLines();
 
-    float GetCenterLinesLength();
+    [[nodiscard]] float GetCenterLinesLength() const;
     void SetCenterLinesLength(float length);
+
+    float GetFrustumSize();
+    void SetFrustumSize(float value);
 
 private:
     /** out dep */

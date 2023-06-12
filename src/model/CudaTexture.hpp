@@ -8,32 +8,32 @@
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
-
 #include "ShaderPipeline.hpp"
 #include "Volume3D.hpp"
 #include "Camera/Camera.hpp"
-
 #include "../cuda/kernel.cuh"
 #include "../cuda/RayCasterParams.cuh"
+
+/** Cuda Kernels */
 #include "../cuda/VolumeRendering.cuh"
+#include "../cuda/PlaneCutRendering.cuh"
 
 #include "../utils/helper_cuda.h"
-
 #include "../cuda/GPUData.cuh"
 #include "../cuda/Common.cuh"
 
 class CudaTexture
 {
 private:
-    uint m_width, m_height;
+//    uint m_width, m_height;
 
-    void *cuda_dev_render_buffer;
-    cudaGraphicsResource_t cuda_image_resource;
-    cudaArray_t cuda_image_array;
-    cudaSurfaceObject_t cuda_texture_surface;
-    cudaResourceDesc cuda_texture_resource_desc;
-    GLuint opengl_tex_cuda;
-    GLuint VBO, VAO, EBO;
+    void *cuda_dev_render_buffer{};
+    cudaGraphicsResource_t cuda_image_resource{};
+    cudaArray_t cuda_image_array{};
+    cudaSurfaceObject_t cuda_texture_surface{};
+    cudaResourceDesc cuda_texture_resource_desc{};
+    GLuint opengl_tex_cuda{};
+    GLuint VBO{}, VAO{}, EBO{};
 
     // Create 2D OpenGL texture in gl_tex and bind it to CUDA in cuda_tex
     void createGLTextureForCUDA(unsigned int size_x, unsigned int size_y)
@@ -93,7 +93,7 @@ public:
         // glBindVertexArray(0); // unbind VAO
     }
 
-    GLuint GetTex()
+    GLuint GetTex() const
     {
         return opengl_tex_cuda;
     }
@@ -103,7 +103,7 @@ public:
         return (uint4 *)cuda_dev_render_buffer;
     }
 
-    CudaTexture(uint width, uint height) : m_width(width), m_height(height)
+    CudaTexture(uint width, uint height)
     {
         /** Init OpenGL Texture **/
         createGLTextureForCUDA(width, height);
@@ -121,22 +121,11 @@ public:
         checkCudaErrors(cudaMalloc(&cuda_dev_render_buffer, size_tex_data));
     }
 
-    ~CudaTexture()
-    {
-        // glDeleteRenderbuffers(m_depthBuffer);
-        // if (pbo)
-        // {
-        //     cudaGraphicsUnregisterResource(cuda_pbo_resource);
-        //     glDeleteBuffers(1, &pbo);
-        //     glDeleteTextures(1, &tex);
-        // }
-    }
+    ~CudaTexture()= default; //TODO:check if no memory leak here.
 
     void RunKernel(GPUData<RayCasterDescriptor>& raycasterDesc, GPUData<CameraDescriptor>& cameraDesc, GPUData<VolumeDescriptor>& volumeDesc)
     {
-        
         checkCudaErrors(cudaGraphicsMapResources(1, &cuda_image_resource, 0));
-        
         checkCudaErrors(cudaGraphicsSubResourceGetMappedArray(&cuda_image_array, cuda_image_resource, 0, 0));
         // the resource Type says which things to set. See Documentation
         cuda_texture_resource_desc.resType = cudaResourceTypeArray;
@@ -144,7 +133,6 @@ public:
         // Create a surface Object
         checkCudaErrors(cudaCreateSurfaceObject(&cuda_texture_surface, &cuda_texture_resource_desc));
         // cuda Kernel here to deal with everything
-
 
         raycasterDesc.Host()->surface = cuda_texture_surface; // 64bits 
         raycasterDesc.ToDevice();
@@ -155,5 +143,26 @@ public:
         volume_rendering_wrapper_linea_ui8(raycasterDesc, cameraDesc, volumeDesc, cuda_texture_surface);
         
         checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_image_resource, 0));
+    }
+
+    void RunCUDAPlaneCut(GPUData<PlaneCutDescriptor>& planeCutDesc, GPUData<VolumeDescriptor>& volumeDesc, GPUData<CameraDescriptor>& cameraDesc ){
+        checkCudaErrors(cudaGraphicsMapResources(1, &cuda_image_resource, 0));
+        checkCudaErrors(cudaGraphicsSubResourceGetMappedArray(&cuda_image_array, cuda_image_resource, 0, 0));
+        // the resource Type says which things to set. See Documentation
+        cuda_texture_resource_desc.resType = cudaResourceTypeArray;
+        cuda_texture_resource_desc.res.array.array = cuda_image_array;
+        // Create a surface Object
+        checkCudaErrors(cudaCreateSurfaceObject(&cuda_texture_surface, &cuda_texture_resource_desc));
+
+        planeCutDesc.Host()->outSurface = cuda_texture_surface;
+
+        cameraDesc.ToDevice();
+        volumeDesc.ToDevice();
+        planeCutDesc.ToDevice();
+
+        /** kernel */
+        plane_cut_rendering_wrapper(planeCutDesc, volumeDesc, cameraDesc);
+        checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_image_resource, 0));
+
     }
 };

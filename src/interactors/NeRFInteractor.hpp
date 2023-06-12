@@ -6,9 +6,9 @@
 
 class NeRFInteractor {
 public:
-    NeRFInteractor();
+    NeRFInteractor() = default;
     NeRFInteractor(const NeRFInteractor&) = delete;
-    ~NeRFInteractor();
+    ~NeRFInteractor() = default;
 
     void SetNeRFDataset(std::shared_ptr<NeRFDataset> nerf);
 

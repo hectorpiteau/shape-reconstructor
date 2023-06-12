@@ -1,35 +1,30 @@
 #include <memory>
+#include <utility>
 
 #include "../model/ImageSet.hpp"
 #include "ImageSetInteractor.hpp"
 
-ImageSetInteractor::ImageSetInteractor()
-{
+ImageSetInteractor::ImageSetInteractor() = default;
 
-};
-
-ImageSetInteractor::~ImageSetInteractor(){
-
-};
+ImageSetInteractor::~ImageSetInteractor() = default;
 
 
-void ImageSetInteractor::SetActiveImageSet(std::shared_ptr<ImageSet> imageSet){
-    m_imageSet = imageSet;
+void ImageSetInteractor::SetActiveImageSet(std::shared_ptr<ImageSet> imageSet) {
+    m_imageSet = std::move(imageSet);
     SetUpdatedImageSet(true);
 }
 
-std::shared_ptr<ImageSet>& ImageSetInteractor::GetImageSet(){
+std::shared_ptr<ImageSet> &ImageSetInteractor::GetImageSet() {
     return m_imageSet;
 }
 
-size_t ImageSetInteractor::LoadImages(const char* folderPath){
+size_t ImageSetInteractor::LoadImages(const char *folderPath) {
     m_imageSet->SetFolderPath(folderPath);
     return m_imageSet->LoadImages();
-
 }
 
-bool ImageSetInteractor::GetUpdatedImageSet(){return m_updatedImageSet;}
+bool ImageSetInteractor::GetUpdatedImageSet() const { return m_updatedImageSet; }
 
-void ImageSetInteractor::SetUpdatedImageSet(bool value){
+void ImageSetInteractor::SetUpdatedImageSet(bool value) {
     m_updatedImageSet = value;
 }

@@ -1,14 +1,14 @@
 #ifndef OVERLAY_PLANE_H
 #define OVERLAY_PLANE_H
 #include <memory>
-#include "../model/ShaderPipeline.hpp"
 #include "../model/Texture2D.hpp"
+#include "../model/ShaderPipeline.hpp"
 #include "../utils/SceneSettings.hpp"
 
 class OverlayPlane
 {
 public:
-    OverlayPlane(std::shared_ptr<SceneSettings> sceneSettings);
+    explicit OverlayPlane(std::shared_ptr<SceneSettings> sceneSettings);
     OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline,std::shared_ptr<SceneSettings> sceneSettings);
     ~OverlayPlane();
 

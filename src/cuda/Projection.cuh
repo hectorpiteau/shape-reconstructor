@@ -33,8 +33,7 @@ using namespace glm;
  * @return vec4 : The same point as vec but expressed with respect
  * to the world space coordinates system.
  */
-CUDA_HOSTDEV inline vec4 CameraToWorld(const vec4 &vec, const mat4 &extrinsic)
-{
+CUDA_HOSTDEV inline vec4 CameraToWorld(const vec4 &vec, const mat4 &extrinsic) {
     /** Pw = R^t @ Pc + T */
     /** PointWorld = Rotation^Transposed multiplied by PointCamera + (Translation from world to camera origins)  */
     mat4 ext = transpose(extrinsic);
@@ -65,8 +64,7 @@ CUDA_HOSTDEV inline vec4 CameraToWorld(const vec4 &vec, const mat4 &extrinsic)
  * @param extrinsic
  * @return vec4
  */
-CUDA_HOSTDEV inline vec4 WorldToCamera(vec4 worldCoords, mat4 extrinsic)
-{
+CUDA_HOSTDEV inline vec4 WorldToCamera(vec4 worldCoords, mat4 extrinsic) {
     return extrinsic * worldCoords;
 }
 
@@ -77,8 +75,7 @@ CUDA_HOSTDEV inline vec4 WorldToCamera(vec4 worldCoords, mat4 extrinsic)
  * @param intrinsicImage
  * @return vec3
  */
-CUDA_HOSTDEV inline vec3 CameraToImage(vec4 cameraCoords, mat3x4 intrinsicImage)
-{
+CUDA_HOSTDEV inline vec3 CameraToImage(vec4 cameraCoords, mat3x4 intrinsicImage) {
     return intrinsicImage * cameraCoords;
 }
 
@@ -89,8 +86,7 @@ CUDA_HOSTDEV inline vec3 CameraToImage(vec4 cameraCoords, mat3x4 intrinsicImage)
  * @param intrinsicPixel
  * @return vec2
  */
-CUDA_HOSTDEV inline vec2 ImageToPixel(vec3 imageCoords, mat3 intrinsicPixel)
-{
+CUDA_HOSTDEV inline vec2 ImageToPixel(vec3 imageCoords, mat3 intrinsicPixel) {
     return intrinsicPixel * imageCoords;
 }
 
@@ -101,8 +97,7 @@ CUDA_HOSTDEV inline vec2 ImageToPixel(vec3 imageCoords, mat3 intrinsicPixel)
  * @param intrinsic
  * @return vec2
  */
-CUDA_HOSTDEV inline vec2 CameraToPixel(vec3 cameraCoords, mat3 intrinsic)
-{
+CUDA_HOSTDEV inline vec2 CameraToPixel(vec3 cameraCoords, mat3 intrinsic) {
     return intrinsic * cameraCoords; // TODO: int round?
 }
 
@@ -114,8 +109,7 @@ CUDA_HOSTDEV inline vec2 CameraToPixel(vec3 cameraCoords, mat3 intrinsic)
  * @return vec3 : A vec3 that correspond to the point in ndcCoords but in the
  * camera coordinate system.
  */
-CUDA_HOSTDEV inline vec3 NDCToCamera(const vec2 &ndcCoords, const mat4 &intrinsic)
-{
+CUDA_HOSTDEV inline vec3 NDCToCamera(const vec2 &ndcCoords, const mat4 &intrinsic) {
     return vec3(ndcCoords.x * 1 / intrinsic[0][0], ndcCoords.y * 1 / intrinsic[1][1], 1.0);
 }
 
@@ -126,9 +120,8 @@ CUDA_HOSTDEV inline vec3 NDCToCamera(const vec2 &ndcCoords, const mat4 &intrinsi
  * @param intrinsic : The camera's intrinsic matrix.
  * @return vec3 : 
  */
-CUDA_HOSTDEV inline vec2 CameraToNDC(const vec3& cameraCoords, const mat4 &intrinsic)
-{
-    return vec2(cameraCoords.x * intrinsic[0][0], cameraCoords.y *intrinsic[1][1]) / cameraCoords.z;
+CUDA_HOSTDEV inline vec2 CameraToNDC(const vec3 &cameraCoords, const mat4 &intrinsic) {
+    return vec2(cameraCoords.x * intrinsic[0][0], cameraCoords.y * intrinsic[1][1]) / cameraCoords.z;
 }
 
 /**
@@ -140,8 +133,8 @@ CUDA_HOSTDEV inline vec2 CameraToNDC(const vec3& cameraCoords, const mat4 &intri
  * @param pixelTranslation
  * @return mat3
  */
-CUDA_HOSTDEV inline mat3 Buildintrinsic(double focalLengthX, double focalLengthY, vec2 pixelSize, vec2 pixelTranslation)
-{
+CUDA_HOSTDEV inline mat3
+BuildIntrinsic(double focalLengthX, double focalLengthY, vec2 pixelSize, vec2 pixelTranslation) {
     mat3 res(0.0);
     res[0][0] = focalLengthX / pixelSize.x;
     res[1][1] = focalLengthY / pixelSize.y;
@@ -161,9 +154,8 @@ CUDA_HOSTDEV inline mat3 Buildintrinsic(double focalLengthX, double focalLengthY
  *
  * @return vec2 The vector containing the size of one pixel in the scene's unit.
  */
-CUDA_HOSTDEV inline vec2 GetPixelSizeVec(int width, int height, double sensorWidth, double sensorHeight)
-{
-    return vec2(sensorWidth / width, sensorHeight / height);
+CUDA_HOSTDEV inline vec2 GetPixelSizeVec(int width, int height, double sensorWidth, double sensorHeight) {
+    return {sensorWidth / width, sensorHeight / height};
 }
 
 /**
@@ -176,19 +168,16 @@ CUDA_HOSTDEV inline vec2 GetPixelSizeVec(int width, int height, double sensorWid
  * @param height : The amount of pixels in the height.
  * @return vec2 : A vector in Normalized Device Coordinates ([-1, 1], [-1, 1])
  */
-CUDA_HOSTDEV inline vec2 PixelToNDC(const vec2 &pixelCoords, int width, int height)
-{
+CUDA_HOSTDEV inline vec2 PixelToNDC(const vec2 &pixelCoords, size_t width, size_t height) {
     vec2 tmp = (2.0f * pixelCoords / vec2(width, height)) - vec2(1.0f);
     // Account for image aspect ratio
     // tmp.x *= (height / width); // TODO: division can be moved sooner in code.
     return tmp;
 }
 
-CUDA_HOSTDEV inline vec3 PixelToWorld(const vec2 &pixelCoords, const mat4 &intrinsic, const mat4 &extrinsic, size_t width, size_t height)
-{
-    auto ndc = PixelToNDC(pixelCoords,
-                          width,
-                          height);
+CUDA_HOSTDEV inline vec3
+PixelToWorld(const vec2 &pixelCoords, const mat4 &intrinsic, const mat4 &extrinsic, size_t width, size_t height) {
+    auto ndc = PixelToNDC(pixelCoords, width, height);
 
     auto cam = vec4(NDCToCamera(ndc, intrinsic) * -1.0f, 1.0f);
 
@@ -206,8 +195,8 @@ CUDA_HOSTDEV inline vec3 PixelToWorld(const vec2 &pixelCoords, const mat4 &intri
  * @param height : The amount of pixels in the height.
  * @return vec2 : A vector in Normalized Device Coordinates ([-1, 1], [-1, 1])
  */
-CUDA_HOSTDEV inline vec2 PixelToNDC(const vec2 &pixelCoords, const mat4 &intrinsic, const vec2 &distortion, int width, int height)
-{
+CUDA_HOSTDEV inline vec2
+PixelToNDC(const vec2 &pixelCoords, const mat4 &intrinsic, const vec2 &distortion, int width, int height) {
     vec2 tmp = (2.0f * pixelCoords / vec2(intrinsic[0][0], intrinsic[1][1])) - vec2(1.0f);
     // Account for image aspect ratio
     tmp.x *= (intrinsic[1][1] / intrinsic[0][0]); // TODO: division can be moved sooner in code.
@@ -223,12 +212,11 @@ CUDA_HOSTDEV inline vec2 PixelToNDC(const vec2 &pixelCoords, const mat4 &intrins
  * @param height : The image's height resolution in pixels. 
  * @return vec2 : The pixel coordinates in continuous coordinates (not discretized).
  */
-CUDA_HOSTDEV inline vec2 NDCToPixel(const vec2 &ndcCoords, size_t width, size_t height)
-{
+CUDA_HOSTDEV inline vec2 NDCToPixel(const vec2 &ndcCoords, size_t width, size_t height) {
     // Calculate pixel coordinates
-    return vec2(
-        (ndcCoords.x + 1.0f) * (width / 2.0f),
-        (ndcCoords.y + 1.0f) * (height / 2.0f));
+    return {
+            (ndcCoords.x + 1.0f) * ((float) width / 2.0f),
+            (ndcCoords.y + 1.0f) * ((float) height / 2.0f)};
 }
 
 /**
@@ -242,25 +230,28 @@ CUDA_HOSTDEV inline vec2 NDCToPixel(const vec2 &ndcCoords, size_t width, size_t 
  * @return vec2
  */
 CUDA_HOSTDEV inline vec2 CamToCamHomography(
-    const vec3 &srcCoords,
-    float distanceFromSrc,
-    const mat4 &srcExtrinsic,
-    const mat4 &dstExtrinsic,
-    const mat4 &srcIntrinsic,
-    const mat4 &dstIntrinsic)
-{
-    return vec2(0.0, 0.0);
+        const vec3 &srcCoords,
+        float distanceFromSrc,
+        const mat4 &srcExtrinsic,
+        const mat4 &dstExtrinsic,
+        const mat4 &srcIntrinsic,
+        const mat4 &dstIntrinsic) {
+    return {0.0, 0.0};
 }
 
 
-CUDA_HOSTDEV inline vec3 VectorPlaneIntersection(const vec3& vecO, const vec3& vecD, const vec3& planeO, const vec3& planeU, const vec3& planeV ){
+CUDA_HOSTDEV inline bool
+VectorPlaneIntersectionExist(const vec3 &vecD, const vec3 &normal) {
     /** Check determinant. */
-    float det = dot(- vecD, (planeU * planeV));
-    if(det > -0.00001f && det < 0.00001f) return vec3(0,0,0);
+    float det = dot(-vecD, normal);
+    if (det < 0.00001f) return false;
+    return true;
+}
 
+CUDA_HOSTDEV inline vec3
+VectorPlaneIntersection(const vec3 &vecO, const vec3 &vecD, const vec3 &planeO,  const vec3 &normal) {
     /** Compute intersection. */
-    vec3 uv = planeU * planeV;
-    float t = dot(uv, (vecO - planeO))/dot(-vecD, uv);
+    float t = dot(normal, (vecO - planeO)) / dot(-vecD, normal);
     return vecO + t * vecD;
 }
 

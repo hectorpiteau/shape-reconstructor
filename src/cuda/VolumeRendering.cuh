@@ -21,10 +21,6 @@ Modified: 2023-04-25T12:53:31.894Z
 
 using namespace glm;
 
-struct VolumeData
-{
-    float4 data;
-};
 
 /**
  * @brief Volume Rendering Wrapper using Texture Allocation :

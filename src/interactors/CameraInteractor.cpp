@@ -1,16 +1,13 @@
 #include <memory>
 #include <glm/glm.hpp>
+#include <utility>
 
 #include "../model/Camera/Camera.hpp"
 #include "CameraInteractor.hpp"
 
-CameraInteractor::CameraInteractor()
-{
-}
-
 void CameraInteractor::SetCamera(std::shared_ptr<Camera> camera)
 {
-    m_camera = camera;
+    m_camera = std::move(camera);
 }
 
 void CameraInteractor::SetIsActive(bool active)

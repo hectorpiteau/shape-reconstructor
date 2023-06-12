@@ -20,9 +20,9 @@ Gizmo::Gizmo(Scene* scene, const vec3& origin, const vec3& x, const vec3& y, con
     WRITE_VEC3(m_zData, 0, m_origin);
     WRITE_VEC3(m_zData, 3, m_origin + m_z);
 
-    m_xLines = std::unique_ptr<Lines>(new Lines(scene, m_xData, 6));
-    m_yLines = std::unique_ptr<Lines>(new Lines(scene, m_yData, 6));
-    m_zLines = std::unique_ptr<Lines>(new Lines(scene, m_zData, 6));
+    m_xLines = std::make_unique<Lines>(scene, m_xData, 6);
+    m_yLines = std::make_unique<Lines>(scene, m_yData, 6);
+    m_zLines = std::make_unique<Lines>(scene, m_zData, 6);
 
     m_xLines->SetColor(m_xColor);
     m_yLines->SetColor(m_yColor);
@@ -55,22 +55,18 @@ void Gizmo::UpdateLines(){
 
 void Gizmo::SetPosition(const vec3& pos){
     m_origin = pos;
-    // UpdateLines();
 }
 
 void Gizmo::SetX(const vec3& x){
     m_x = x;
-    // UpdateLines();
 }
 
 void Gizmo::SetY(const vec3& y){
     m_y = y;
-    // UpdateLines();
 }
 
 void Gizmo::SetZ(const vec3& z){
     m_z = z;
-    // UpdateLines();
 }
 
 void Gizmo::Render()

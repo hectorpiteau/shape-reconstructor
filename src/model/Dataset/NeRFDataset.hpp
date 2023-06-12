@@ -40,14 +40,38 @@ struct NeRFImage : public CameraCalibrationInformations {
  * Real images can then be loaded by 
  */
 class NeRFDataset : public Dataset, public SceneObject{
+private:
+
+    vec2 m_imageSize = vec2(800, 800);
+
+    Scene* m_scene;
+
+    enum NeRFDatasetModes m_mode;
+
+    std::string m_trainJSONPath;
+    std::string m_trainImagesPath;
+
+    std::string m_validJSONPath;
+    std::string m_validImagesPath;
+
+    std::vector<NeRFImage> m_images;
+    std::vector<CameraCalibrationInformations> m_imagesCalibration;
+
+    bool m_isCalibrationLoaded;
+    bool m_camerasGenerated;
+
+    /** in dep */
+    std::shared_ptr<CameraSet> m_cameraSet = nullptr;
+    std::shared_ptr<ImageSet> m_imageSet = nullptr;
+
 public:
-    NeRFDataset(Scene* scene);
-    ~NeRFDataset();
+    explicit NeRFDataset(Scene* scene);
+    ~NeRFDataset() override;
 
     /**
      * @brief Load the images paths and transform matrices
      * in memory. 
-     * Does not load the images itselfs. 
+     * Does not load the images themselves.
      * An ImageSet can be used for this task.
      * 
      * @return true 
@@ -61,14 +85,14 @@ public:
      * @return true : Images loaded.
      * @return false : Images not loaded.
      */
-    bool Load();
+    bool Load() override;
 
     /**
      * @brief Get the amount of images in the dataset currently loaded.
      * 
      * @return size_t : The amount of images.
      */
-    size_t Size();
+    size_t Size() override;
 
     /**
      * @brief Get the Mode of the Dataset.
@@ -92,42 +116,18 @@ public:
      */
     void SetMode(enum NeRFDatasetModes mode);
 
-    void Render();
+    void Render() override;
 
     const std::string& GetCurrentJsonPath();
     const std::string& GetCurrentImageFolderPath();
 
     std::shared_ptr<ImageSet> GetImageSet();
 
-    bool IsCalibrationLoaded();
+    [[nodiscard]] bool IsCalibrationLoaded() const;
     
     void GenerateCameras();
 
-    bool AreCamerasGenerated();
+    [[nodiscard]] bool AreCamerasGenerated() const;
 
     std::shared_ptr<CameraSet> GetCameraSet();
-
-private:
-
-    vec2 m_imageSize = vec2(800, 800);
-    
-    Scene* m_scene;
-
-    enum NeRFDatasetModes m_mode;
-    
-    std::string m_trainJSONPath;
-    std::string m_trainImagesPath;
-
-    std::string m_validJSONPath;
-    std::string m_validImagesPath;
-
-    std::vector<NeRFImage> m_images;
-    std::vector<CameraCalibrationInformations> m_imagesCalibration;
-
-    bool m_isCalibrationLoaded;
-    bool m_camerasGenerated;
-
-    /** in dep */
-    std::shared_ptr<CameraSet> m_cameraSet = nullptr;
-    std::shared_ptr<ImageSet> m_imageSet = nullptr;
 };

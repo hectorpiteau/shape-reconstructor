@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/assimp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/glfw" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/glm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/lcms2" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/libraw" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/librawcmake" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/nlohmann" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/tinycudann" vcs="Git" />
+  </component>
+</project>

@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 // #include <experimental/filesystem>
-#include <filesystem>
+#include "../utils/filesystem.h"
 
 #include <algorithm>
 
@@ -40,24 +40,19 @@ const std::string& ImageSet::GetFolderPath(){
 }
 
 bool imageSort(Image* a, Image* b){
-    return strcmp(a->filename.c_str(), b->filename.c_str()) > 0 ? false : true;
+    return strcmp(a->filename.c_str(), b->filename.c_str()) <= 0;
 }
 
 size_t ImageSet::LoadImages() {
     if(m_folderPath.length() <= 0) return 0;
     
     for (const auto & entry : std::filesystem::directory_iterator(m_folderPath)){
-        std::cout << entry.path() << std::endl;
-        Image* img = new Image(entry.path().filename());
-        img->LoadPng(entry.path(), true, false);
+        auto* img = new Image(entry.path().filename());
+        img->LoadPng(entry.path(), false, false);
         m_images.push_back(img);
     }
     /** sort by filename. */
     std::sort(m_images.begin(), m_images.end(), imageSort);
-    return m_images.size();
-}
-
-int ImageSet::GetAmountOfImages() {
     return m_images.size();
 }
 

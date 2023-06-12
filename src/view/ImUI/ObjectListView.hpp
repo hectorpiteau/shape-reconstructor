@@ -39,8 +39,8 @@ public:
 private:
     std::vector<std::shared_ptr<ObjectListItem>> m_items;
 
-    ObjectListInteractor* m_interactor;
+    ObjectListInteractor* m_interactor{};
 
     std::string m_selectedName;
-    int m_selectedId;
+    int m_selectedId{};
 };

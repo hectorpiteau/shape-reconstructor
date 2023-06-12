@@ -38,7 +38,7 @@ public:
         
     }
 
-    void Bind();
+    void Bind() {}
 
     /**
      * @brief Transfer the data to the device (GPU).

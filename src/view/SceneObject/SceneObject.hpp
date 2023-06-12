@@ -2,6 +2,7 @@
 #include "../Renderable/Renderable.hpp"
 #include <string>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 enum SceneObjectTypes
@@ -18,6 +19,8 @@ enum SceneObjectTypes
     MESH,
     VOLUMERENDERER,
     RAYCASTER,
+    PLANECUT,
+    ADAMOPTIMIZER,
     NONE
 };
 
@@ -34,17 +37,19 @@ static const std::vector<const char *> SceneObjectNames = {
     "Mesh",
     "Volume Renderer",
     "Raycaster",
+    "PlaneCut",
+    "Adam Optimizer",
     "None"};
 
 class SceneObject : public Renderable
 {
 protected:
-    bool m_isChild;
+    bool m_isChild{};
     /** A uniq-id that identify this SceneObject. */
     int m_id;
     /** True if the object is active in the scene (visible) or not. */
-    bool m_active;
-    bool m_listVisible;
+    bool m_active{};
+    bool m_listVisible{};
     /** The Object's name. */
     std::string m_name;
     /** The Object's type, stored as a string in order to be easily extended. */
@@ -52,17 +57,17 @@ protected:
     /** The Object's type as the enum, used for fast comparison. */
     enum SceneObjectTypes m_type;
 
-    /** Chilren SceneObjects (dependencies). */
+    /** Children SceneObjects (dependencies). */
     std::vector<std::shared_ptr<SceneObject>> m_children;
 
 public:
-    SceneObject(const std::string typeName, enum SceneObjectTypes type) : 
+    SceneObject(std::string typeName, enum SceneObjectTypes type) :
     m_isChild(false), 
     m_id(-1), 
     m_active(true), 
     m_listVisible(true), 
     m_name("none"), 
-    m_typeName(typeName), 
+    m_typeName(std::move(typeName)),
     m_type(type) {}
 
     /**
@@ -70,7 +75,7 @@ public:
      *
      * @return int : A uniq-id.
      */
-    int GetID() { return m_id; }
+    [[nodiscard]] int GetID() const { return m_id; }
 
     /**
      * @brief Set the uniq-id of this object.
@@ -86,7 +91,7 @@ public:
      * @return true : If the object is active and have to be visible "rendered".
      * @return false : If the object must be inactive and so not visible.
      */
-    bool IsActive() { return m_active; }
+    [[nodiscard]] bool IsActive() const { return m_active; }
 
     /**
      * @brief Set the active state of this SceneObject.
@@ -97,7 +102,7 @@ public:
 
     /**
      * @brief Set this SceneObject's name.
-     * Not necessarely unique.
+     * Not necessarily unique.
      *
      * @param name : A string that will be displayed as the object's name.
      */
@@ -121,20 +126,26 @@ public:
     /**
      * @brief Get the object type.
      * Identify the Type of the Object.
-     * Used to connect with the appropriate inpector in the view.
+     * Used to connect with the appropriate inspector in the view.
      *
      * @return const std::string& : A constant string that contains the name of the type used.
      */
-    enum SceneObjectTypes GetType() { return m_type; }
+    [[nodiscard]] enum SceneObjectTypes GetType() const { return m_type; }
 
     /** Default constructor. Create an invalid SceneObject. */
-    SceneObject() : m_id(-1) {}
+    SceneObject() : m_isChild(false),
+                    m_id(-1),
+                    m_active(true),
+                    m_listVisible(true),
+                    m_name("none"),
+                    m_typeName("SceneObject"),
+                    m_type(SceneObjectTypes::NONE) {}
 
     std::vector<std::shared_ptr<SceneObject>> &GetChildren() { return m_children; }
 
     std::shared_ptr<SceneObject> GetChild(int id)
     {
-        if (m_children.size() > 0)
+        if (!m_children.empty())
         {
             for (auto child : m_children)
             {
@@ -157,7 +168,7 @@ public:
         std::vector<std::shared_ptr<SceneObject>> GetAll(SceneObjectTypes type)
     {
         std::vector<std::shared_ptr<SceneObject>> tab = std::vector<std::shared_ptr<SceneObject>>();
-        for (auto obj : m_children)
+        for (const auto& obj : m_children)
         {
             if (obj->GetType() == type)
                 tab.push_back(obj);

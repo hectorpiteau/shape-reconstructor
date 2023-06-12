@@ -27,7 +27,7 @@ public:
      * @brief Destroy the Scene object.
      *
      */
-    ~Scene();
+    ~Scene() = default;
 
     /**
      * @brief Add an object in the scene. This function updates the object's uniq-id.

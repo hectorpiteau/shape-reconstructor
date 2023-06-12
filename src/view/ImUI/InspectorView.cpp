@@ -11,22 +11,25 @@
 
 #include "../../interactors/SceneObjectInteractor.hpp"
 
-#include "Inspectors/ImageSetInspector.hpp"
+#include "Inspectors/ImageSetEditor.hpp"
 #include "Inspectors/CameraInspector.hpp"
 #include "Inspectors/NeRFInspector.hpp"
 #include "Inspectors/VolumeEditor.hpp"
 #include "Inspectors/VolumeRendererEditor.hpp"
+#include "Inspectors/PlaneCutEditor.hpp"
 
 
 
 InspectorView::InspectorView(SceneObjectInteractor* interactor) : m_interactor(interactor) {
-    m_imageSetInspectorView = new ImageSetInspector(m_interactor->imageSetInteractor);
+    m_imageSetInspectorView = new ImageSetEditor(m_interactor->imageSetInteractor);
     m_cameraInspectorView = new CameraInspector(m_interactor->cameraInteractor);
     m_cameraSetInspectorView = new CameraSetInspector(m_interactor->cameraSetInteractor);
     m_nerfDatasetInspectorView = new NeRFInspector(m_interactor->nerfInteractor);
     m_volumeEditorView = new VolumeEditor(m_interactor->volume3DInteractor);
     m_volumeRendererEditorView = new VolumeRendererEditor(m_interactor->volumeRendererInteractor);
     m_simpleRayCasterEditorView = new SimpleRayCasterEditor(m_interactor->simpleRayCasterInteractor);
+    m_planeCutEditorView = new PlaneCutEditor(m_interactor->planeCutInteractor);
+    m_adamEditorView = new AdamEditor(m_interactor->adamInteractor);
 }
 
 InspectorView::~InspectorView() {
@@ -86,6 +89,12 @@ void InspectorView::Render(){
             break;
         case SceneObjectTypes::RAYCASTER:
             m_simpleRayCasterEditorView->Render();
+            break;
+        case SceneObjectTypes::PLANECUT:
+            m_planeCutEditorView->Render();
+            break;
+        case SceneObjectTypes::ADAMOPTIMIZER:
+            m_adamEditorView->Render();
             break;
         case SceneObjectTypes::NONE:
         default:

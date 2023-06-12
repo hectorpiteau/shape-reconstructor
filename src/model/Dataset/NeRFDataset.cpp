@@ -21,10 +21,10 @@ NeRFDataset::NeRFDataset(Scene *scene)
     : Dataset{std::string("NeRFDataset")}, SceneObject{std::string("NeRFDataset"), SceneObjectTypes::NERFDATASET}, 
       m_scene(scene),
       m_mode(NeRFDatasetModes::TRAIN),
-      m_trainJSONPath("../data/nerf/transforms_train.json"),
-      m_trainImagesPath("../data/nerf/train/"),
-      m_validJSONPath("../data/nerf/transforms_val.json"),
-      m_validImagesPath("../data/nerf/val/"),
+      m_trainJSONPath("/home/hpiteau/work/shape-reconstructor/data/nerf/transforms_train.json"),
+      m_trainImagesPath("/home/hpiteau/work/shape-reconstructor/data/nerf/train"),
+      m_validJSONPath("/home/hpiteau/work/shape-reconstructor/data/nerf/transforms_val.json"),
+      m_validImagesPath("/home/hpiteau/work/shape-reconstructor/data/nerf/val"),
       m_images(),
       m_imagesCalibration(),
       m_isCalibrationLoaded(false),
@@ -45,9 +45,7 @@ NeRFDataset::NeRFDataset(Scene *scene)
     m_children.push_back(m_cameraSet);
 }
 
-NeRFDataset::~NeRFDataset()
-{
-}
+NeRFDataset::~NeRFDataset() = default;
 
 bool NeRFDataset::LoadCalibrations()
 {
@@ -134,15 +132,16 @@ bool NeRFDataset::LoadCalibrations()
         mat4 ext_inv = glm::inverse(glm::transpose(tmp.transformMatrix));
         
         tmp.extrinsic = ext_inv;
-        tmp.extrinsic[0][1] = -tmp.extrinsic[0][1];
-        tmp.extrinsic[1][1] = -tmp.extrinsic[1][1];
-        tmp.extrinsic[2][1] = -tmp.extrinsic[2][1];
-        tmp.extrinsic[3][1] = -tmp.extrinsic[3][1];
-        
-        tmp.extrinsic[0][2] = -tmp.extrinsic[0][2];
-        tmp.extrinsic[1][2] = -tmp.extrinsic[1][2];
-        tmp.extrinsic[2][2] = -tmp.extrinsic[2][2];
-        tmp.extrinsic[3][2] = -tmp.extrinsic[3][2];
+
+//        tmp.extrinsic[0][1] = -tmp.extrinsic[0][1];
+//        tmp.extrinsic[1][1] = -tmp.extrinsic[1][1];
+//        tmp.extrinsic[2][1] = -tmp.extrinsic[2][1];
+//        tmp.extrinsic[3][1] = -tmp.extrinsic[3][1];
+//
+//        tmp.extrinsic[0][2] = -tmp.extrinsic[0][2];
+//        tmp.extrinsic[1][2] = -tmp.extrinsic[1][2];
+//        tmp.extrinsic[2][2] = -tmp.extrinsic[2][2];
+//        tmp.extrinsic[3][2] = -tmp.extrinsic[3][2];
         
         // mat3x3 R = mat3x3(tmp.extrinsic);
         // vec4 T = vec4(tmp.extrinsic[3]);
@@ -200,12 +199,8 @@ void NeRFDataset::SetMode(enum NeRFDatasetModes mode)
 
 void NeRFDataset::Render()
 {
-    // nothing for now
-    for (auto &child : m_children)
-    {
-        if (child->IsActive())
-            child->Render();
-    }
+    m_imageSet->Render();
+    m_cameraSet->Render();
 }
 
 const std::string &NeRFDataset::GetCurrentJsonPath()
@@ -239,7 +234,7 @@ std::shared_ptr<ImageSet> NeRFDataset::GetImageSet()
     return m_imageSet;
 }
 
-bool NeRFDataset::IsCalibrationLoaded()
+bool NeRFDataset::IsCalibrationLoaded() const
 {
     return m_isCalibrationLoaded;
 }
@@ -254,11 +249,11 @@ bool NeRFDataset::Load()
 
 void NeRFDataset::GenerateCameras()
 {
-    if(m_camerasGenerated == true) {
+    if(m_camerasGenerated) {
         std::cout << "NeRFDataset::GenerateCameras : Cameras already generate." << std::endl;
         return;
     }
-    if(m_isCalibrationLoaded == false) {
+    if(!m_isCalibrationLoaded) {
         std::cout << "NeRFDataset::GenerateCameras : Calibration not done yet, can't generate cameras." << std::endl;
         return;
     }
@@ -290,12 +285,12 @@ void NeRFDataset::GenerateCameras()
     m_cameraSet->m_areCalibrated = true;
     
     // m_cameraSet->LinkToImageSet(GetImageSet());
-    // m_cameraSet->CalibrateFromInformations(m_imagesCalibration);
+    // m_cameraSet->CalibrateFromInformation(m_imagesCalibration);
 
     m_camerasGenerated = true;
 }
 
-bool NeRFDataset::AreCamerasGenerated()
+bool NeRFDataset::AreCamerasGenerated() const
 {
     return m_camerasGenerated;
 }

@@ -12,7 +12,7 @@
 #include "../model/ShaderPipeline.hpp"
 #include "Renderable/Renderable.hpp"
 
-Lines::Lines(Scene* scene, const float *data, int dataLength)
+Lines::Lines(Scene* scene, const float *data, size_t dataLength)
     : SceneObject {std::string("LINES"), SceneObjectTypes::LINES},
       m_scene(scene),
       m_data(data),
@@ -37,7 +37,7 @@ Lines::Lines(Scene* scene, const float *data, int dataLength)
     m_ready = true;
 }
 
-Lines::Lines() : SceneObject {std::string("LINES"), SceneObjectTypes::LINES}, m_data(nullptr), m_dataLength(0), m_pipeline("../src/shaders/v_lines.glsl", "../src/shaders/f_lines.glsl")
+Lines::Lines() : SceneObject {std::string("LINES"), SceneObjectTypes::LINES}, m_pipeline("../src/shaders/v_lines.glsl", "../src/shaders/f_lines.glsl"), m_data(nullptr), m_dataLength(0)
 {
     m_mvpLocation = m_pipeline.AddUniform("mvp");
 

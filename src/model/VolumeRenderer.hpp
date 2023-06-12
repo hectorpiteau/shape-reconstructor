@@ -30,9 +30,9 @@ using namespace glm;
 
 class VolumeRenderer : public SceneObject {
 public:
-    VolumeRenderer(Scene* scene);
+    explicit VolumeRenderer(Scene* scene);
     VolumeRenderer(const VolumeRenderer&) = delete;
-    ~VolumeRenderer();
+    ~VolumeRenderer() override = default;
 
     /**
      * @brief Set the boolean to known if it needs to use the scene active camera or a custom camera.
@@ -46,14 +46,14 @@ public:
      * 
      * @return const vec2& : A constant ref to a vec2 containing coordinates in [-1, 1].
      */
-    const vec2& GetRenderingZoneMinNDC();
+    const vec2& GetRenderingZoneMinNDC() const;
     
     /**
      * @brief Get the Rendering Zone's maximum Normalized Device Coordinates.
      * 
      * @return const vec2& : A constant ref to a vec2 containing coordinates in [-1, 1].
      */
-    const vec2& GetRenderingZoneMaxNDC();
+    const vec2& GetRenderingZoneMaxNDC() const;
 
     /**
      * @brief Set the Show Rendering Zone boolean.
@@ -68,9 +68,9 @@ public:
      * @return True to display the rendering zone on the target camera. 
      * @return False to hide it.
      */
-    bool GetShowRenderingZone();
+    bool GetShowRenderingZone() const;
 
-    bool IsRendering();
+    [[nodiscard]] bool IsRendering() const;
     void SetIsRendering(bool value);
 
     /**
@@ -108,11 +108,13 @@ public:
      * It includes potential visual cues of the renderer, but
      * also the result of the volume renderer itself.
      */
-    void Render();
+    void Render() override;
+
+    std::shared_ptr<Volume3D> GetVolume3D();
 
     size_t amountOfRays = 0;
-    vec2 m_renderZoneMinNDC;
-    vec2 m_renderZoneMaxNDC;
+    vec2 m_renderZoneMinNDC{};
+    vec2 m_renderZoneMaxNDC{};
 
 private:
     bool m_isRendering = true;
@@ -134,6 +136,6 @@ private:
     GPUData<VolumeDescriptor> m_volumeDesc;
     GPUData<RayCasterDescriptor> m_raycasterDesc;
     
-    RayCasterParams m_params;
+    RayCasterParams m_params{};
     // void RunKernel(cudaArray *image_array, uint width, uint height);
 };

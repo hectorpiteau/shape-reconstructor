@@ -9,6 +9,7 @@ Modified: 2023-04-26T14:15:22.040Z
 
 #include <memory>
 #include <string>
+#include <utility>
 #include "Ray.h"
 #include "../Camera/Camera.hpp"
 
@@ -34,14 +35,14 @@ protected:
 
     /** The rendering zone in the camera view. It determines a 
      * bouding box for casting only useful rays. NDC coordinates. */
-    vec2 renderingZoneNDCMin;
-    vec2 renderingZoneNDCMax;
+    vec2 renderingZoneNDCMin{};
+    vec2 renderingZoneNDCMax{};
 
     /** The rendering zone in the camera view but in pixels,
      * used to know which pixels are rendered, and which are not.
      */
-    ivec2 renderingZonePixelMin;
-    ivec2 renderingZonePixelMax;
+    ivec2 renderingZonePixelMin{};
+    ivec2 renderingZonePixelMax{};
 
     /**
      * The rendering Zone size in Pixels.
@@ -56,9 +57,9 @@ protected:
     float* m_rayLinesVertices = nullptr;
 
 public:
-    RayCaster(Scene* scene, std::shared_ptr<Camera> camera)   
+    RayCaster(Scene* scene, std::shared_ptr<Camera> camera)
     : SceneObject{std::string("RayCaster"), SceneObjectTypes::RAYCASTER},
-    m_scene(scene), m_camera(camera) {
+    m_scene(scene), m_camera(std::move(camera)) {
         SetName(std::string("Simple RayCaster"));
         renderingZoneNDCMin = vec2(-1.0, -1.0);
         renderingZoneNDCMax = vec2(1.0, 1.0);
@@ -66,28 +67,20 @@ public:
         renderingZonePixelMin = floor(NDCToPixel(renderingZoneNDCMin, m_camera->GetResolution().x, m_camera->GetResolution().y));
         renderingZonePixelMax = ceil(NDCToPixel(renderingZoneNDCMax, m_camera->GetResolution().x, m_camera->GetResolution().y));
 
-        // std::cout << "Resolution: " << std::to_string(m_camera->GetResolution().x) << " " << std::to_string(m_camera->GetResolution().y) << std::endl;
-
-        // std::cout << "renderingZoneNDCMin: " << std::to_string(renderingZoneNDCMin.x) << " " << std::to_string(renderingZoneNDCMin.y) << std::endl;
-        // std::cout << "renderingZoneNDCMax: " << std::to_string(renderingZoneNDCMax.x) << " " << std::to_string(renderingZoneNDCMax.y) << std::endl;
-        // std::cout << "renderingZonePixelMax: " << std::to_string(renderingZonePixelMax.x) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
-        // std::cout << "renderingZonePixelMax: " << std::to_string(renderingZonePixelMax.x) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
-        
-
         renderingZoneWidth = renderingZonePixelMax.x - renderingZonePixelMin.x;
         renderingZoneHeight = renderingZonePixelMax.y - renderingZonePixelMin.y;
         UpdateRays();
     };
 
-    ~RayCaster() {
-        if(m_rayLinesVertices != nullptr) delete [] m_rayLinesVertices;
-        if(m_rayLines != nullptr) delete m_rayLines;
+    ~RayCaster() override {
+        delete [] m_rayLinesVertices;
+        delete m_rayLines;
     }
     
     RayCaster(const RayCaster&) = delete;
 
     void SetCamera(std::shared_ptr<Camera> camera) { 
-        m_camera = camera;
+        m_camera = std::move(camera);
         UpdateRays();
     }
 
@@ -124,20 +117,20 @@ public:
         UpdateRays();
     }
 
-    size_t GetAmountOfRays(){
+    [[nodiscard]] size_t GetAmountOfRays() const{
         return renderingZoneWidth * renderingZoneHeight;
     }
 
-    size_t GetRenderZoneWidth(){
+    [[nodiscard]] size_t GetRenderZoneWidth() const{
         return renderingZoneWidth;
     }
     
-    size_t GetRenderZoneHeight(){
+    [[nodiscard]] size_t GetRenderZoneHeight() const{
         return renderingZoneHeight;
     }
 
     virtual Ray GetRay(const vec2& pixel) {
-        Ray tmp;
+        Ray tmp{};
         tmp.dir = vec3(1.0);
         tmp.origin = vec3(0.0);
         tmp.tmin = 0.0f;
@@ -146,9 +139,9 @@ public:
     }
 
     void UpdateRays(){
-        if(m_showRays == false) return;
-        if(m_rayLinesVertices != nullptr) delete [] m_rayLinesVertices;
-        if(m_rayLinesVertices != nullptr) delete  m_rayLines;
+        if(!m_showRays) return;
+        delete [] m_rayLinesVertices;
+        delete  m_rayLines;
 
         size_t dataLength = 2 * 3 * GetAmountOfRays();
         m_rayLinesVertices = new float[dataLength];
@@ -156,13 +149,9 @@ public:
 
         size_t index = 0;
         auto origin = m_camera->GetPosition();
-        
-        // std::cout << "Updating rays.. (amount_of_points:" << std::to_string(dataLength) << ")" << std::endl;
-        // std::cout << "Creating rays, x: " << std::to_string(renderingZonePixelMin.x) << " " << std::to_string(renderingZonePixelMax.x) << std::endl;
-        // std::cout << "Creating rays, y: " << std::to_string(renderingZonePixelMin.y) << " " << std::to_string(renderingZonePixelMax.y) << std::endl;
-        
-        for(int x=renderingZonePixelMin.x; x < renderingZonePixelMax.x; x += 1){
-            for(int y=renderingZonePixelMin.y; y < renderingZonePixelMax.y; y += 1){
+
+        for(int x=renderingZonePixelMin.x; x < renderingZonePixelMax.x; x += 16){
+            for(int y=renderingZonePixelMin.y; y < renderingZonePixelMax.y; y += 16){
                 WRITE_VEC3(m_rayLinesVertices, index, origin);
                 index += 3;
 

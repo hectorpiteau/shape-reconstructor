@@ -16,68 +16,60 @@
 #include "../../../interactors/ImageSetInteractor.hpp"
 
 
-
-class ImageSetInspector
-{
+class ImageSetEditor {
 public:
-    ImageSetInspector(ImageSetInteractor *interactor) : m_interactor(interactor)
-    {
+    explicit ImageSetEditor(ImageSetInteractor *interactor) : m_interactor(interactor) {
         m_comboBoxImagesName = std::vector<char *>();
     };
 
-    ImageSetInspector(const ImageSetInspector &) = delete;
+    ImageSetEditor(const ImageSetEditor &) = delete;
 
-    ~ImageSetInspector(){};
+    ~ImageSetEditor() = default;
 
-    void Update()
-    {
+    void Update() {
         if (m_interactor->GetImageSet() == nullptr) return;
 
         /** Copy the full path to the current folder; */
         strcpy(m_folderPath, m_interactor->GetImageSet()->GetFolderPath().c_str());
-        std::cout <<"ImageSet UPDATE: " << m_interactor->GetImageSet()->GetFolderPath() << std::endl;
+        std::cout << "ImageSet UPDATE: " << m_interactor->GetImageSet()->GetFolderPath() << " size: " << std::to_string(m_interactor->GetImageSet()->size()) << std::endl;
 
         if (m_interactor->GetImageSet()->size() <= 0) return;
 
-        
-        if (m_comboBoxImagesName.size() > 0)
-        {
-            for (char *elem : m_comboBoxImagesName)
-            {
+
+        if (!m_comboBoxImagesName.empty()) {
+            for (char *elem: m_comboBoxImagesName) {
                 delete[] elem;
             }
             m_comboBoxImagesName.clear();
         }
 
         /** Retrieve images names for combobox. */
-        for (size_t i = 0; i < m_interactor->GetImageSet()->size(); ++i)
-        {
+        for (size_t i = 0; i < m_interactor->GetImageSet()->size(); ++i) {
             const Image *img = (*m_interactor->GetImageSet())[i];
 
             char *tmp = new char[img->GetFilename().length()];
             strcpy(tmp, img->GetFilename().c_str());
             m_comboBoxImagesName.push_back(tmp);
 
-            std::cout << img->GetFilename() << std::endl;
+            std::cout << "images loaded in the visible set : " << img->GetFilename() << std::endl;
         }
     }
 
-    void Render()
-    {
-        if (m_interactor == nullptr || m_interactor->GetImageSet() == nullptr)
-        {
+    void Render() {
+        if (m_interactor == nullptr || m_interactor->GetImageSet() == nullptr) {
             ImGui::Text("Error: interactor is null.");
             return;
         }
         /** Check if the imageSet have been updated or not. */
-        if(m_interactor->GetUpdatedImageSet()){
+        if (m_interactor->GetUpdatedImageSet()) {
             Update();
             m_interactor->SetUpdatedImageSet(false);
         }
 
-        ImGui::SeparatorText(ICON_FA_INFO " ImageSet - Informations");
+        ImGui::SeparatorText(ICON_FA_INFO " ImageSet - Information");
         /** SceneObject id. */
-        ImGui::TextUnformatted((std::string("Images count: ") + std::to_string(m_interactor->GetImageSet()->GetAmountOfImages())).c_str());
+        ImGui::TextUnformatted((std::string("Images count: ") +
+                                std::to_string(m_interactor->GetImageSet()->size())).c_str());
 
         /** Image tab with load status. */
         ImGui::Spacing();
@@ -85,8 +77,7 @@ public:
 
         ImGui::InputText("Folder path", m_folderPath, 256); // IM_ARRAYSIZE(m_folderPath)
 
-        if (ImGui::Button(ICON_FA_IMAGES " Load images"))
-        {
+        if (ImGui::Button(ICON_FA_IMAGES " Load images")) {
             size_t count = m_interactor->LoadImages(m_folderPath);
             if (count > 0)
                 m_loadStatus = std::string("loaded");
@@ -101,27 +92,21 @@ public:
 
         ImGui::Spacing();
         ImGui::SeparatorText(ICON_FA_IMAGE " Image Preview");
-        if (m_interactor->GetImageSet() == nullptr)
-        {
+        if (m_interactor->GetImageSet() == nullptr) {
             ImGui::TextWrapped("No image selected.");
-        }
-        else
-        {
+        } else {
             static ImGuiComboFlags flags = 0;
 
             /** Display image example. */
-            if (m_comboBoxImagesName.size() > 0)
-            {
+            if (!m_comboBoxImagesName.empty()) {
                 const char *combo_preview = m_comboBoxImagesName[m_comboBoxCurrent];
 
-                if (ImGui::BeginCombo("Preview Image", combo_preview, flags))
-                {
-                    for (size_t i = 0; i < m_comboBoxImagesName.size(); ++i)
-                    {
+                if (ImGui::BeginCombo("Preview Image", combo_preview, flags)) {
+                    for (size_t i = 0; i < m_comboBoxImagesName.size(); ++i) {
                         const bool is_selected = (m_comboBoxCurrent == i);
 
-                        if (ImGui::Selectable(m_comboBoxImagesName[i], is_selected)){
-                            if(m_comboBoxCurrent != i){
+                        if (ImGui::Selectable(m_comboBoxImagesName[i], is_selected)) {
+                            if (m_comboBoxCurrent != i) {
                                 m_image = m_interactor->GetImageSet()->GetImage(i);
                                 m_imageTex.LoadFromImage(m_image);
                             }
@@ -135,7 +120,7 @@ public:
                     ImGui::EndCombo();
                 }
 
-                if(m_image != nullptr){
+                if (m_image != nullptr) {
 
                     ImGuiIO &io = ImGui::GetIO();
 
@@ -148,29 +133,23 @@ public:
 
                     ImVec2 pos = ImGui::GetCursorScreenPos();
 
-                    ImGui::Image((void *)(intptr_t)m_imageTex.GetID(), ImVec2(my_tex_w, my_tex_h), ImVec2(0, 0), ImVec2(1, 1));
+                    ImGui::Image((void *) (intptr_t) m_imageTex.GetID(), ImVec2(my_tex_w, my_tex_h), ImVec2(0, 0),
+                                 ImVec2(1, 1));
 
-                    if (m_enableZoom && ImGui::IsItemHovered())
-                    {
+                    if (m_enableZoom && ImGui::IsItemHovered()) {
                         ImGui::BeginTooltip();
                         float region_sz = 64.0f;
                         float region_x = io.MousePos.x - pos.x - region_sz * 0.5f;
                         float region_y = io.MousePos.y - pos.y - region_sz * 0.5f;
                         float zoom = 4.0f;
-                        if (region_x < 0.0f)
-                        {
+                        if (region_x < 0.0f) {
                             region_x = 0.0f;
-                        }
-                        else if (region_x > my_tex_w - region_sz)
-                        {
+                        } else if (region_x > my_tex_w - region_sz) {
                             region_x = my_tex_w - region_sz;
                         }
-                        if (region_y < 0.0f)
-                        {
+                        if (region_y < 0.0f) {
                             region_y = 0.0f;
-                        }
-                        else if (region_y > my_tex_h - region_sz)
-                        {
+                        } else if (region_y > my_tex_h - region_sz) {
                             region_y = my_tex_h - region_sz;
                         }
 
@@ -178,18 +157,17 @@ public:
                         ImGui::Text("Max: (%.2f, %.2f)", region_x + region_sz, region_y + region_sz);
                         ImVec2 uv0 = ImVec2((region_x) / my_tex_w, (region_y) / my_tex_h);
                         ImVec2 uv1 = ImVec2((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
-                        ImGui::Image((void *)(intptr_t)m_imageTex.GetID(), ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1);
+                        ImGui::Image((void *) (intptr_t) m_imageTex.GetID(), ImVec2(region_sz * zoom, region_sz * zoom),
+                                     uv0, uv1);
                         ImGui::EndTooltip();
                     }
                 }
-            }
-            else
-            {
+            } else {
                 ImGui::Text("~ wait for loading ~ ");
             }
 
             /** Displayed image resolution. */
-            // ImGui::Text((std::string("Image size: (") + std::to_string(m_image->width) + std::string(", ") + std::to_string(m_image->height) + std::string(")")).c_str());
+//             ImGui::Text((std::string("Image size: (") + std::to_string(m_image->width) + std::string(", ") + std::to_string(m_image->height) + std::string(")")).c_str());
             /** Displayed image color mode. */
         }
 

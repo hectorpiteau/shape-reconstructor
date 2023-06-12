@@ -8,8 +8,10 @@
 #include "ImageSetInteractor.hpp"
 #include "CameraInteractor.hpp"
 #include "NeRFInteractor.hpp"
+#include "AdamInteractor.hpp"
 #include "CameraSetInteractor.hpp"
 #include "Volume3DInteractor.hpp"
+#include "PlaneCutInteractor.hpp"
 #include "VolumeRendererInteractor.hpp"
 #include "SimpleRayCasterInteractor.hpp"
 
@@ -22,7 +24,7 @@ class InspectorView;
  * This interactor is communicating with all other specific interactor in
  * order to update them with the selected object. 
  * This update will allow the ui to be rendered using the interactor and it's 
- * newly refreshed informations.
+ * newly refreshed information.
  * 
  */
 class SceneObjectInteractor {
@@ -71,7 +73,8 @@ public:
     Volume3DInteractor* volume3DInteractor;
     VolumeRendererInteractor* volumeRendererInteractor;
     SimpleRayCasterInteractor* simpleRayCasterInteractor;
-
+    PlaneCutInteractor* planeCutInteractor;
+    AdamInteractor* adamInteractor;
 private:
     Scene* m_scene;
     /** The currently selected SceneObject. */
@@ -79,4 +82,5 @@ private:
 
     /** The main window that holds all other SceneObject's editors (inspectors). */
     InspectorView* m_inspectorView;
+
 };

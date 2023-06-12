@@ -11,15 +11,17 @@
 
 #include "../../../include/icons/IconsFontAwesome6.h"
 
-#include "Inspectors/ImageSetInspector.hpp"
+#include "Inspectors/ImageSetEditor.hpp"
 #include "Inspectors/CameraInspector.hpp"
 #include "Inspectors/NeRFInspector.hpp"
 #include "Inspectors/CameraSetInspector.hpp"
 #include "Inspectors/VolumeEditor.hpp"
 #include "Inspectors/VolumeRendererEditor.hpp"
 #include "Inspectors/SimpleRayCasterEditor.hpp"
+#include "Inspectors/PlaneCutEditor.hpp"
 
 #include "../../interactors/SceneObjectInteractor.hpp"
+#include "Inspectors/AdamEditor.hpp"
 
 class SceneObjectInteractor;
 
@@ -58,13 +60,15 @@ private:
     SceneObjectInteractor* m_interactor;
 
     /** Inspectors */
-    ImageSetInspector* m_imageSetInspectorView;
+    ImageSetEditor* m_imageSetInspectorView;
     CameraInspector* m_cameraInspectorView;
     CameraSetInspector* m_cameraSetInspectorView;
     NeRFInspector* m_nerfDatasetInspectorView;
     VolumeEditor* m_volumeEditorView;
     VolumeRendererEditor* m_volumeRendererEditorView;
     SimpleRayCasterEditor* m_simpleRayCasterEditorView;
+    PlaneCutEditor* m_planeCutEditorView;
+    AdamEditor* m_adamEditorView;
 
     std::string m_selectedName;
     int m_selectedId;

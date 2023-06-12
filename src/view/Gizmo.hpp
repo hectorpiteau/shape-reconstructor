@@ -32,11 +32,11 @@ private:
     float m_yLength = 1.0f;
     float m_zLength = 1.0f;
 
-    float m_xData[6];
+    float m_xData[6]{};
     std::vector<vec3> m_xVec;
-    float m_yData[6];
+    float m_yData[6]{};
     std::vector<vec3> m_yVec;
-    float m_zData[6];
+    float m_zData[6]{};
     std::vector<vec3> m_zVec;
 
     vec3 m_origin = vec3(0.0, 0.0, 0.0);

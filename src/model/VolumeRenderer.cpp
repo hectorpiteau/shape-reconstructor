@@ -6,8 +6,9 @@ Created:  2023-04-14T14:45:11.682Z
 Modified: 2023-04-26T13:51:29.197Z
 */
 #include <memory>
+#include <utility>
 #include <vector>
-#include <string> 
+#include <string>
 #include <glm/glm.hpp>
 
 #include "VolumeRenderer.hpp"
@@ -34,11 +35,11 @@ Modified: 2023-04-26T13:51:29.197Z
 
 using namespace glm;
 
-VolumeRenderer::VolumeRenderer(Scene* scene)
-: SceneObject{std::string("VolumeRenderer"), SceneObjectTypes::VOLUMERENDERER}, m_scene(scene){
+VolumeRenderer::VolumeRenderer(Scene *scene)
+        : SceneObject{std::string("VolumeRenderer"), SceneObjectTypes::VOLUMERENDERER}, m_scene(scene) {
     SetName(std::string(ICON_FA_SPINNER " Volume Renderer"));
 
-    m_volume = std::make_shared<Volume3D>(scene, ivec3(128,128,128));
+    m_volume = std::make_shared<Volume3D>(scene, ivec3(128, 128, 128));
     m_scene->Add(m_volume, true, true);
     m_children.push_back(m_volume);
 
@@ -48,44 +49,41 @@ VolumeRenderer::VolumeRenderer(Scene* scene)
     m_children.push_back(m_rayCaster);
 
     m_renderZoneLines = std::make_shared<Lines>(scene, m_renderingZoneVertices, 4 * 2 * 3);
-    m_renderZoneLines->SetColor(vec4(0.0,1.0,0.0,1.0));
+    m_renderZoneLines->SetColor(vec4(0.0, 1.0, 0.0, 1.0));
 
     /** Create the overlay plane that will be used to display the volume rendering texture on. */
     m_outPlane = std::make_shared<OverlayPlane>(
-        std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl", "../src/shaders/f_overlay_plane.glsl"),
-        m_scene->GetSceneSettings()
+            std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl",
+                                             "../src/shaders/f_overlay_plane.glsl"),
+            m_scene->GetSceneSettings()
     );
 
     /** Create the cuda texture that will receive the result of the volume rendering process. */
     m_cudaTex = std::make_shared<CudaTexture>(
-        m_scene->GetSceneSettings()->GetViewportWidth(),
-        m_scene->GetSceneSettings()->GetViewportHeight()
+            m_scene->GetSceneSettings()->GetViewportWidth(),
+            m_scene->GetSceneSettings()->GetViewportHeight()
     );
 }
 
-VolumeRenderer::~VolumeRenderer(){
-}
-
-void VolumeRenderer::SetUseDefaultCamera(bool useDefaultCamera){
+void VolumeRenderer::SetUseDefaultCamera(bool useDefaultCamera) {
     m_useDefaultCamera = useDefaultCamera;
     m_camera = m_scene->GetDefaultCam();
     m_rayCaster->SetCamera(m_camera);
 }
 
-bool VolumeRenderer::IsRendering(){
+bool VolumeRenderer::IsRendering() const {
     return m_isRendering;
 }
 
-void VolumeRenderer::SetIsRendering(bool value){
+void VolumeRenderer::SetIsRendering(bool value) {
     m_isRendering = value;
 }
 
-void VolumeRenderer::ComputeRenderingZone()
-{
-    vec3* bboxPoints = m_volume->m_bboxPoints;
-    
-   vec2 ndcMin = vec2(1, 1), ndcMax = vec2(-1,-1);
-    for(int i=0; i<8; ++i){
+void VolumeRenderer::ComputeRenderingZone() {
+    vec3 *bboxPoints = m_volume->m_bboxPoints;
+
+    vec2 ndcMin = vec2(1, 1), ndcMax = vec2(-1, -1);
+    for (int i = 0; i < 8; ++i) {
         auto camcoords = WorldToCamera(vec4(bboxPoints[i], 1.0f), m_camera->GetExtrinsic());
         auto ndccoords = CameraToNDC(vec3(camcoords), m_camera->GetIntrinsic());
         ndcMin = min(ndcMin, ndccoords);
@@ -94,7 +92,7 @@ void VolumeRenderer::ComputeRenderingZone()
 
     ndcMin -= vec2(0.02f, 0.02f);
     ndcMax += vec2(0.02f, 0.02f);
-    
+
     m_renderZoneMinNDC = ndcMin;
     m_renderZoneMaxNDC = ndcMax;
 
@@ -102,12 +100,12 @@ void VolumeRenderer::ComputeRenderingZone()
     auto p10 = NDCToCamera(vec2(ndcMax.x, ndcMax.y), m_camera->GetIntrinsic()) * -1.0f;
     auto p20 = NDCToCamera(vec2(ndcMax.x, ndcMin.y), m_camera->GetIntrinsic()) * -1.0f;
     auto p30 = NDCToCamera(vec2(ndcMin.x, ndcMin.y), m_camera->GetIntrinsic()) * -1.0f;
-    
+
     p00 = vec3(CameraToWorld(vec4(p00, 1.0f), m_camera->GetExtrinsic()));
     p10 = vec3(CameraToWorld(vec4(p10, 1.0f), m_camera->GetExtrinsic()));
     p20 = vec3(CameraToWorld(vec4(p20, 1.0f), m_camera->GetExtrinsic()));
     p30 = vec3(CameraToWorld(vec4(p30, 1.0f), m_camera->GetExtrinsic()));
-    
+
     WRITE_VEC3(m_renderingZoneVertices, 0, p00);
     WRITE_VEC3(m_renderingZoneVertices, 3, p10);
     WRITE_VEC3(m_renderingZoneVertices, 6, p10);
@@ -121,10 +119,10 @@ void VolumeRenderer::ComputeRenderingZone()
     m_rayCaster->SetRenderingZoneNDC(m_renderZoneMinNDC, m_renderZoneMaxNDC);
 }
 
-void VolumeRenderer::Render(){
+void VolumeRenderer::Render() {
     m_isRendering = m_scene->GetSceneSettings()->GetVariable(SceneGlobalVariables::VOLUME_RENDERING);
-    std::shared_ptr<Camera> cam = (m_useDefaultCamera || m_camera == nullptr)  ? m_scene->GetActiveCam() : m_camera;
-    
+    std::shared_ptr<Camera> cam = (m_useDefaultCamera || m_camera == nullptr) ? m_scene->GetActiveCam() : m_camera;
+
     ComputeRenderingZone();
 
     m_cameraDesc.Host()->camExt = cam->GetExtrinsic();
@@ -132,14 +130,14 @@ void VolumeRenderer::Render(){
     m_cameraDesc.Host()->camPos = cam->GetPosition();
     m_cameraDesc.Host()->width = cam->GetResolution().x;
     m_cameraDesc.Host()->height = cam->GetResolution().y;
-    
+
     m_raycasterDesc.Host()->width = cam->GetResolution().x;
     m_raycasterDesc.Host()->height = cam->GetResolution().y;
     m_raycasterDesc.Host()->minPixelX = m_rayCaster->GetRenderingZoneMinPixel().x;
     m_raycasterDesc.Host()->minPixelY = m_rayCaster->GetRenderingZoneMinPixel().y;
     m_raycasterDesc.Host()->maxPixelX = m_rayCaster->GetRenderingZoneMaxPixel().x;
     m_raycasterDesc.Host()->maxPixelY = m_rayCaster->GetRenderingZoneMaxPixel().y;
-    
+
     m_volumeDesc.Host()->bboxMin = m_volume->GetBboxMin();
     m_volumeDesc.Host()->bboxMax = m_volume->GetBboxMax();
     m_volumeDesc.Host()->worldSize = m_volume->GetBboxMax() - m_volume->GetBboxMin();
@@ -147,55 +145,61 @@ void VolumeRenderer::Render(){
     m_volumeDesc.Host()->data = m_volume->GetCudaVolume()->GetDevicePtr();
 
     /** Render volume using the raycaster. */
-    if(m_isRendering){
+    if (m_isRendering) {
         m_cudaTex->RunKernel(m_raycasterDesc, m_cameraDesc, m_volumeDesc);
     }
 
     // /** Rendering zone. */
 
-    if(m_showRenderingZone){
+    if (m_showRenderingZone) {
         m_renderZoneLines->Render();
     }
 
-    
-    for(auto& child : m_children){
-        if(child->IsActive()) child->Render();
+
+    for (auto &child: m_children) {
+        if (child->IsActive()) child->Render();
     }
 
-    if(m_isRendering){
+    if (m_isRendering) {
         m_outPlane->Render(true, m_cudaTex->GetTex());
     }
 }
 
 
-const vec2& VolumeRenderer::GetRenderingZoneMinNDC(){
+const vec2 &VolumeRenderer::GetRenderingZoneMinNDC() const {
     return m_renderZoneMinNDC;
 }
 
-const vec2& VolumeRenderer::GetRenderingZoneMaxNDC(){
+const vec2 &VolumeRenderer::GetRenderingZoneMaxNDC() const {
     return m_renderZoneMaxNDC;
 }
 
-void VolumeRenderer::SetShowRenderingZone(bool visible){
+void VolumeRenderer::SetShowRenderingZone(bool visible) {
     m_showRenderingZone = visible;
 }
 
-bool VolumeRenderer::GetShowRenderingZone(){
+bool VolumeRenderer::GetShowRenderingZone() const {
     return m_showRenderingZone;
 }
 
-std::vector<std::shared_ptr<Camera>> VolumeRenderer::GetAvailableCameras(){
+std::vector<std::shared_ptr<Camera>> VolumeRenderer::GetAvailableCameras() {
     auto tmp = m_scene->GetAll(SceneObjectTypes::CAMERA);
     std::vector<std::shared_ptr<Camera>> res;
-    for(auto x: tmp) res.push_back(std::dynamic_pointer_cast<Camera>(x));
+    /** Pre-allocate room for all the cameras. */
+    res.reserve(tmp.size());
+    for (const auto &x: tmp) res.push_back(std::dynamic_pointer_cast<Camera>(x));
     return res;
 }
 
-void VolumeRenderer::SetTargetCamera(std::shared_ptr<Camera> cam){
-    m_camera = cam;
+void VolumeRenderer::SetTargetCamera(std::shared_ptr<Camera> cam) {
+    m_camera = std::move(cam);
     m_rayCaster->SetCamera(m_camera);
 }
 
-std::shared_ptr<Camera> VolumeRenderer::GetTargetCamera(){
+std::shared_ptr<Camera> VolumeRenderer::GetTargetCamera() {
     return m_camera;
+}
+
+std::shared_ptr<Volume3D> VolumeRenderer::GetVolume3D() {
+    return m_volume;
 }

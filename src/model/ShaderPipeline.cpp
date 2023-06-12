@@ -28,10 +28,10 @@ void ShaderPipeline::CompileShader()
     std::string vertexShader, fragmentShader;
 
     GLenum err = glGetError();
-    if (err != GL_NO_ERROR)
-    {
-        fprintf(stderr, "OpenGL error (at line ShaderPipeline.cpp:%d): %s\n", __LINE__, gluErrorString(err));
-    }
+//    if (err != GL_NO_ERROR)
+//    {
+//        fprintf(stderr, "OpenGL error (at line ShaderPipeline.cpp:%d): %s\n", __LINE__, gluErrorString(err));
+//    }
 
     GLuint shaderProgram = glCreateProgram();
 

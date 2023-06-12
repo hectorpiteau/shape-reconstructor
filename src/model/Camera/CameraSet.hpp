@@ -31,9 +31,9 @@ struct CameraEntry {
  */
 class CameraSet : public SceneObject {
 public:
-    CameraSet(Scene* scene);
+    explicit CameraSet(Scene* scene);
     CameraSet(const CameraSet& ) = delete;
-    ~CameraSet();   
+    ~CameraSet() override;
 
     /**
      * @brief Add a camera to the CameraSet. 
@@ -76,17 +76,20 @@ public:
 
     bool LinkToImageSet(std::shared_ptr<ImageSet> imageSet);
     
-    bool AreCamerasGenerated();
+    bool AreCamerasGenerated() const;
 
-    bool IsLocked();
+    bool IsLocked() const;
 
-    bool CalibrateFromInformations(const std::vector<struct CameraCalibrationInformations>& informations);
+    bool CalibrateFromInformation(const std::vector<struct CameraCalibrationInformations>& information);
 
-    void Render();
+    void Render() override;
 
     void ShowCenterLines();
     void HideCenterLines();
     void SetCenterLinesLength(float length);
+
+    [[nodiscard]] float GetFrustumSize() const;
+    void SetFrustumSize(float value);
 
     bool m_areCameraGenerated;
     bool m_areCalibrated;
@@ -95,5 +98,5 @@ public:
 private:
     Scene* m_scene;
     std::vector<std::shared_ptr<Camera>> m_cameras;
-
+    float m_frustumSize = 1.0f;
 };

@@ -19,9 +19,7 @@ CameraSet::CameraSet(Scene *scene)
     SetName(std::string("Camera Set"));
 }
 
-CameraSet::~CameraSet()
-{
-}
+CameraSet::~CameraSet() = default;
 
 size_t CameraSet::Size()
 {
@@ -54,12 +52,12 @@ std::vector<std::shared_ptr<Camera>> &CameraSet::GetCameras()
     return m_cameras;
 }
 
-bool CameraSet::AreCamerasGenerated()
+bool CameraSet::AreCamerasGenerated() const
 {
     return m_areCameraGenerated;
 }
 
-bool CameraSet::IsLocked()
+bool CameraSet::IsLocked() const
 {
     return m_isLocked;
 }
@@ -95,21 +93,18 @@ bool CameraSet::LinkToImageSet(std::shared_ptr<ImageSet> imageSet)
     return true;
 }
 
-bool CameraSet::CalibrateFromInformations(const std::vector<CameraCalibrationInformations> &informations)
+bool CameraSet::CalibrateFromInformation(const std::vector<CameraCalibrationInformations> &information)
 {
-    if (informations.size() != m_cameras.size())
+    if (information.size() != m_cameras.size())
         return false;
 
-    std::cout << "CameraSet:: Calibrate cameras from informations. " << std::endl;
-
-    for (size_t i = 0; i < informations.size(); ++i)
+    for (size_t i = 0; i < information.size(); ++i)
     {
-        CameraCalibrationInformations info = informations[i];
+        CameraCalibrationInformations info = information[i];
         std::shared_ptr<Camera> cam = m_cameras[i];
 
         std::cout << "Calibrate camera: " << i << std::endl;
 
-        // cam->SetFovX(info.fov, true);
         cam->SetIntrinsic(info.intrinsic);
         cam->SetExtrinsic(info.extrinsic);
     }
@@ -120,38 +115,34 @@ bool CameraSet::CalibrateFromInformations(const std::vector<CameraCalibrationInf
 
 void CameraSet::Render()
 {
-
     for (auto &cam : m_cameras)
-    {
-
         cam->Render();
-    }
-
-    // for(auto& child : m_children){
-    //     if(child->IsActive()) child->Render();
-    // }
 }
 
 void CameraSet::ShowCenterLines()
 {
     for (auto &cam : m_cameras)
-    {
         cam->SetIsCenterLineVisible(true);
-    }
 }
 
 void CameraSet::HideCenterLines()
 {
     for (auto &cam : m_cameras)
-    {
         cam->SetIsCenterLineVisible(false);
-    }
 }
 
 void CameraSet::SetCenterLinesLength(float length)
 {
     for (auto &cam : m_cameras)
-    {
         cam->SetCenterLineLength(length);
-    }
+}
+
+float CameraSet::GetFrustumSize() const {
+    return m_frustumSize;
+}
+
+void CameraSet::SetFrustumSize(float value){
+    m_frustumSize = value;
+    for (auto &cam : m_cameras)
+        cam->SetFrustumSize(value);
 }

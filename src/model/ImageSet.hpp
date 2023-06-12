@@ -10,7 +10,7 @@
 class ImageSet : public SceneObject
 {
 public:
-    ImageSet(Scene *scene);
+    explicit ImageSet(Scene *scene);
 
     ImageSet(const ImageSet &) = delete;
 
@@ -25,13 +25,7 @@ public:
      */
     size_t LoadImages();
 
-    /**
-     * @brief Get the Amount Of Images in this imageset.
-     * If the images are not loaded, the amount is 0.
-     *
-     * @return int : The amount of loaded images.
-     */
-    int GetAmountOfImages();
+
 
     Image *GetImage(size_t index);
     Image *GetImage(const std::string &filename);
@@ -39,9 +33,15 @@ public:
     std::vector<Image *> &GetImages();
     const Image *operator[](size_t index);
 
+    /**
+     * @brief Get the Amount Of Images in this imageSet.
+     * If the images are not loaded, the amount is 0.
+     *
+     * @return size_t : The amount of loaded images.
+     */
     size_t size();
 
-    void Render();
+    void Render() override;
 
 private:
     std::vector<Image *> m_images;

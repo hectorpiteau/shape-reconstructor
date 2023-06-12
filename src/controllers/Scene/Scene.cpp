@@ -23,23 +23,17 @@ std::vector<std::shared_ptr<SceneObject>> &Scene::GetSceneObjects()
 {
     return m_objects;
 }
-
-Scene::~Scene()
-{
-    // do nothing for now
-}
-
 // template<typename T>
 std::vector<std::shared_ptr<SceneObject>> Scene::GetAll(SceneObjectTypes type)
 {
     std::vector<std::shared_ptr<SceneObject>> tab = std::vector<std::shared_ptr<SceneObject>>();
-    for (auto obj : m_objects)
+    for (const auto& obj : m_objects)
     {
         if (obj->GetType() == type)
             tab.push_back(obj);
 
         std::vector<std::shared_ptr<SceneObject>> tmp = obj->GetAll(type);
-        for (auto a : tmp)
+        for (const auto& a : tmp)
             tab.push_back(a);
     }
     return tab;
@@ -56,7 +50,7 @@ std::shared_ptr<SceneObject> Scene::Add(std::shared_ptr<SceneObject> object, boo
     object->SetActive(active);
 
     object->SetIsChild(isChild);
-    if (isChild == false)
+    if (!isChild)
         m_objects.push_back(object);
     return object;
 }
@@ -87,21 +81,21 @@ std::shared_ptr<Camera> Scene::GetDefaultCam()
 
 std::shared_ptr<SceneObject> Scene::Get(int id)
 {
-    if (m_uniqIdManager->IdExists(id) == false)
+    if (!m_uniqIdManager->IdExists(id))
     {
         std::cout << "SceneObject: " << id << " doest not exist." << std::endl;
         return nullptr;
     }
 
-    for (size_t i = 0; i < m_objects.size(); ++i)
+    for (auto & m_object : m_objects)
     {
-        if (m_objects[i]->GetID() == id)
+        if (m_object->GetID() == id)
         {
-            return m_objects[i];
+            return m_object;
         }
         else
         {
-            auto child = m_objects[i]->GetChild(id);
+            auto child = m_object->GetChild(id);
             if (child != nullptr)
                 return child;
         }

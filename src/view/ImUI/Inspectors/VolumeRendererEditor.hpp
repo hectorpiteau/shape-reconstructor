@@ -6,6 +6,7 @@ Created:  2023-04-21T12:47:52.699Z
 Modified: 2023-04-26T09:24:24.924Z
 */
 #pragma once
+
 #include <glm/glm.hpp>
 
 #include "../../../interactors/VolumeRendererInteractor.hpp"
@@ -17,8 +18,7 @@ Modified: 2023-04-26T09:24:24.924Z
 
 using namespace glm;
 
-class VolumeRendererEditor
-{
+class VolumeRendererEditor {
 private:
     VolumeRendererInteractor *m_interactor;
 
@@ -26,18 +26,14 @@ private:
     size_t m_comboBoxCurrent = 0;
 
 public:
-    VolumeRendererEditor(VolumeRendererInteractor *interactor) : m_interactor(interactor)
-    {
+    explicit VolumeRendererEditor(VolumeRendererInteractor *interactor) : m_interactor(interactor) {
     }
 
     VolumeRendererEditor(const VolumeRendererEditor &) = delete;
 
-    ~VolumeRendererEditor()
-    {
-    }
+    ~VolumeRendererEditor() = default;
 
-    void Render()
-    {
+    void Render() {
         vec2 renderZoneMinNDC = m_interactor->GetRenderingZoneMinNDC();
         vec2 renderZoneMaxNDC = m_interactor->GetRenderingZoneMaxNDC();
 
@@ -65,25 +61,20 @@ public:
         ImGui::Separator();
         ImGui::Spacing();
         ImGui::Checkbox("Show rendering zone on camera", &showRenderingZone);
-        
+
 
         static ImGuiComboFlags flags = 0;
 
         /** Display image example. */
-        if (m_comboBoxCameras.size() > 0)
-        {
+        if (!m_comboBoxCameras.empty()) {
             auto combo_preview = m_comboBoxCameras[m_comboBoxCurrent]->GetName().c_str();
 
-            if (ImGui::BeginCombo("Target Camera", combo_preview, flags))
-            {
-                for (size_t i = 0; i < m_comboBoxCameras.size(); ++i)
-                {
+            if (ImGui::BeginCombo("Target Camera", combo_preview, flags)) {
+                for (size_t i = 0; i < m_comboBoxCameras.size(); ++i) {
                     const bool is_selected = (m_comboBoxCurrent == i);
 
-                    if (ImGui::Selectable(m_comboBoxCameras[i]->GetName().c_str(), is_selected))
-                    {
-                        if (m_comboBoxCurrent != i)
-                        {
+                    if (ImGui::Selectable(m_comboBoxCameras[i]->GetName().c_str(), is_selected)) {
+                        if (m_comboBoxCurrent != i) {
                             m_interactor->SetTargetCamera(m_comboBoxCameras[i]);
                         }
                         m_comboBoxCurrent = i;
@@ -96,12 +87,11 @@ public:
                 ImGui::EndCombo();
             }
 
-            if (showRenderingZone != m_interactor->IsRenderingZoneVisible())
-            {
+            if (showRenderingZone != m_interactor->IsRenderingZoneVisible()) {
                 m_interactor->SetIsRenderingZoneVisible(showRenderingZone);
             }
 
-            if(isRendering != m_interactor->IsRendering()){
+            if (isRendering != m_interactor->IsRendering()) {
                 m_interactor->SetIsRendering(isRendering);
             }
 

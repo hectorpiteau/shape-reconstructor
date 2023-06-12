@@ -34,27 +34,29 @@ struct cell
 class CudaLinearVolume3D
 {
 private:
-    float4 *m_hostData = nullptr;
+    vec4 *m_hostData = nullptr;
     float4 *m_gpuData  = nullptr;
     ivec3 m_res = ivec3(100, 100, 100);
 
     bool m_isInGpu = false;
     size_t m_size = 0;
+    size_t m_size_gpu = 0;
     size_t m_cellSize = sizeof(float4);
 
 public:
-    CudaLinearVolume3D(const ivec3& res)
+    explicit CudaLinearVolume3D(const ivec3& res)
     {
         m_res = res;
 
-        m_size = m_res.x * m_res.y * m_res.z * sizeof(float4);
-        
+        m_size = m_res.x * m_res.y * m_res.z * sizeof(vec4);
+        m_size_gpu = m_res.x * m_res.y * m_res.z * sizeof(float4);
+
         /** Declare Host buffer. */
-        m_hostData = (float4*)malloc(m_size);
+        m_hostData = (vec4*)malloc(m_size);
 
         /** Declare Device buffer. */
         checkCudaErrors(
-            cudaMalloc((void **)&m_gpuData, m_size)
+            cudaMalloc((void **)&m_gpuData, m_size_gpu)
         );
     }
 
@@ -64,7 +66,7 @@ public:
         if(m_gpuData != nullptr) cudaFree(m_gpuData);
     }
 
-    CUDA_HOST inline size_t GetIndex(ivec3 loc ){
+    CUDA_HOST [[nodiscard]] inline size_t GetIndex(const ivec3& loc) const{
         if(loc.x < 0 || loc.y < 0 || loc.z < 0 || loc.x > m_res.x || loc.y > m_res.y || loc.z > m_res.z){
             std::cout << "Error : trying to get index out of range. " << std::endl;
             return 0;
@@ -87,33 +89,29 @@ public:
                 }
     }
 
-    CUDA_DEV void DSet(ivec3 loc, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+    CUDA_DEV void DSet(const ivec3& loc, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
     {
-        float4 tmp = make_float4(r,g,b,a);m_gpuData[GetIndex(loc)] = tmp;
+        m_gpuData[GetIndex(loc)] = make_float4(r,g,b,a);
     }
 
-    CUDA_DEV void DSet(ivec3 loc, cell data)
+    CUDA_DEV void DSet(const ivec3& loc, cell data)
     {
-        float4 tmp = make_float4(data.r, data.g, data.b, data.a);
-        m_gpuData[GetIndex(loc)] = tmp;
+        m_gpuData[GetIndex(loc)] = make_float4(data.r, data.g, data.b, data.a);
     }
 
-    CUDA_HOST void HSet(ivec3 loc, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+    CUDA_HOST void HSet(const ivec3& loc, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
     {
-        float4 tmp = make_float4(r,g,b,a);
-        m_hostData[GetIndex(loc)] = tmp;
+        m_hostData[GetIndex(loc)] = {r,g,b,a};
     }
 
-    CUDA_HOST void HSet(ivec3 loc, vec4 data)
+    CUDA_HOST void HSet(const ivec3& loc, const vec4& data)
     {
-        float4 tmp = make_float4(data.x,data.y,data.z,data.w);
-        m_hostData[GetIndex(loc)] = tmp;
+        m_hostData[GetIndex(loc)] = {data.x,data.y,data.z,data.w};
     }
 
     CUDA_HOST void HSet(ivec3 loc, cell data)
     {
-        float4 tmp = make_float4(data.r, data.g, data.b, data.a);
-        m_hostData[GetIndex(loc)] = tmp;
+        m_hostData[GetIndex(loc)] = {data.r, data.g, data.b, data.a};
     }
 
     /**
@@ -139,7 +137,7 @@ public:
      * 
      * @return float* : A pointer on the buffer allocated on the host. 
      */
-    CUDA_HOST float4* GetHostPtr(){
+    CUDA_HOST vec4* GetHostPtr(){
         return m_hostData;
     }
 

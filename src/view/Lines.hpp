@@ -22,7 +22,7 @@ public:
      * in the world space coordinate.
      * @param dataLength : The amount of floats in the data list.
      */
-    Lines(Scene* scene, const float *data, int dataLength);
+    Lines(Scene* scene, const float *data, size_t dataLength);
 
     /**
      * @brief Construct a new Lines SceneObject.
@@ -32,7 +32,7 @@ public:
     /** Delete copy constructor. */
     Lines(const Lines&) = delete;
 
-    ~Lines();
+    ~Lines() override;
     
     /**
      * @brief Update the vertices that defines the lines displayed on screen.
@@ -65,7 +65,7 @@ public:
      * @brief Render lines on screen.
      *
      */
-    void Render();
+    void Render() override;
 
 private:
     Scene* m_scene;
@@ -89,7 +89,7 @@ private:
 
     /** A constant pointer to the data. TODO: clear */
     const float *m_data;
-    int m_dataLength;
+    size_t m_dataLength;
 
     int m_visibleDataLength;
 

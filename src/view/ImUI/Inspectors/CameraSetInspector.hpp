@@ -40,6 +40,7 @@ public:
         }
         
         float centerLinesLength = m_interactor->GetCenterLinesLength();
+        float frustumSize = m_interactor->GetFrustumSize();
 
         ImGui::SeparatorText(ICON_FA_INFO " CameraSet - Informations");
 
@@ -93,11 +94,15 @@ public:
         }
 
 
-        ImGui::InputFloat("Lines Length", &centerLinesLength);
-        ImGui::Separator();
-
-        if(centerLinesLength != m_interactor->GetCenterLinesLength())
+        if(ImGui::DragFloat("Lines Length", &centerLinesLength , 0.01f)){
             m_interactor->SetCenterLinesLength(centerLinesLength);
+        }
+
+        if(ImGui::DragFloat("Frustum size", &frustumSize , 0.01f)){
+            m_interactor->SetFrustumSize(frustumSize);
+        }
+
+        ImGui::Separator();
 
         if(m_cameraInspector->IsOpened()){
             m_cameraInspector->Render();

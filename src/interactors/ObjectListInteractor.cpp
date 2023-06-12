@@ -21,7 +21,7 @@ std::shared_ptr<ObjectListItem> CreateObjectListItem(const std::shared_ptr<Scene
 
     /** Loop trough children with the same function to generate an ObjectListItem per child. */
     for(const auto& child: sceneObject->GetChildren()){
-        if(child->IsVisibleInList() == false) continue;
+        if(!child->IsVisibleInList()) continue;
         std::shared_ptr<ObjectListItem> childItem = CreateObjectListItem(child, interactor);
         childItem->SetLocked(true);
         result.push_back(childItem);

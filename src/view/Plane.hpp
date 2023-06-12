@@ -16,15 +16,15 @@ class Scene;
 class Plane : Renderable
 {
 public:
-    Plane(Scene* scene);
+    explicit Plane(Scene* scene);
     Plane(const Plane &) = delete;
-    ~Plane();
+    ~Plane() override = default;
     
     void SetTexture2D(Texture2D* texture);
 
     void SetVertices(const vec3 &top_left, const vec3 &top_right, const vec3 &bot_left, const vec3 &bot_right);
     
-    void Render();
+    void Render() override;
 
 private:
     /** out dep. */
@@ -36,8 +36,8 @@ private:
     
     Texture2D* m_texture = nullptr;
 
-    unsigned int m_VBO;
-    unsigned int m_VAO;
+    unsigned int m_VBO{};
+    unsigned int m_VAO{};
 
     /** Uniforms */
     GLint m_modelLocation;
