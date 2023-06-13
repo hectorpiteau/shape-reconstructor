@@ -19,3 +19,12 @@ export CUDAHOSTCXX=/usr/bin/g++-8
 - `cmake ..`
 - `make -j`
 
+
+Requirements:
+- libxrandr
+- libxinerama
+- libxcursor
+- libxi
+- CUDA
+- GCC / G++
+- Zlib
