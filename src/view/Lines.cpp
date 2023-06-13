@@ -15,16 +15,16 @@
 Lines::Lines(Scene* scene, const float *data, size_t dataLength)
     : SceneObject {std::string("LINES"), SceneObjectTypes::LINES},
       m_scene(scene),
+      m_pipeline("../src/shaders/v_lines.glsl", "../src/shaders/f_lines.glsl"),
       m_data(data),
-      m_dataLength(dataLength),
-      m_pipeline("../src/shaders/v_lines.glsl", "../src/shaders/f_lines.glsl")
+      m_dataLength(dataLength)
 {
     m_mvpLocation = m_pipeline.AddUniform("mvp");
     m_colorLocation = m_pipeline.AddUniform("color");
 
     glGenBuffers(1, &m_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, m_dataLength * sizeof(float), m_data, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,  m_dataLength * sizeof(float), m_data, GL_STREAM_DRAW);
 
     glGenVertexArrays(1, &m_VAO);
     glBindVertexArray(m_VAO);

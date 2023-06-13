@@ -1,5 +1,5 @@
 #pragma once
-
+#include <GL/glew.h>
 #include "../../view/SceneObject/SceneObject.hpp"
 #include "../../utils/SceneSettings.hpp"
 #include "../../model/Camera/Camera.hpp"

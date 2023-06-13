@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <string>
-
+#include <GL/glew.h>
 #include "Image.hpp"
 #include "../view/SceneObject/SceneObject.hpp"
 #include "../controllers/Scene/Scene.hpp"
@@ -43,8 +43,12 @@ public:
 
     void Render() override;
 
+    bool AreImagesGenerated();
+
 private:
     std::vector<Image *> m_images;
 
     std::string m_folderPath;
+
+    bool m_areImagesGenerated = false;
 };

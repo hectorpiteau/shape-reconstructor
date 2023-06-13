@@ -16,7 +16,7 @@
 class CameraSetInspector
 {
 public:
-    CameraSetInspector(CameraSetInteractor *interactor) : m_interactor(interactor){
+    explicit CameraSetInspector(CameraSetInteractor *interactor) : m_interactor(interactor){
 
         m_cameraInteractor = new CameraInteractor();
         m_cameraInspector = new CameraInspector(m_cameraInteractor);

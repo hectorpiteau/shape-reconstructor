@@ -20,13 +20,96 @@ using namespace glm;
 
 class Camera : public SceneObject
 {
+private:
+    /** ext dep. */
+    Scene * m_scene;
+    std::shared_ptr<SceneSettings> m_sceneSettings;
+
+    /** Cursor */
+    vec2 m_previousCursorPos = vec2(0.0, 0.0);
+    float m_prevScrollY = 0.0f;
+
+    double yDeltaAngle{};
+
+    /** Camera position in world space coordinates. */
+    vec3 m_pos{};
+    /** The target position in world space that the camera is looking at. */
+    vec3 m_target{};
+    /** The camera's up vector. */
+    vec3 m_up{};
+    /** Field of view, (x,y). */
+    vec2 m_fov{};
+
+    float m_near = 0.001f;
+    float m_far = 100.0f;
+
+    /** Computed values. */
+    vec3 m_forward{};
+    vec3 m_realUp{};
+    vec3 m_right{};
+
+    bool m_displayCenterLine = false;
+    bool m_showImagePlane = false;
+    bool m_showFrustumLines = true;
+
+    /**
+     * @brief Also known as the extrinsic matrix.
+     * Rotate and translate compare to world coordinates.
+     */
+    mat4 m_viewMatrix{};
+
+    /**
+     * @brief Also known as the intrinsic matrix.
+     * Projection of points from camera-space to image-space.
+     */
+    mat4 m_projectionMatrix{};
+
+    float m_scroll = 0.0f;
+    float m_speed = 3.0f;
+    float m_horizontalAngle = 3.14f*1.25f;
+    // Initial vertical angle : none
+    float m_verticalAngle = -3.14f * 0.2f;
+    // Initial Field of View
+    float m_initialFoV = 65.0f;
+
+    float m_mouseSpeed = 0.005f;
+
+    float m_wireframeVertices[16*3] = {0.0f};
+
+    ivec2 m_resolution{};
+
+    Lines* m_frustumLines{};
+    Gizmo* m_gizmo{};
+    // float m_wireSize = 0.1f;
+    float m_wireSize = 1.0f;
+
+    /** Image plane. */
+    Texture2D* m_imageTex = nullptr;
+    Plane* m_imagePlane = nullptr;
+    /** Center line forward dir. */
+    Lines* m_centerLine{};
+    float m_centerLineVertices[6] = {0.0f};
+    float m_centerLineLength = 1.0f;
+
+    GPUData<CameraDescriptor> m_desc;
+    /**
+     * Update the GPU Descriptor on GPU memory.
+     */
+    void UpdateGPUDescriptor();
 
 public:
     Camera(Scene *scene, const std::string& name, const vec3& position, const vec3& target);
     explicit Camera(Scene* scene);
+
     ~Camera() override;
 
     void Initialize();
+
+    /**
+     * Get a descriptor of the camera available on GPU memory.
+     * @return : A GPU-Ready pointer to a Camera Descriptor.
+     */
+    CameraDescriptor* GetGPUDescriptor();
 
     /**
      * @brief Set the camera's position in world space coordinates.
@@ -243,75 +326,5 @@ public:
      */
     std::string filename;
 
-private:
-    /** ext dep. */
-    Scene * m_scene;
-    std::shared_ptr<SceneSettings> m_sceneSettings;
-
-    /** Cursor */
-    vec2 m_previousCursorPos = vec2(0.0, 0.0);
-    float m_prevScrollY = 0.0f;
-    
-    double yDeltaAngle{};
-
-    /** Camera position in world space coordinates. */
-    vec3 m_pos{};
-    /** The target position in world space that the camera is looking at. */
-    vec3 m_target{};
-    /** The camera's up vector. */
-    vec3 m_up{};
-    /** Field of view, (x,y). */
-    vec2 m_fov{};
-
-    float m_near = 0.001f;
-    float m_far = 100.0f;
-    
-    /** Computed values. */
-    vec3 m_forward{};
-    vec3 m_realUp{};
-    vec3 m_right{};
-
-    bool m_displayCenterLine = false;
-    bool m_showImagePlane = false;
-    bool m_showFrustumLines = true;
-    
-    /**
-     * @brief Also known as the extrinsic matrix.
-     * Rotate and translate compare to world coordinates.
-     */
-    mat4 m_viewMatrix{};
-
-    /**
-     * @brief Also known as the intrinsic matrix.
-     * Projection of points from camera-space to image-space.
-     */
-    mat4 m_projectionMatrix{};
-
-    float m_scroll = 0.0f;
-    float m_speed = 3.0f;
-    float m_horizontalAngle = 3.14f*1.25f;
-    // Initial vertical angle : none
-    float m_verticalAngle = -3.14f * 0.2f;
-    // Initial Field of View
-    float m_initialFoV = 65.0f;
-
-    float m_mouseSpeed = 0.005f;
-
-    float m_wireframeVertices[16*3] = {0.0f};
-
-    ivec2 m_resolution{};
-
-    Lines* m_frustumLines{};
-    Gizmo* m_gizmo{};
-    // float m_wireSize = 0.1f;
-    float m_wireSize = 1.0f;
-
-    /** Image plane. */
-    Texture2D* m_imageTex = nullptr;
-    Plane* m_imagePlane = nullptr;
-    /** Center line forward dir. */
-    Lines* m_centerLine{};
-    float m_centerLineVertices[6] = {0.0f};
-    float m_centerLineLength = 1.0f;
 
 };

@@ -68,18 +68,18 @@ public:
     void Render() override;
 
 private:
-    Scene* m_scene;
+    Scene* m_scene{};
     /** Vertex Buffer Object and Vertex Attribute Object identifiers. */
-    unsigned int m_VBO, m_VAO;
+    unsigned int m_VBO{}, m_VAO{};
 
     /** Model matrix of the set of lines. Used to compute the MVP matrix. */
-    glm::mat4 m_model;
+    glm::mat4 m_model{};
 
     /** Location for MVP matrix sent to the shader. */
     GLint m_mvpLocation;
 
     /** Location for color vector sent to the shader. */
-    GLint m_colorLocation;
+    GLint m_colorLocation{};
 
     /** Lines's color. */
     glm::vec4 m_color = glm::vec4(0.7, 0.6, 1.0, 1.0);
@@ -91,7 +91,7 @@ private:
     const float *m_data;
     size_t m_dataLength;
 
-    int m_visibleDataLength;
+    int m_visibleDataLength{};
 
     const std::vector<glm::vec3> m_vertices;
 

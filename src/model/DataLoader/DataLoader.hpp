@@ -7,6 +7,7 @@
 
 
 #include <memory>
+#include <vector>
 #include "../Camera/CameraSet.hpp"
 #include "../ImageSet.hpp"
 #include "Common.cuh"
@@ -18,16 +19,43 @@ private:
     std::shared_ptr<ImageSet> m_imageSet;
 
     unsigned int m_batchSize;
+    /** Array of batch item descriptors. */
+    GPUData<BatchItemDescriptor>* m_batchItems;
+    /** Array of GPU-Ready pointers to gpu-allocated batch-items descriptors. */
+    std::vector<BatchItemDescriptor*> m_gpuBatchItemPointers;
 
-    GPUData<BatchDescriptor> m_batchDescriptor;
+    /** A list of indexes that are used to select which cameras and images to
+     * put in the batch. */
+    std::vector<unsigned int> m_indexes;
 
+    /** The index in the start of the batch indexes in the indexes array. */
+    unsigned int m_startIndex{};
+
+    bool m_isReady = false;
+    bool m_batchLoaded = false;
+
+
+    void Init();
 public:
-    explicit DataLoader(std::shared_ptr<CameraSet> cameraSet, std::shared_ptr<ImageSet> imageSet);
+    DataLoader();
     DataLoader(const DataLoader&) = delete;
     ~DataLoader() = default;
 
+    void SetCameraSet(std::shared_ptr<CameraSet> cameraSet);
+
+    void SetImageSet(std::shared_ptr<ImageSet> imageSet);
+
     void SetBatchSize(unsigned int size);
-    unsigned int GetBatchSize();
+    [[nodiscard]] unsigned int GetBatchSize() const;
+
+    void Shuffle();
+
+    void LoadNext();
+
+    BatchItemDescriptor* GetGPUDescriptors();
+
+    [[nodiscard]] bool IsReady() const;
+    [[nodiscard]] bool IsOnGPU() const;
 
 };
 

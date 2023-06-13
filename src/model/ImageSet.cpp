@@ -53,6 +53,8 @@ size_t ImageSet::LoadImages() {
     }
     /** sort by filename. */
     std::sort(m_images.begin(), m_images.end(), imageSort);
+
+    m_areImagesGenerated = true;
     return m_images.size();
 }
 
@@ -72,4 +74,8 @@ void ImageSet::Render(){
     for(auto& child : m_children){
         if(child->IsActive()) child->Render();
     }
+}
+
+bool ImageSet::AreImagesGenerated() {
+    return m_areImagesGenerated;
 }

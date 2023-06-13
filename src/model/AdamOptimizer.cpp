@@ -11,12 +11,15 @@
 
 using namespace glm;
 
-AdamOptimizer::AdamOptimizer(const ivec3 &volumeResolution) :
-        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_res(volumeResolution) {
+AdamOptimizer::AdamOptimizer(std::shared_ptr<Dataset> dataset, const ivec3 &volumeResolution) :
+        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_res(volumeResolution), m_dataset(std::move(dataset)) {
     SetName("Adam Optimizer");
     m_adamG1 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_adamG2 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_blurredVoxels = std::make_shared<CudaLinearVolume3D>(volumeResolution);
+    m_dataLoader = std::make_shared<DataLoader>();
+    m_dataLoader->SetCameraSet(m_dataset->GetCameraSet());
+    m_dataLoader->SetImageSet(m_dataset->GetImageSet());
 }
 
 void AdamOptimizer::SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume){
@@ -64,4 +67,16 @@ void AdamOptimizer::SetEta(float value) {
 
 float AdamOptimizer::GetEta() const {
     return m_eta;
+}
+
+std::shared_ptr<DataLoader> AdamOptimizer::GetDataLoader() {
+    return m_dataLoader;
+}
+
+void AdamOptimizer::SetBatchSize(unsigned int batchSize) {
+    return m_dataLoader->SetBatchSize(batchSize);
+}
+
+unsigned int AdamOptimizer::GetBatchSize() {
+    return m_dataLoader->GetBatchSize();
 }

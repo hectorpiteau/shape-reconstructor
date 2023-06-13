@@ -121,7 +121,7 @@ public:
     const std::string& GetCurrentJsonPath();
     const std::string& GetCurrentImageFolderPath();
 
-    std::shared_ptr<ImageSet> GetImageSet();
+
 
     [[nodiscard]] bool IsCalibrationLoaded() const;
     
@@ -129,5 +129,6 @@ public:
 
     [[nodiscard]] bool AreCamerasGenerated() const;
 
-    std::shared_ptr<CameraSet> GetCameraSet();
+    std::shared_ptr<CameraSet> GetCameraSet() override;
+    std::shared_ptr<ImageSet> GetImageSet() override;
 };

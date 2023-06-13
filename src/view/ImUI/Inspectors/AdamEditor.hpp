@@ -34,6 +34,9 @@ public:
         auto eps = m_interactor->GetEpsilon();
         auto eta = m_interactor->GetEta();
         auto batchSize = m_interactor->GetBatchSize();
+        auto isReady = m_interactor->IsReady();
+        auto isOnGPU = m_interactor->IsOnGPU();
+
 
         ImGui::SeparatorText(ICON_FA_INFO " Adam Optimizer - Information");
         ImGui::Spacing();
@@ -50,12 +53,44 @@ public:
             m_interactor->SetEta(eta);
         }
 
-        ImGui::SeparatorText( "Batch");
+        ImGui::SeparatorText( "DataLoader");
         ImGui::Spacing();
-        if(ImGui::DragInt("Batch-Size", &batchSize, 1)){
+
+        ImGui::Text("IsReady: ");
+        ImGui::SameLine();
+        if(isReady){
+            ImGui::Text("Yes - Camera&Image Set Ok");
+        }else{
+            ImGui::Text("No - Camera&Image Set Not Ok");
+        }
+
+        ImGui::Text("IsBatchOnGPU: ");
+        ImGui::SameLine();
+        if(isOnGPU){
+            ImGui::Text("Yes");
+        }else{
+            ImGui::Text("No");
+        }
+
+        if(ImGui::DragInt("Batch-Size", (int*)&batchSize, 1, 1)){
             m_interactor->SetBatchSize(batchSize);
         }
 
+        ImGui::SeparatorText( "Actions");
+        ImGui::Spacing();
+
+        ImGui::Button("Initialize", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f));
+        ImGui::Spacing();
+        ImGui::Button("Optimize", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f));
+
+        ImGui::SeparatorText( "Stats");
+        ImGui::Spacing();
+        ImGui::Text("Amount of iterations: ");
+        ImGui::SameLine();
+        ImGui::TextUnformatted(std::to_string(0).c_str());
+
+        static float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };
+        ImGui::PlotLines("PSNR", arr, IM_ARRAYSIZE(arr), 0, nullptr, 0.0f, 45.0f,  ImVec2(0, 80.0f));
 
         ImGui::Separator();
     }

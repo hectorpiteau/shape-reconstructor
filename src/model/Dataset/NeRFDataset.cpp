@@ -18,18 +18,17 @@ using json = nlohmann::json;
 using namespace glm;
 
 NeRFDataset::NeRFDataset(Scene *scene)
-    : Dataset{std::string("NeRFDataset")}, SceneObject{std::string("NeRFDataset"), SceneObjectTypes::NERFDATASET}, 
-      m_scene(scene),
-      m_mode(NeRFDatasetModes::TRAIN),
-      m_trainJSONPath("/home/hpiteau/work/shape-reconstructor/data/nerf/transforms_train.json"),
-      m_trainImagesPath("/home/hpiteau/work/shape-reconstructor/data/nerf/train"),
-      m_validJSONPath("/home/hpiteau/work/shape-reconstructor/data/nerf/transforms_val.json"),
-      m_validImagesPath("/home/hpiteau/work/shape-reconstructor/data/nerf/val"),
-      m_images(),
-      m_imagesCalibration(),
-      m_isCalibrationLoaded(false),
-      m_camerasGenerated(false)
-{
+        : Dataset{std::string("NeRFDataset")}, SceneObject{std::string("NeRFDataset"), SceneObjectTypes::NERFDATASET},
+          m_scene(scene),
+          m_mode(NeRFDatasetModes::TRAIN),
+          m_trainJSONPath("/home/hpiteau/work/shape-reconstructor/data/nerf/transforms_train.json"),
+          m_trainImagesPath("/home/hpiteau/work/shape-reconstructor/data/nerf/train"),
+          m_validJSONPath("/home/hpiteau/work/shape-reconstructor/data/nerf/transforms_val.json"),
+          m_validImagesPath("/home/hpiteau/work/shape-reconstructor/data/nerf/val"),
+          m_images(),
+          m_imagesCalibration(),
+          m_isCalibrationLoaded(false),
+          m_camerasGenerated(false) {
     SetName(std::string(ICON_FA_DATABASE " Nerf Dataset"));
     m_children = std::vector<std::shared_ptr<SceneObject>>();
 
@@ -47,8 +46,7 @@ NeRFDataset::NeRFDataset(Scene *scene)
 
 NeRFDataset::~NeRFDataset() = default;
 
-bool NeRFDataset::LoadCalibrations()
-{
+bool NeRFDataset::LoadCalibrations() {
     std::string configFilePath = m_mode == NeRFDatasetModes::TRAIN ? m_trainJSONPath : m_validJSONPath;
     std::cout << "Load calibration file: " << configFilePath << std::endl;
 
@@ -56,24 +54,20 @@ bool NeRFDataset::LoadCalibrations()
     json data = json::parse(f);
     float fov = 0.69f;
 
-    if (data["frames"] == nullptr || data["frames"].is_array() == false)
-    {
+    if (data["frames"] == nullptr || data["frames"].is_array() == false) {
         f.close();
         m_isCalibrationLoaded = false;
     }
 
     /** Parse FOV x : */
-    if (data["camera_angle_x"] != nullptr && data["camera_angle_x"].is_number_float())
-    {
+    if (data["camera_angle_x"] != nullptr && data["camera_angle_x"].is_number_float()) {
         fov = data["camera_angle_x"];
     }
 
     int image_counter = 0;
-    for (auto &img : data["frames"])
-    {
+    for (auto &img: data["frames"]) {
         /** Verify that transform_matrix exists and that it is an array. */
-        if (img["transform_matrix"] == nullptr || img["transform_matrix"].is_array() == false)
-        {
+        if (img["transform_matrix"] == nullptr || img["transform_matrix"].is_array() == false) {
             continue;
         }
 
@@ -81,8 +75,7 @@ bool NeRFDataset::LoadCalibrations()
         tmp.fov = fov;
 
         /** Copy path and filename. */
-        if (img["file_path"] != nullptr && img["file_path"].is_string())
-        {
+        if (img["file_path"] != nullptr && img["file_path"].is_string()) {
             tmp.fullPath = std::string(img["file_path"]);
             tmp.fullPath.erase(0, 1);
             tmp.fullPath = std::string("../data/nerf" + tmp.fullPath);
@@ -98,20 +91,17 @@ bool NeRFDataset::LoadCalibrations()
         }
 
         /** Copy matrix columns. */
-        for (int i = 0; i < 4; i++)
-        {
+        for (int i = 0; i < 4; i++) {
             /** Verify the correctness of the i'th column in the json. */
-            if (img["transform_matrix"][i] == nullptr || img["transform_matrix"][i].is_array() == false)
-            {
+            if (img["transform_matrix"][i] == nullptr || img["transform_matrix"][i].is_array() == false) {
                 break;
             }
 
             /** Copy matrix transform in the mat4. */
-            for (int j = 0; j < 4; j++)
-            {
+            for (int j = 0; j < 4; j++) {
                 /** Verify that the correctness of the float. */
-                if (img["transform_matrix"][i][j] == nullptr || img["transform_matrix"][i][j].is_number_float() == false)
-                {
+                if (img["transform_matrix"][i][j] == nullptr ||
+                    img["transform_matrix"][i][j].is_number_float() == false) {
                     break;
                 }
 
@@ -130,7 +120,7 @@ bool NeRFDataset::LoadCalibrations()
         tmp.intrinsic = K;
 
         mat4 ext_inv = glm::inverse(glm::transpose(tmp.transformMatrix));
-        
+
         tmp.extrinsic = ext_inv;
 
 //        tmp.extrinsic[0][1] = -tmp.extrinsic[0][1];
@@ -142,7 +132,7 @@ bool NeRFDataset::LoadCalibrations()
 //        tmp.extrinsic[1][2] = -tmp.extrinsic[1][2];
 //        tmp.extrinsic[2][2] = -tmp.extrinsic[2][2];
 //        tmp.extrinsic[3][2] = -tmp.extrinsic[3][2];
-        
+
         // mat3x3 R = mat3x3(tmp.extrinsic);
         // vec4 T = vec4(tmp.extrinsic[3]);
 
@@ -158,109 +148,92 @@ bool NeRFDataset::LoadCalibrations()
     return true;
 }
 
-size_t NeRFDataset::Size()
-{
+size_t NeRFDataset::Size() {
     return m_images.size();
 }
 
-const char *NeRFDataset::GetModeName()
-{
-    switch (m_mode)
-    {
-    case NeRFDatasetModes::TRAIN:
-        return NeRFDatasetModesNames[0];
-    case NeRFDatasetModes::VALID:
-        return NeRFDatasetModesNames[1];
-    default:
-        return NeRFDatasetModesNames[0];
+const char *NeRFDataset::GetModeName() {
+    switch (m_mode) {
+        case NeRFDatasetModes::TRAIN:
+            return NeRFDatasetModesNames[0];
+        case NeRFDatasetModes::VALID:
+            return NeRFDatasetModesNames[1];
+        default:
+            return NeRFDatasetModesNames[0];
     }
 }
-enum NeRFDatasetModes NeRFDataset::GetMode()
-{
+
+enum NeRFDatasetModes NeRFDataset::GetMode() {
     return m_mode;
 }
 
-void NeRFDataset::SetMode(enum NeRFDatasetModes mode)
-{
+void NeRFDataset::SetMode(enum NeRFDatasetModes mode) {
     m_mode = mode;
     m_camerasGenerated = false;
     m_isCalibrationLoaded = false;
 
-    switch (mode)
-    {
-    case NeRFDatasetModes::TRAIN:
-        GetImageSet()->SetFolderPath(m_trainImagesPath);
-        break;
-    case NeRFDatasetModes::VALID:
-        GetImageSet()->SetFolderPath(m_validImagesPath);
-        break;
+    switch (mode) {
+        case NeRFDatasetModes::TRAIN:
+            GetImageSet()->SetFolderPath(m_trainImagesPath);
+            break;
+        case NeRFDatasetModes::VALID:
+            GetImageSet()->SetFolderPath(m_validImagesPath);
+            break;
     }
 }
 
-void NeRFDataset::Render()
-{
+void NeRFDataset::Render() {
     m_imageSet->Render();
     m_cameraSet->Render();
 }
 
-const std::string &NeRFDataset::GetCurrentJsonPath()
-{
-    switch (m_mode)
-    {
-    case NeRFDatasetModes::TRAIN:
-        return m_trainJSONPath;
-    case NeRFDatasetModes::VALID:
-        return m_validJSONPath;
-    default:
-        return m_trainJSONPath;
+const std::string &NeRFDataset::GetCurrentJsonPath() {
+    switch (m_mode) {
+        case NeRFDatasetModes::TRAIN:
+            return m_trainJSONPath;
+        case NeRFDatasetModes::VALID:
+            return m_validJSONPath;
+        default:
+            return m_trainJSONPath;
     }
 }
 
-const std::string &NeRFDataset::GetCurrentImageFolderPath()
-{
-    switch (m_mode)
-    {
-    case NeRFDatasetModes::TRAIN:
-        return m_trainImagesPath;
-    case NeRFDatasetModes::VALID:
-        return m_validImagesPath;
-    default:
-        return m_trainImagesPath;
+const std::string &NeRFDataset::GetCurrentImageFolderPath() {
+    switch (m_mode) {
+        case NeRFDatasetModes::TRAIN:
+            return m_trainImagesPath;
+        case NeRFDatasetModes::VALID:
+            return m_validImagesPath;
+        default:
+            return m_trainImagesPath;
     }
 }
 
-std::shared_ptr<ImageSet> NeRFDataset::GetImageSet()
-{
-    return m_imageSet;
-}
 
-bool NeRFDataset::IsCalibrationLoaded() const
-{
+bool NeRFDataset::IsCalibrationLoaded() const {
     return m_isCalibrationLoaded;
 }
 
-bool NeRFDataset::Load()
-{
+bool NeRFDataset::Load() {
     m_imageSet->LoadImages();
     LoadCalibrations();
     GenerateCameras();
     return m_camerasGenerated && m_isCalibrationLoaded;
 }
 
-void NeRFDataset::GenerateCameras()
-{
-    if(m_camerasGenerated) {
+void NeRFDataset::GenerateCameras() {
+    if (m_camerasGenerated) {
         std::cout << "NeRFDataset::GenerateCameras : Cameras already generate." << std::endl;
         return;
     }
-    if(!m_isCalibrationLoaded) {
+    if (!m_isCalibrationLoaded) {
         std::cout << "NeRFDataset::GenerateCameras : Calibration not done yet, can't generate cameras." << std::endl;
         return;
     }
-    
+
     int cpt = 0;
-    
-    for(size_t i=0; i<m_imagesCalibration.size(); ++i){
+
+    for (size_t i = 0; i < m_imagesCalibration.size(); ++i) {
         NeRFImage imgInfo = m_images[i];
         CameraCalibrationInformations calibInfo = m_imagesCalibration[i];
         std::shared_ptr<Camera> cam = std::make_shared<Camera>(m_scene);
@@ -275,7 +248,7 @@ void NeRFDataset::GenerateCameras()
         cam->SetName(std::string(ICON_FA_CAMERA " Camera ") + std::to_string(cpt++));
         cam->SetIsVisibleInList(false);
         m_scene->Add(cam, true, true);
-        
+
         std::cout << "image: " << cam->filename << " -> " << imgInfo.fileName << std::endl;
         m_cameraSet->AddCamera(cam);
     }
@@ -283,18 +256,21 @@ void NeRFDataset::GenerateCameras()
     m_cameraSet->m_isLocked = true;
     m_cameraSet->m_areCameraGenerated = true;
     m_cameraSet->m_areCalibrated = true;
-    
+
     // m_cameraSet->LinkToImageSet(GetImageSet());
     // m_cameraSet->CalibrateFromInformation(m_imagesCalibration);
 
     m_camerasGenerated = true;
 }
 
-bool NeRFDataset::AreCamerasGenerated() const
-{
+bool NeRFDataset::AreCamerasGenerated() const {
     return m_camerasGenerated;
 }
 
-std::shared_ptr<CameraSet> NeRFDataset::GetCameraSet(){
+std::shared_ptr<CameraSet> NeRFDataset::GetCameraSet() {
     return m_cameraSet;
+}
+
+std::shared_ptr<ImageSet> NeRFDataset::GetImageSet() {
+    return m_imageSet;
 }

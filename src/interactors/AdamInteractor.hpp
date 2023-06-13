@@ -27,8 +27,11 @@ public:
     [[nodiscard]] float GetEta() const;
 
     unsigned int GetBatchSize();
-
     void SetBatchSize(unsigned int size);
+
+    bool IsReady();
+
+    bool IsOnGPU();
 };
 
 

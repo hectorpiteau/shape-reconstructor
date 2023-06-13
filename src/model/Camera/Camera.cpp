@@ -64,16 +64,16 @@ void Camera::Initialize() {
 
     /** Parameters to visual components. */
     m_frustumLines = new Lines(m_scene, m_wireframeVertices, 16 * 3);
-    if(m_frustumLines != nullptr) m_frustumLines->SetColor(1.0, 0.8, 0.8, 0.8);
+    if (m_frustumLines != nullptr) m_frustumLines->SetColor(1.0, 0.8, 0.8, 0.8);
 //    if(m_frustumLines != nullptr) m_frustumLines->SetColor(0.0, 0.0, 0.0, 0.8);
     m_gizmo = new Gizmo(m_scene, m_pos, m_right, m_realUp, m_forward);
 
     /** Create the camera's image plane. */
-    if(m_imagePlane != nullptr) m_imagePlane->SetTexture2D(m_imageTex);
+    if (m_imagePlane != nullptr) m_imagePlane->SetTexture2D(m_imageTex);
 
     /** Center line. */
     m_centerLine = new Lines(m_scene, m_centerLineVertices, 6);
-    if(m_centerLine != nullptr) m_centerLine->SetColor(0.0, 1.0, 1.0, 1.0);
+    if (m_centerLine != nullptr) m_centerLine->SetColor(0.0, 1.0, 1.0, 1.0);
 
     UpdateWireframe();
 }
@@ -119,6 +119,8 @@ void Camera::SetPosition(float x, float y, float z) {
     /** Update center line. */
     WRITE_VEC3(m_centerLineVertices, 0, m_pos);
     m_centerLine->UpdateVertices(m_centerLineVertices);
+
+    UpdateGPUDescriptor();
 }
 
 const mat4 &Camera::GetViewMatrix() {
@@ -297,7 +299,8 @@ void Camera::UpdateWireframe() {
     corner_bot_right_tmp.z *= -1.0f;
     vec3 corner_bot_right = CameraToWorld(vec4(corner_bot_right_tmp, 1.0f), m_viewMatrix);
 
-    if(m_imagePlane != nullptr) m_imagePlane->SetVertices(corner_bot_left, corner_bot_right, corner_top_left, corner_top_right);
+    if (m_imagePlane != nullptr)
+        m_imagePlane->SetVertices(corner_bot_left, corner_bot_right, corner_top_left, corner_top_right);
 //    if(m_imagePlane != nullptr) m_imagePlane->SetVertices(corner_top_left, corner_top_right, corner_bot_left, corner_bot_right);
 
     WRITE_VEC3(m_wireframeVertices, 0, corner_top_left);
@@ -375,6 +378,8 @@ void Camera::Render() {
 void Camera::SetIntrinsic(const mat4 &intrinsic) {
     m_projectionMatrix = intrinsic;
     UpdateWireframe();
+
+    UpdateGPUDescriptor();
 }
 
 void Camera::SetExtrinsic(const mat4 &extrinsic) {
@@ -403,6 +408,7 @@ void Camera::SetExtrinsic(const mat4 &extrinsic) {
     WRITE_VEC3(m_centerLineVertices, 3, m_pos + m_forward * m_centerLineLength);
     m_centerLine->UpdateVertices(m_centerLineVertices);
 
+    UpdateGPUDescriptor();
 }
 
 const mat4 &Camera::GetIntrinsic() {
@@ -463,4 +469,16 @@ void Camera::SetShowImagePlane(bool visible) {
 void Camera::SetFrustumSize(float value) {
     m_wireSize = value;
     UpdateWireframe();
+}
+
+void Camera::UpdateGPUDescriptor() {
+    m_desc.Host()->camPos = m_pos;
+    m_desc.Host()->camExt = m_viewMatrix;
+    m_desc.Host()->camInt = m_projectionMatrix;
+
+    m_desc.ToDevice();
+}
+
+CameraDescriptor *Camera::GetGPUDescriptor() {
+    return m_desc.Device();
 }

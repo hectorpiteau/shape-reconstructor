@@ -16,10 +16,10 @@ using namespace glm;
 class CameraInspector
 {
 public:
-    CameraInspector(CameraInteractor *interactor) : m_interactor(interactor){};
+    explicit CameraInspector(CameraInteractor *interactor) : m_interactor(interactor){};
     CameraInspector(const CameraInspector &) = delete;
 
-    ~CameraInspector(){};
+    ~CameraInspector()= default;
 
     void Render()
     {
@@ -148,14 +148,14 @@ public:
 private:
     CameraInteractor *m_interactor;
 
-    mat4 m_intrinsicT;
-    mat4 m_extrinsicT;
+    mat4 m_intrinsicT{};
+    mat4 m_extrinsicT{};
     
-    vec3 m_pos;
-    vec3 m_target;
-    vec3 m_right;
-    vec3 m_up;
-    float m_near, m_far;
+    vec3 m_pos{};
+    vec3 m_target{};
+    vec3 m_right{};
+    vec3 m_up{};
+    float m_near{}, m_far{};
 
     bool m_isOpened = false;
     bool m_isExternal = false;

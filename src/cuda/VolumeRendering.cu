@@ -347,3 +347,30 @@ extern "C" void volume_rendering_wrapper_linea_ui8(GPUData<RayCasterDescriptor> 
         std::cerr << "ERROR: " << cudaGetErrorString(err) << std::endl;
     }
 }
+
+
+__global__ void batched_forward(BatchItemDescriptor* item){
+    /** Compute PSNR per ray. */
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+
+}
+
+
+extern "C" void batched_forward_wrapper( BatchItemDescriptor* items, size_t length){
+    auto item = items[0];
+    dim3 threads(16, 16);
+    /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
+    dim3 blocks((item.img->res.x + threads.x - 1) / threads.x,
+            (item.img->res.y + threads.y - 1) / threads.y);
+
+    for(int i=0; i<length; ++i){
+        batched_forward<<<threads, blocks>>>(items + i);
+        cudaError_t err = cudaGetLastError();
+        if (err != cudaSuccess)
+        {
+            std::cerr << "ERROR: " << cudaGetErrorString(err) << std::endl;
+        }
+    }
+}

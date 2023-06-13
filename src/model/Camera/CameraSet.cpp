@@ -52,6 +52,10 @@ std::vector<std::shared_ptr<Camera>> &CameraSet::GetCameras()
     return m_cameras;
 }
 
+std::shared_ptr<Camera> CameraSet::GetCamera(unsigned int index){
+    return m_cameras[index];
+}
+
 bool CameraSet::AreCamerasGenerated() const
 {
     return m_areCameraGenerated;

@@ -35,15 +35,17 @@ public:
         m_scene->Add(cam1);
 
         m_scene->Add(std::make_shared<LineGrid>(m_scene));
-        
-        m_scene->Add(std::make_shared<NeRFDataset>(m_scene));
+
+        auto nerfdataset = std::make_shared<NeRFDataset>(m_scene);
+        m_scene->Add(nerfdataset);
 
         auto volumeRenderer1 = std::make_shared<VolumeRenderer>(m_scene);
         m_scene->Add(volumeRenderer1);
 
         m_scene->Add(std::make_shared<PlaneCut>(m_scene, volumeRenderer1->GetVolume3D()));
 
-        m_scene->Add(std::make_shared<AdamOptimizer>(volumeRenderer1->GetVolume3D()->GetResolution()));
+        auto adamOptimizer = std::make_shared<AdamOptimizer>(nerfdataset, volumeRenderer1->GetVolume3D()->GetResolution());
+        m_scene->Add(adamOptimizer);
 
         /** Create Views and Interactors */
         m_objectListView = std::make_shared<ObjectListView>();

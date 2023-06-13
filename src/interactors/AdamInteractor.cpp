@@ -32,12 +32,20 @@ float AdamInteractor::GetEta() const {
     return m_adam->GetEta();
 }
 
-int AdamInteractor::GetBatchSize() {
-    return m_adam->GetDataLoader()->GetBatchSize();
+unsigned int AdamInteractor::GetBatchSize() {
+    return m_adam->GetBatchSize();
 }
 
-void AdamInteractor::SetBatchSize(int size){
-    m_adam->GetDataLoader()->SetBatchSize(size);
+bool AdamInteractor::IsReady(){
+    return m_adam->GetDataLoader()->IsReady();
+}
+
+void AdamInteractor::SetBatchSize(unsigned int size){
+    m_adam->SetBatchSize(size);
+}
+
+bool AdamInteractor::IsOnGPU() {
+    return m_adam->GetDataLoader()->IsOnGPU();
 }
 
 

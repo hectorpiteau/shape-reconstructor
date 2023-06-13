@@ -105,13 +105,16 @@ struct GaussianWeightsDescriptor {
     unsigned short ks = 1;
 };
 
-struct ImageCam : public CameraDescriptor{
+struct LinearImageDescriptor {
+    ivec2 res;
+    unsigned char* data;
 };
 
-struct BatchDescriptor {
-    unsigned short channels;
+struct BatchItemDescriptor{
+    /** Combines Camera and Image Descriptors. */
+    CameraDescriptor* cam;
 
+    LinearImageDescriptor* img;
 };
-
 
 #endif //CUDA_COMMON_H

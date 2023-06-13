@@ -74,11 +74,13 @@ public:
      */
     std::vector<std::shared_ptr<Camera>>& GetCameras();
 
+    std::shared_ptr<Camera> GetCamera(unsigned int index);
+
     bool LinkToImageSet(std::shared_ptr<ImageSet> imageSet);
     
-    bool AreCamerasGenerated() const;
+    [[nodiscard]] bool AreCamerasGenerated() const;
 
-    bool IsLocked() const;
+    [[nodiscard]] bool IsLocked() const;
 
     bool CalibrateFromInformation(const std::vector<struct CameraCalibrationInformations>& information);
 
