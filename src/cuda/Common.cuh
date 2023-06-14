@@ -117,4 +117,22 @@ struct BatchItemDescriptor{
     LinearImageDescriptor* img;
 };
 
+struct IntegrationRangeDescriptor {
+    /**
+     * column-major. Smallest increment goes in y+ direction.
+     * Indexed : data[x * height + y];
+     * */
+    float *data;
+    /** The data dimension. (width, height) */
+    ivec2 dim;
+
+    bool renderInTexture;
+    cudaSurfaceObject_t surface;
+};
+
+struct BBoxDescriptor {
+    vec3 min;
+    vec3 max;
+};
+
 #endif //CUDA_COMMON_H

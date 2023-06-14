@@ -44,7 +44,7 @@ public:
 
         m_scene->Add(std::make_shared<PlaneCut>(m_scene, volumeRenderer1->GetVolume3D()));
 
-        auto adamOptimizer = std::make_shared<AdamOptimizer>(nerfdataset, volumeRenderer1->GetVolume3D()->GetResolution());
+        auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volumeRenderer1->GetVolume3D(), volumeRenderer1->GetVolume3D()->GetResolution());
         m_scene->Add(adamOptimizer);
 
         /** Create Views and Interactors */

@@ -20,6 +20,7 @@ using namespace glm;
 
 class AdamOptimizer : public SceneObject {
 private:
+    Scene* m_scene;
     /** Epsilon */
     float m_epsilon=1.0E-8f;
     /** Step size. */
@@ -49,15 +50,24 @@ private:
 
     std::shared_ptr<Dataset> m_dataset;
 
+    /** Integration ranges. One per camera. */
+    GPUData<IntegrationRangeDescriptor> m_integrationRangeDescriptor;
+
+    /** The overlay to show on screen useful data.*/
+    std::shared_ptr<OverlayPlane> m_overlay;
+    /** The cuda texture used for writing data to the overlay. */
+    std::shared_ptr<CudaTexture> m_cudaTex;
 
 public:
-    explicit AdamOptimizer(std::shared_ptr<Dataset> dataset, const ivec3& volumeResolution);
+    explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> m_target,  const ivec3& volumeResolution);
     AdamOptimizer(const AdamOptimizer&) = delete;
     ~AdamOptimizer() override = default;
 
     void UpdateGPUDescriptor();
 
     void Step();
+
+    void Initialize();
 
     void SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume);
 

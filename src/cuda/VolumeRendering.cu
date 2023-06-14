@@ -349,10 +349,18 @@ extern "C" void volume_rendering_wrapper_linea_ui8(GPUData<RayCasterDescriptor> 
 }
 
 
-__global__ void batched_forward(BatchItemDescriptor* item){
-    /** Compute PSNR per ray. */
+__global__ void batched_forward(BatchItemDescriptor* item, LinearImageDescriptor *output_color){
+    /** Pixel coords. */
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    Ray ray = SingleRayCaster::GetRay(ivec2(x,y), item->cam);
+
+
+
+    /** Compute PSNR per ray. */
+    /** Compute Gradient. */
+
 
 
 }
@@ -366,7 +374,7 @@ extern "C" void batched_forward_wrapper( BatchItemDescriptor* items, size_t leng
             (item.img->res.y + threads.y - 1) / threads.y);
 
     for(int i=0; i<length; ++i){
-        batched_forward<<<threads, blocks>>>(items + i);
+//        batched_forward<<<threads, blocks>>>(items + i);
         cudaError_t err = cudaGetLastError();
         if (err != cudaSuccess)
         {

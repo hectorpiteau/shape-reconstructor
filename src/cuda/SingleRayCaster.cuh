@@ -34,7 +34,7 @@ public:
         dir = dir - camera->camPos;
         Ray ray = {
                 .origin = camera->camPos,
-                .dir =  dir,
+                .dir =  normalize(dir),
                 .tmin = 0.0f,
                 .tmax = 20.0f
         };

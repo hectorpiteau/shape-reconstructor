@@ -11,19 +11,36 @@
 
 using namespace glm;
 
-AdamOptimizer::AdamOptimizer(std::shared_ptr<Dataset> dataset, const ivec3 &volumeResolution) :
-        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_res(volumeResolution), m_dataset(std::move(dataset)) {
+AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target, const ivec3 &volumeResolution) :
+        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_target(target),m_res(volumeResolution), m_dataset(std::move(dataset)), m_integrationRangeDescriptor() {
     SetName("Adam Optimizer");
+    /** Create the overlay plane that will be used to display the volume rendering texture on. */
+    m_overlay = std::make_shared<OverlayPlane>(
+            std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl",
+                                             "../src/shaders/f_overlay_plane.glsl"), scene->GetSceneSettings());
+
+    /** Create the cuda texture that will receive the result of the volume rendering process. */
+    m_cudaTex = std::make_shared<CudaTexture>(
+            scene->GetSceneSettings()->GetViewportWidth(),
+            scene->GetSceneSettings()->GetViewportHeight());
+
     m_adamG1 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_adamG2 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_blurredVoxels = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_dataLoader = std::make_shared<DataLoader>();
     m_dataLoader->SetCameraSet(m_dataset->GetCameraSet());
     m_dataLoader->SetImageSet(m_dataset->GetImageSet());
+
+    m_integrationRangeDescriptor.Host()->surface = m_cudaTex->GetTex();
 }
 
 void AdamOptimizer::SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume){
     m_target = std::move(targetVolume);
+}
+
+void AdamOptimizer::Initialize(){
+    /** Initialize integration ranges. */
+
 }
 
 void AdamOptimizer::Render() {
@@ -31,6 +48,15 @@ void AdamOptimizer::Render() {
     if(m_optimize){
         Step();
     }
+
+    m_integrationRangeDescriptor.Host()->dim = ivec2(m_scene->GetSceneSettings()->GetViewportWidth(),
+                                                     m_scene->GetSceneSettings()->GetViewportHeight());
+    m_integrationRangeDescriptor.Host()->renderInTexture = true;
+
+    m_scene->GetActiveCam()->UpdateGPUDescriptor();
+
+    m_cudaTex->RunCUDAIntegralRange(m_integrationRangeDescriptor, m_scene->GetActiveCam()->GetGPUData(), m_target->GetGPUDescriptor());
+    m_overlay->Render(true, m_cudaTex->GetTex());
 }
 
 void AdamOptimizer::Step(){

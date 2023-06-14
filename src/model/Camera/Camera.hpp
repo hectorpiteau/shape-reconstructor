@@ -81,7 +81,7 @@ private:
     Lines* m_frustumLines{};
     Gizmo* m_gizmo{};
     // float m_wireSize = 0.1f;
-    float m_wireSize = 1.0f;
+    float m_wireSize = 0.15f;
 
     /** Image plane. */
     Texture2D* m_imageTex = nullptr;
@@ -92,10 +92,7 @@ private:
     float m_centerLineLength = 1.0f;
 
     GPUData<CameraDescriptor> m_desc;
-    /**
-     * Update the GPU Descriptor on GPU memory.
-     */
-    void UpdateGPUDescriptor();
+
 
 public:
     Camera(Scene *scene, const std::string& name, const vec3& position, const vec3& target);
@@ -110,6 +107,13 @@ public:
      * @return : A GPU-Ready pointer to a Camera Descriptor.
      */
     CameraDescriptor* GetGPUDescriptor();
+
+    /**
+     * Update the GPU Descriptor on GPU memory.
+     */
+    void UpdateGPUDescriptor();
+
+    GPUData<CameraDescriptor>& GetGPUData();
 
     /**
      * @brief Set the camera's position in world space coordinates.

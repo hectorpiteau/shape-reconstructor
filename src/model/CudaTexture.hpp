@@ -21,6 +21,7 @@
 #include "../utils/helper_cuda.h"
 #include "../cuda/GPUData.cuh"
 #include "../cuda/Common.cuh"
+#include "IntegrationRange.cuh"
 
 class CudaTexture
 {
@@ -163,6 +164,25 @@ public:
         /** kernel */
         plane_cut_rendering_wrapper(planeCutDesc, volumeDesc, cameraDesc);
         checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_image_resource, 0));
-
     }
+
+    void RunCUDAIntegralRange(GPUData<IntegrationRangeDescriptor>& ranges, GPUData<CameraDescriptor>& camera,  BBoxDescriptor* bbox){
+        checkCudaErrors(cudaGraphicsMapResources(1, &cuda_image_resource, 0));
+        checkCudaErrors(cudaGraphicsSubResourceGetMappedArray(&cuda_image_array, cuda_image_resource, 0, 0));
+        // the resource Type says which things to set. See Documentation
+        cuda_texture_resource_desc.resType = cudaResourceTypeArray;
+        cuda_texture_resource_desc.res.array.array = cuda_image_array;
+        // Create a surface Object
+        checkCudaErrors(cudaCreateSurfaceObject(&cuda_texture_surface, &cuda_texture_resource_desc));
+
+        ranges.Host()->surface = cuda_texture_surface;
+        ranges.ToDevice();
+
+        /** kernel */
+        integration_range_bbox_wrapper(camera, ranges.Device(), bbox);
+        checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_image_resource, 0));
+    }
+
+
+
 };

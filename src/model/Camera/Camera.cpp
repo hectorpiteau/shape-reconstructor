@@ -475,10 +475,15 @@ void Camera::UpdateGPUDescriptor() {
     m_desc.Host()->camPos = m_pos;
     m_desc.Host()->camExt = m_viewMatrix;
     m_desc.Host()->camInt = m_projectionMatrix;
-
+    m_desc.Host()->width = m_resolution.x;
+    m_desc.Host()->height = m_resolution.y;
     m_desc.ToDevice();
 }
 
 CameraDescriptor *Camera::GetGPUDescriptor() {
     return m_desc.Device();
+}
+
+GPUData<CameraDescriptor>& Camera::GetGPUData(){
+    return m_desc;
 }

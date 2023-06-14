@@ -255,4 +255,10 @@ VectorPlaneIntersection(const vec3 &vecO, const vec3 &vecD, const vec3 &planeO, 
     return vecO + t * vecD;
 }
 
+CUDA_HOSTDEV inline float
+VectorPlaneIntersectionT(const vec3 &vecO, const vec3 &vecD, const vec3 &planeO,  const vec3 &normal) {
+    /** Compute intersection. */
+    return dot(normal, (vecO - planeO)) / dot(-vecD, normal);
+}
+
 #endif //PROJECTION_CUDA_H

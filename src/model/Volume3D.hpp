@@ -51,7 +51,7 @@ public:
      */
     void InitializeVolume();
 
-    void Render();
+    void Render() override;
 
     void ComputeBBoxPoints();
 
@@ -63,11 +63,12 @@ public:
     std::shared_ptr<CudaLinearVolume3D> GetCudaVolume();
 
     vec3 m_bboxPoints[8] = {};
+
+    BBoxDescriptor* GetGPUDescriptor();
 private:
     /** ext dep*/
     Scene *m_scene;
-    
-    
+
     /** in dep */
     std::shared_ptr<CudaLinearVolume3D> m_cudaVolume;
     std::shared_ptr<Lines> m_lines;
@@ -76,6 +77,8 @@ private:
     vec3 m_bboxMin = vec3(-0.5, -0.5, -0.5);
     vec3 m_bboxMax = vec3(0.5, 0.5, 0.5);
     ivec3 m_res;
+
+    GPUData<BBoxDescriptor> m_desc;
 
     /** wireframe coordinates. */
     float m_wireframeVertices[12 * 2 * 3] = {

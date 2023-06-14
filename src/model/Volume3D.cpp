@@ -17,7 +17,7 @@
 
 using namespace glm;
 
-Volume3D::Volume3D(Scene *scene, ivec3 res) : SceneObject{std::string("VOLUME3D"), SceneObjectTypes::VOLUME3D}, m_scene(scene), m_res(res)
+Volume3D::Volume3D(Scene *scene, ivec3 res) : SceneObject{std::string("VOLUME3D"), SceneObjectTypes::VOLUME3D}, m_scene(scene), m_res(res), m_desc()
 {
     SetName(std::string(ICON_FA_CUBES " Volume 3D"));
     m_lines = std::make_shared<Lines>(scene, m_wireframeVertices, 12 * 2 * 3);
@@ -26,6 +26,11 @@ Volume3D::Volume3D(Scene *scene, ivec3 res) : SceneObject{std::string("VOLUME3D"
     m_cudaVolume = std::make_shared<CudaLinearVolume3D>(vec3(100, 100, 100));
     m_cudaVolume->InitStub();
     m_cudaVolume->ToGPU();
+
+    /** Initialize GPU descriptor. */
+    m_desc.Host()->min = m_bboxMin;
+    m_desc.Host()->max = m_bboxMax;
+    m_desc.ToDevice();
 }
 
 void Volume3D::SetBBoxMin(const vec3 &bboxMin)
@@ -33,6 +38,9 @@ void Volume3D::SetBBoxMin(const vec3 &bboxMin)
     m_bboxMin = bboxMin;
     ComputeBBoxPoints();
     m_lines->UpdateVertices(m_wireframeVertices);
+
+    m_desc.Host()->min = bboxMin;
+    m_desc.ToDevice();
 }
 
 void Volume3D::SetBBoxMax(const vec3 &bboxMax)
@@ -40,6 +48,8 @@ void Volume3D::SetBBoxMax(const vec3 &bboxMax)
     m_bboxMax = bboxMax;
     ComputeBBoxPoints();
     m_lines->UpdateVertices(m_wireframeVertices);
+    m_desc.Host()->max = bboxMax;
+    m_desc.ToDevice();
 }
 
 void Volume3D::InitializeVolume()
@@ -166,4 +176,8 @@ void Volume3D::Render()
 
 std::shared_ptr<CudaLinearVolume3D> Volume3D::GetCudaVolume(){
     return m_cudaVolume;
+}
+
+BBoxDescriptor *Volume3D::GetGPUDescriptor() {
+    return m_desc.Device();
 }
