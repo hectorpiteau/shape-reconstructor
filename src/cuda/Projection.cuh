@@ -249,16 +249,35 @@ VectorPlaneIntersectionExist(const vec3 &vecD, const vec3 &normal) {
 }
 
 CUDA_HOSTDEV inline vec3
-VectorPlaneIntersection(const vec3 &vecO, const vec3 &vecD, const vec3 &planeO,  const vec3 &normal) {
+VectorPlaneIntersection(const vec3 &vecO, const vec3 &vecD, const vec3 &planeO, const vec3 &normal) {
     /** Compute intersection. */
     float t = dot(normal, (vecO - planeO)) / dot(-vecD, normal);
     return vecO + t * vecD;
 }
 
 CUDA_HOSTDEV inline float
-VectorPlaneIntersectionT(const vec3 &vecO, const vec3 &vecD, const vec3 &planeO,  const vec3 &normal) {
+VectorPlaneIntersectionT(const vec3 &vecO, const vec3 &vecD, const vec3 &planeO, const vec3 &normal) {
     /** Compute intersection. */
     return dot(normal, (vecO - planeO)) / dot(-vecD, normal);
 }
+
+CUDA_HOSTDEV inline bool
+BBoxTminTmax(vec3 origin, vec3 dir, vec3 bbox_min, vec3 bbox_max, float* tmin, float* tmax) {
+    vec3 ray_inv = 1.0f / dir;
+    float tx1 = (bbox_min.x - origin.x) * ray_inv.x;
+    float tx2 = (bbox_max.x - origin.x) * ray_inv.x;
+    *tmin = min(tx1, tx2);
+    *tmax = max(tx1, tx2);
+    float ty1 = (bbox_min.y - origin.y) * ray_inv.y;
+    float ty2 = (bbox_max.y - origin.y) * ray_inv.y;
+    *tmin = max(*tmin, min(ty1, ty2));
+    *tmax = min(*tmax, max(ty1, ty2));
+    float tz1 = (bbox_min.z - origin.z) * ray_inv.z;
+    float tz2 = (bbox_max.z - origin.z) * ray_inv.z;
+    *tmin = max(*tmin, min(tz1, tz2));
+    *tmax = min(*tmax, max(tz1, tz2));
+    return *tmax >= max(0.0f, *tmin);
+}
+
 
 #endif //PROJECTION_CUDA_H

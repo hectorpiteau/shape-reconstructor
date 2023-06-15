@@ -40,7 +40,19 @@ void AdamOptimizer::SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume){
 
 void AdamOptimizer::Initialize(){
     /** Initialize integration ranges. */
+    auto cameraSet = m_dataset->GetCameraSet();
+    for(auto cam : cameraSet->GetCameras()){
 
+        cam->GetIntegrationRangeGPUDescriptor().Host()->data = (float2*)GPUData<IntegrationRangeDescriptor>::AllocateOnDevice(cam->GetResolution().x * cam->GetResolution().y * sizeof(float2));
+        cam->GetIntegrationRangeGPUDescriptor().Host()->dim.x = cam->GetResolution().x;
+        cam->GetIntegrationRangeGPUDescriptor().Host()->dim.y = cam->GetResolution().y;
+        cam->GetIntegrationRangeGPUDescriptor().Host()->renderInTexture = false;
+        cam->GetIntegrationRangeGPUDescriptor().ToDevice();
+
+        integration_range_bbox_wrapper(cam->GetGPUData(), cam->GetIntegrationRangeGPUDescriptor().Device(), m_target->GetGPUDescriptor());
+    }
+
+    /** Initialize volume. */
 }
 
 void AdamOptimizer::Render() {

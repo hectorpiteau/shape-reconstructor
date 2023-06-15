@@ -110,25 +110,29 @@ struct LinearImageDescriptor {
     unsigned char* data;
 };
 
-struct BatchItemDescriptor{
-    /** Combines Camera and Image Descriptors. */
-    CameraDescriptor* cam;
-
-    LinearImageDescriptor* img;
-};
-
 struct IntegrationRangeDescriptor {
     /**
      * column-major. Smallest increment goes in y+ direction.
      * Indexed : data[x * height + y];
      * */
-    float *data;
+    float2 *data;
     /** The data dimension. (width, height) */
     ivec2 dim;
 
     bool renderInTexture;
     cudaSurfaceObject_t surface;
 };
+struct BatchItemDescriptor{
+    /** Combines Camera and Image Descriptors. */
+    CameraDescriptor* cam;
+
+    LinearImageDescriptor* img;
+
+    IntegrationRangeDescriptor* range;
+
+};
+
+
 
 struct BBoxDescriptor {
     vec3 min;

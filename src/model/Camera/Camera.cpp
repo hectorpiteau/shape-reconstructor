@@ -480,8 +480,17 @@ void Camera::UpdateGPUDescriptor() {
     m_desc.ToDevice();
 }
 
+ivec2 Camera::SetResolution(const ivec2& res) {
+    m_resolution = res;
+    UpdateGPUDescriptor();
+}
+
 CameraDescriptor *Camera::GetGPUDescriptor() {
     return m_desc.Device();
+}
+
+GPUData<IntegrationRangeDescriptor>& Camera::GetIntegrationRangeGPUDescriptor(){
+    return m_integrationDesc;
 }
 
 GPUData<CameraDescriptor>& Camera::GetGPUData(){

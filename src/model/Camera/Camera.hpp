@@ -92,6 +92,7 @@ private:
     float m_centerLineLength = 1.0f;
 
     GPUData<CameraDescriptor> m_desc;
+    GPUData<IntegrationRangeDescriptor> m_integrationDesc;
 
 
 public:
@@ -114,6 +115,7 @@ public:
     void UpdateGPUDescriptor();
 
     GPUData<CameraDescriptor>& GetGPUData();
+    GPUData<IntegrationRangeDescriptor>& GetIntegrationRangeGPUDescriptor();
 
     /**
      * @brief Set the camera's position in world space coordinates.
@@ -294,6 +296,8 @@ public:
      * @return const ivec2& (x = width, y = height), amount of pixels in both axis.
      */
     const ivec2& GetResolution();
+
+    ivec2 SetResolution(const ivec2& res);
 
     /**
      * @brief Render the camera in the scene. Render the gizmo, frustum and potentially 

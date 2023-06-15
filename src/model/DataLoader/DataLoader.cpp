@@ -66,8 +66,11 @@ void DataLoader::LoadNext(){
         auto image = m_imageSet->GetImage(m_indexes[m_startIndex + i]);
         auto imageDesc = image->GetGPUDescriptor();
 
+        auto integrationRangeDesc = camera->GetIntegrationRangeGPUDescriptor().Device();
+
         m_batchItems[i].Host()->cam = cameraDesc;
         m_batchItems[i].Host()->img = imageDesc;
+        m_batchItems[i].Host()->range = integrationRangeDesc;
         m_batchItems[i].ToDevice();
 
         /** Store ready to use pointer array. */

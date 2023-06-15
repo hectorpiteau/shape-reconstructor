@@ -11,5 +11,7 @@
     <mapping directory="$PROJECT_DIR$/include/librawcmake" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/include/nlohmann" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/include/tinycudann" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/tinycudann/dependencies/cutlass" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/tinycudann/dependencies/fmt" vcs="Git" />
   </component>
 </project>
