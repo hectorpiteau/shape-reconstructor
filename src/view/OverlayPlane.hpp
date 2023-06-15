@@ -4,6 +4,7 @@
 #include "../model/Texture2D.hpp"
 #include "../model/ShaderPipeline.hpp"
 #include "../utils/SceneSettings.hpp"
+#include "../controllers/Scene/Scene.hpp"
 
 class OverlayPlane
 {
@@ -12,7 +13,7 @@ public:
     OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline,std::shared_ptr<SceneSettings> sceneSettings);
     ~OverlayPlane();
 
-    void Render(bool useTex, GLuint tex);
+    void Render(bool useTex, GLuint tex, Scene* m_scene);
 
     void SetTextureData(const unsigned char *data);
 
@@ -45,6 +46,10 @@ private:
     unsigned int m_VAO;
 
     GLint m_scaleLocation;
+    /** Uniforms */
+    GLint m_modelLocation;
+    GLint m_viewLocation;
+    GLint m_projectionLocation;
 };
 
 #endif // OVERLAY_PLANE_H

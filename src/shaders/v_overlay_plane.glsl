@@ -5,6 +5,8 @@ layout (location = 1) in vec2 aTexCoord;
 
 uniform float scale;
 
+
+
 out vec3 normal;
 out vec4 FragPos;
 out vec2 TexCoord;

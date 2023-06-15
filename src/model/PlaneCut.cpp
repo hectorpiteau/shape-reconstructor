@@ -73,5 +73,5 @@ void PlaneCut::Render() {
     /** Run kernel on texture. */
     m_cudaTex->RunCUDAPlaneCut(m_planeCutDesc, m_volumeDesc, m_cameraDesc);
 
-    m_overlay->Render(true, m_cudaTex->GetTex());
+//    m_overlay->Render(true, m_cudaTex->GetTex());
 }

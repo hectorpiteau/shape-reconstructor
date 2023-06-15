@@ -11,6 +11,7 @@
 #include "../controllers/Scene/Scene.hpp"
 #include "../Texture2D.hpp"
 #include "../view/Plane.hpp"
+#include "../CudaTexture.hpp"
 
 class Scene;
 class Lines;
@@ -94,6 +95,7 @@ private:
     GPUData<CameraDescriptor> m_desc;
     GPUData<IntegrationRangeDescriptor> m_integrationDesc;
 
+    std::shared_ptr<CudaTexture> m_cudaTexture = nullptr;
 
 public:
     Camera(Scene *scene, const std::string& name, const vec3& position, const vec3& target);
@@ -116,6 +118,8 @@ public:
 
     GPUData<CameraDescriptor>& GetGPUData();
     GPUData<IntegrationRangeDescriptor>& GetIntegrationRangeGPUDescriptor();
+
+    std::shared_ptr<CudaTexture> GetCudaTexture();
 
     /**
      * @brief Set the camera's position in world space coordinates.
@@ -304,6 +308,8 @@ public:
      * image planes of the camera's images is activated. 
      */
     void Render() override;
+
+    void InitializeCudaTexture();
 
     /**
      * @brief Set the Image displayed on the current image plane.

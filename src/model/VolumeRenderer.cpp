@@ -161,7 +161,7 @@ void VolumeRenderer::Render() {
     }
 
     if (m_isRendering) {
-        m_outPlane->Render(true, m_cudaTex->GetTex());
+//        m_outPlane->Render(true, m_cudaTex->GetTex());
     }
 }
 

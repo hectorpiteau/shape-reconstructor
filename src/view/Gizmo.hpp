@@ -24,7 +24,7 @@ public:
     void SetY(const vec3& y);
     void SetZ(const vec3& z);
     
-    void Render();
+    void Render() override;
     
 private:
     Scene* m_scene;

@@ -48,5 +48,15 @@ bool AdamInteractor::IsOnGPU() {
     return m_adam->GetDataLoader()->IsOnGPU();
 }
 
+bool AdamInteractor::IntegrationRangeLoaded(){
+    return m_adam->IntegrationRangeLoaded();
+}
 
+void AdamInteractor::Initialize(){
+    m_adam->Initialize();
+}
+
+void AdamInteractor::Optimize(){
+    m_adam->Optimize();
+}
 

@@ -17,6 +17,7 @@
 #include "CudaBuffer.hpp"
 
 using namespace glm;
+class Lines;
 
 /**
  * @brief This class allows for the render of 3D volumetric data.

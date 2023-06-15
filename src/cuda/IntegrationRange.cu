@@ -49,9 +49,11 @@ extern "C" void integration_range_bbox_wrapper(GPUData<CameraDescriptor>& camera
                 (camera.Host()->height + threads.y - 1) / threads.y);
 
     IntegrationRange<<<blocks, threads>>>(camera.Device(), output_ranges, bbox);
-
+    std::cout << "Compute ranges. " << std::endl;
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         std::cerr << "ERROR: " << cudaGetErrorString(err) << std::endl;
     }
+
+    cudaDeviceSynchronize();
 }

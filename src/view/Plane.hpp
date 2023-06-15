@@ -23,12 +23,18 @@ public:
     void SetTexture2D(Texture2D* texture);
 
     void SetVertices(const vec3 &top_left, const vec3 &top_right, const vec3 &bot_left, const vec3 &bot_right);
-    
+
+    void SetCustomTex(GLuint tex);
+    void SetUseCustomTex(bool use);
+
     void Render() override;
 
 private:
     /** out dep. */
     Scene *m_scene;
+
+    GLuint m_customTex;
+    bool m_useCustomTex;
 
     mat4 m_model = mat4(1.0);
 
@@ -43,12 +49,11 @@ private:
     GLint m_modelLocation;
     GLint m_viewLocation;
     GLint m_projectionLocation;
-    
 
-    size_t m_size = (3 + 2) * 6;
+    size_t m_size = 6 * 5;
 
     /** world pos (x,y,z) + tex (u, v)*/
-    float m_vertices[(3 + 2) * 6] = {
+    float m_vertices[6 * 5] = {
         -1.0f, 1.0f, 0.0f,      0.0f, 1.0f,  //top_left
          1.0f, 1.0f, 0.0f,      1.0f, 1.0f,  //top_right
         -1.0f, -1.0f, 0.0f,     0.0f, 0.0f,  //bot_left

@@ -5,6 +5,7 @@
 #include "../model/ShaderPipeline.hpp"
 #include "../model/Texture2D.hpp"
 #include "../utils/SceneSettings.hpp"
+#include "../controllers/Scene/Scene.hpp"
 
 OverlayPlane::OverlayPlane(std::shared_ptr<SceneSettings> sceneSettings){
     m_pipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl", "../src/shaders/f_overlay_plane.glsl");
@@ -35,15 +36,15 @@ void OverlayPlane::Initialize(int width, int height){
     m_texture0 = std::make_shared<Texture2D>(width, height, 4, 1);
 }
 
-OverlayPlane::~OverlayPlane()
-{
-}
+OverlayPlane::~OverlayPlane() = default;
 
-void OverlayPlane::Render(bool useTex, GLuint tex)
+void OverlayPlane::Render(bool useTex, GLuint tex, Scene* m_scene)
 {
     m_pipeline->UseShader();
+    mat4 m_model = mat4(1.0);
 
     glUniform1f(m_scaleLocation, 1.0f);
+
     if(useTex){
         glBindTexture(GL_TEXTURE_2D, tex);
     }else{
@@ -51,7 +52,7 @@ void OverlayPlane::Render(bool useTex, GLuint tex)
     }
     
     glBindVertexArray(m_VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 1 * 6 * 3);
+    glDrawArrays(GL_TRIANGLES, 0, 1 * 6);
 }
 
 void OverlayPlane::SetTextureData(const unsigned char *data)

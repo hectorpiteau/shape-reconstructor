@@ -1,10 +1,6 @@
-#include <GL/glew.h>
-#include <GL/gl.h>
 #include <glm/glm.hpp>
 #include <memory>
 #include "Gizmo.hpp"
-#include "../controllers/Scene/Scene.hpp"
-#include "../utils/Utils.hpp"
 
 using namespace glm;
 

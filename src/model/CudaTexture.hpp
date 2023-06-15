@@ -28,7 +28,7 @@ class CudaTexture
 private:
 //    uint m_width, m_height;
 
-    void *cuda_dev_render_buffer{};
+//    void *cuda_dev_render_buffer{};
     cudaGraphicsResource_t cuda_image_resource{};
     cudaArray_t cuda_image_array{};
     cudaSurfaceObject_t cuda_texture_surface{};
@@ -43,17 +43,16 @@ private:
         glGenTextures(1, &opengl_tex_cuda);              // generate 1 texture
         glBindTexture(GL_TEXTURE_2D, opengl_tex_cuda); // set it as current target
         // set basic texture parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // clamp s coordinate
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // clamp t coordinate
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); // clamp t coordinate
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // clamp s coordinate
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // clamp t coordinate
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); // clamp t coordinate
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         void *buf((void *)malloc(size_x * size_y * sizeof(GLubyte) * 4));
 
         // Specify 2D texture
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8UI_EXT, size_x, size_y, 0, GL_RGBA8UI_EXT, GL_UNSIGNED_BYTE, buf); //TODO: Maybe use 8bits int
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8UI_EXT, size_x, size_y, 0, GL_RGBA_INTEGER_EXT, GL_UNSIGNED_BYTE, buf);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8UI, (int)size_x, (int)size_y, 0, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, buf);
 
         glBindTexture(GL_TEXTURE_2D, 0);
         free(buf);
@@ -94,15 +93,15 @@ public:
         // glBindVertexArray(0); // unbind VAO
     }
 
-    GLuint GetTex() const
+    [[nodiscard]] GLuint GetTex() const
     {
         return opengl_tex_cuda;
     }
 
-    uint4 *GetCudaPtr()
-    {
-        return (uint4 *)cuda_dev_render_buffer;
-    }
+//    uint4 *GetCudaPtr()
+//    {
+//        return (uint4 *)cuda_dev_render_buffer;
+//    }
 
     CudaTexture(uint width, uint height)
     {
@@ -119,22 +118,14 @@ public:
         size_tex_data = sizeof(GLubyte) * num_values;
 
         /** We don't want to use cudaMallocManaged here - since we definitely want Allocate CUDA memory for color output */
-        checkCudaErrors(cudaMalloc(&cuda_dev_render_buffer, size_tex_data));
+//        checkCudaErrors(cudaMalloc(&cuda_dev_render_buffer, size_tex_data));
     }
 
     ~CudaTexture()= default; //TODO:check if no memory leak here.
 
     void RunKernel(GPUData<RayCasterDescriptor>& raycasterDesc, GPUData<CameraDescriptor>& cameraDesc, GPUData<VolumeDescriptor>& volumeDesc)
     {
-        checkCudaErrors(cudaGraphicsMapResources(1, &cuda_image_resource, 0));
-        checkCudaErrors(cudaGraphicsSubResourceGetMappedArray(&cuda_image_array, cuda_image_resource, 0, 0));
-        // the resource Type says which things to set. See Documentation
-        cuda_texture_resource_desc.resType = cudaResourceTypeArray;
-        cuda_texture_resource_desc.res.array.array = cuda_image_array;
-        // Create a surface Object
-        checkCudaErrors(cudaCreateSurfaceObject(&cuda_texture_surface, &cuda_texture_resource_desc));
-        // cuda Kernel here to deal with everything
-
+        OpenSurface();
         raycasterDesc.Host()->surface = cuda_texture_surface; // 64bits 
         raycasterDesc.ToDevice();
         cameraDesc.ToDevice();
@@ -143,17 +134,11 @@ public:
         /** kernel */
         volume_rendering_wrapper_linea_ui8(raycasterDesc, cameraDesc, volumeDesc, cuda_texture_surface);
         
-        checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_image_resource, 0));
+        CloseSurface();
     }
 
     void RunCUDAPlaneCut(GPUData<PlaneCutDescriptor>& planeCutDesc, GPUData<VolumeDescriptor>& volumeDesc, GPUData<CameraDescriptor>& cameraDesc ){
-        checkCudaErrors(cudaGraphicsMapResources(1, &cuda_image_resource, 0));
-        checkCudaErrors(cudaGraphicsSubResourceGetMappedArray(&cuda_image_array, cuda_image_resource, 0, 0));
-        // the resource Type says which things to set. See Documentation
-        cuda_texture_resource_desc.resType = cudaResourceTypeArray;
-        cuda_texture_resource_desc.res.array.array = cuda_image_array;
-        // Create a surface Object
-        checkCudaErrors(cudaCreateSurfaceObject(&cuda_texture_surface, &cuda_texture_resource_desc));
+        OpenSurface();
 
         planeCutDesc.Host()->outSurface = cuda_texture_surface;
 
@@ -163,10 +148,21 @@ public:
 
         /** kernel */
         plane_cut_rendering_wrapper(planeCutDesc, volumeDesc, cameraDesc);
-        checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_image_resource, 0));
+        CloseSurface();
     }
 
     void RunCUDAIntegralRange(GPUData<IntegrationRangeDescriptor>& ranges, GPUData<CameraDescriptor>& camera,  BBoxDescriptor* bbox){
+        OpenSurface();
+
+        ranges.Host()->surface = cuda_texture_surface;
+        ranges.ToDevice();
+
+        /** kernel */
+        integration_range_bbox_wrapper(camera, ranges.Device(), bbox);
+        CloseSurface();
+    }
+
+    cudaSurfaceObject_t OpenSurface(){
         checkCudaErrors(cudaGraphicsMapResources(1, &cuda_image_resource, 0));
         checkCudaErrors(cudaGraphicsSubResourceGetMappedArray(&cuda_image_array, cuda_image_resource, 0, 0));
         // the resource Type says which things to set. See Documentation
@@ -174,14 +170,13 @@ public:
         cuda_texture_resource_desc.res.array.array = cuda_image_array;
         // Create a surface Object
         checkCudaErrors(cudaCreateSurfaceObject(&cuda_texture_surface, &cuda_texture_resource_desc));
+        return cuda_texture_surface;
+    }
 
-        ranges.Host()->surface = cuda_texture_surface;
-        ranges.ToDevice();
-
-        /** kernel */
-        integration_range_bbox_wrapper(camera, ranges.Device(), bbox);
+    void CloseSurface(){
         checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_image_resource, 0));
     }
+
 
 
 

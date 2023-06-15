@@ -58,6 +58,10 @@ private:
     /** The cuda texture used for writing data to the overlay. */
     std::shared_ptr<CudaTexture> m_cudaTex;
 
+    bool m_integrationRangeLoaded = false;
+
+    std::shared_ptr<Plane> m_testPlane;
+
 public:
     explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> m_target,  const ivec3& volumeResolution);
     AdamOptimizer(const AdamOptimizer&) = delete;
@@ -77,6 +81,9 @@ public:
     [[nodiscard]] float GetEpsilon() const;
     void SetEta(float value);
     [[nodiscard]] float GetEta() const;
+    [[nodiscard]] bool IntegrationRangeLoaded() const;
+
+    void Optimize();
 
     /**
      * Get the batch size of the DataLoader.

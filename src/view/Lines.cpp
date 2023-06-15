@@ -155,5 +155,5 @@ void Lines::Render()
 
     glBindVertexArray(m_VAO);
 
-    glDrawArrays(GL_LINES, 0, m_dataLength); // previous length: m_dataLength
+    glDrawArrays(GL_LINES, 0, m_dataLength / 3); // previous length: m_dataLength
 }

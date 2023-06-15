@@ -8,8 +8,7 @@ Modified: 2023-04-20T09:53:10.796Z
 
 #version 330 core
 
-// uniform usampler2D texture0;
-uniform sampler2D texture0;
+uniform usampler2D texture0;
 
 in vec2 TexCoord;
 out vec4 FragColor;
@@ -17,5 +16,8 @@ out vec4 FragColor;
 
 void main()
 {
-    FragColor = texture(texture0, TexCoord);
+    FragColor = texture(texture0, TexCoord) /255.0f;
+//    FragColor.xy = TexCoord;
+
+//    FragColor.w = 1.0f;
 }

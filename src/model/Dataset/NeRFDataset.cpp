@@ -237,16 +237,16 @@ void NeRFDataset::GenerateCameras() {
         NeRFImage imgInfo = m_images[i];
         CameraCalibrationInformations calibInfo = m_imagesCalibration[i];
         std::shared_ptr<Camera> cam = std::make_shared<Camera>(m_scene);
-        // cam->SetFovX(calibInfo.fov);
-        // cam->SetFovY(calibInfo.fov);
         cam->SetIntrinsic(calibInfo.intrinsic);
         cam->SetExtrinsic(calibInfo.extrinsic);
         cam->SetImage(m_imageSet->GetImage(imgInfo.fileName));
-
+        cam->SetResolution(ivec2(m_imageSet->GetImage(imgInfo.fileName)->width, m_imageSet->GetImage(imgInfo.fileName)->height));
         cam->SetActive(true);
         cam->SetIsChild(true);
         cam->SetName(std::string(ICON_FA_CAMERA " Camera ") + std::to_string(cpt++));
         cam->SetIsVisibleInList(false);
+        cam->InitializeCudaTexture();
+
         m_scene->Add(cam, true, true);
 
         std::cout << "image: " << cam->filename << " -> " << imgInfo.fileName << std::endl;

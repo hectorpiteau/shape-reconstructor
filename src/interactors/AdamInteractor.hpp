@@ -32,6 +32,12 @@ public:
     bool IsReady();
 
     bool IsOnGPU();
+
+    bool IntegrationRangeLoaded();
+
+    void Initialize();
+
+    void Optimize();
 };
 
 

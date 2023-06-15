@@ -360,12 +360,22 @@ void Camera::SetFar(float far) {
 float Camera::GetFar() const { return m_far; }
 
 void Camera::Render() {
+    glDisable(GL_BLEND);
     /** Frustum */
-    if (m_showFrustumLines) m_frustumLines->Render();
-    m_gizmo->Render();
+    if (m_showFrustumLines && m_frustumLines != nullptr) m_frustumLines->Render();
+    if(m_gizmo!= nullptr) m_gizmo->Render();
 
     /** Image plane linked. */
-    if (m_imagePlane != nullptr && m_showImagePlane) m_imagePlane->Render();
+    if (m_imagePlane != nullptr) {
+        if(m_cudaTexture != nullptr){
+            m_imagePlane->SetUseCustomTex(true);
+            m_imagePlane->SetCustomTex(m_cudaTexture->GetTex());
+            m_imagePlane->Render();
+        }else{
+            m_imagePlane->SetUseCustomTex(false);
+            m_imagePlane->Render();
+        }
+    }
 
     /** Center line. */
     if (m_displayCenterLine) {
@@ -373,6 +383,17 @@ void Camera::Render() {
     }
 
     /** Rays (partial) for each pixel. */
+    glEnable(GL_BLEND);
+}
+
+void Camera::InitializeCudaTexture(){
+    m_cudaTexture = std::make_shared<CudaTexture>(m_resolution.x, m_resolution.y);
+    m_imagePlane->SetCustomTex(m_cudaTexture->GetTex());
+    m_imagePlane->SetUseCustomTex(true);
+}
+
+std::shared_ptr<CudaTexture> Camera::GetCudaTexture(){
+    return m_cudaTexture;
 }
 
 void Camera::SetIntrinsic(const mat4 &intrinsic) {

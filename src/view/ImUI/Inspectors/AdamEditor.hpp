@@ -36,6 +36,7 @@ public:
         auto batchSize = m_interactor->GetBatchSize();
         auto isReady = m_interactor->IsReady();
         auto isOnGPU = m_interactor->IsOnGPU();
+        auto intRangeLoaded = m_interactor->IntegrationRangeLoaded();
 
 
         ImGui::SeparatorText(ICON_FA_INFO " Adam Optimizer - Information");
@@ -79,9 +80,20 @@ public:
         ImGui::SeparatorText( "Actions");
         ImGui::Spacing();
 
-        ImGui::Button("Initialize", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f));
+        if(ImGui::Button("Initialize", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
+            m_interactor->Initialize();
+        }
+        ImGui::Text("Integration Ranges: ");
+        ImGui::SameLine();
+        if(intRangeLoaded){
+            ImGui::Text("Loaded");
+        }else{
+            ImGui::Text("Not Loaded");
+        }
         ImGui::Spacing();
-        ImGui::Button("Optimize", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f));
+        if(ImGui::Button("Optimize", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
+            m_interactor->Optimize();
+        }
 
         ImGui::SeparatorText( "Stats");
         ImGui::Spacing();
