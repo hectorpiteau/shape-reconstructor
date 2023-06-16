@@ -63,9 +63,6 @@ struct ImageDescriptor {
 };
 
 struct RayCasterDescriptor {
-    /* Camera's image plane dimensions.*/
-    unsigned short width;
-    unsigned short height;
     /** Active zone min coordinates in pixels. */
     unsigned short minPixelX;
     unsigned short minPixelY;
@@ -75,6 +72,8 @@ struct RayCasterDescriptor {
     // 6*ushort(16) = 96bits
     cudaSurfaceObject_t surface; // 64bits
     //total: 96 + 64 = 160 (alignment?)
+
+    bool renderAllPixels;
 };
 
 struct CameraDescriptor {
@@ -108,6 +107,7 @@ struct GaussianWeightsDescriptor {
 struct LinearImageDescriptor {
     ivec2 res;
     unsigned char* data;
+    cudaArray* cdata;
 };
 
 struct IntegrationRangeDescriptor {
@@ -122,6 +122,7 @@ struct IntegrationRangeDescriptor {
     bool renderInTexture;
     cudaSurfaceObject_t surface;
 };
+
 struct BatchItemDescriptor{
     /** Combines Camera and Image Descriptors. */
     CameraDescriptor* cam;
@@ -130,6 +131,9 @@ struct BatchItemDescriptor{
 
     IntegrationRangeDescriptor* range;
 
+    /** True for rendering the forward in the debugSurface. */
+    bool debugRender;
+    cudaSurfaceObject_t debugSurface;
 };
 
 

@@ -18,7 +18,7 @@ protected:
     bool m_isDeviceUpToDate;
 
 public:
-    GPUData() : m_host(nullptr), m_device(nullptr), m_isDeviceUpToDate(false) {
+    explicit GPUData() : m_host(nullptr), m_device(nullptr), m_isDeviceUpToDate(false) {
         m_host = (T *) malloc(sizeof(T));
         if (m_host == nullptr) {
             std::cerr << "GPUData: Malloc error." << std::endl;
@@ -52,8 +52,9 @@ public:
     }
 
     static void *AllocateOnDevice(size_t size) {
-        void *ptr;
-        checkCudaErrors(cudaMalloc((void **) &ptr, size));
+        void* ptr;
+        checkCudaErrors(
+                cudaMalloc(&ptr, size));
         return ptr;
     }
 

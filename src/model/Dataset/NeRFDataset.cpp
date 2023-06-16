@@ -257,9 +257,6 @@ void NeRFDataset::GenerateCameras() {
     m_cameraSet->m_areCameraGenerated = true;
     m_cameraSet->m_areCalibrated = true;
 
-    // m_cameraSet->LinkToImageSet(GetImageSet());
-    // m_cameraSet->CalibrateFromInformation(m_imagesCalibration);
-
     m_camerasGenerated = true;
 }
 

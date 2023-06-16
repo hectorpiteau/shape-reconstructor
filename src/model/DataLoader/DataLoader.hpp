@@ -20,7 +20,7 @@ private:
 
     unsigned int m_batchSize;
     /** Array of batch item descriptors. */
-    GPUData<BatchItemDescriptor>* m_batchItems;
+    std::vector<GPUData<BatchItemDescriptor>*> m_batchItems;
     /** Array of GPU-Ready pointers to gpu-allocated batch-items descriptors. */
     std::vector<BatchItemDescriptor*> m_gpuBatchItemPointers;
 
@@ -35,15 +35,12 @@ private:
     bool m_batchLoaded = false;
 
 
-    void Init();
 public:
-    DataLoader();
+    DataLoader(std::shared_ptr<CameraSet> cameraSet ,std::shared_ptr<ImageSet> imageSet);
     DataLoader(const DataLoader&) = delete;
     ~DataLoader() = default;
 
-    void SetCameraSet(std::shared_ptr<CameraSet> cameraSet);
-
-    void SetImageSet(std::shared_ptr<ImageSet> imageSet);
+    void Initialize();
 
     void SetBatchSize(unsigned int size);
     [[nodiscard]] unsigned int GetBatchSize() const;

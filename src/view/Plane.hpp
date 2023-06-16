@@ -54,12 +54,12 @@ private:
 
     /** world pos (x,y,z) + tex (u, v)*/
     float m_vertices[6 * 5] = {
-        -1.0f, 1.0f, 0.0f,      0.0f, 1.0f,  //top_left
-         1.0f, 1.0f, 0.0f,      1.0f, 1.0f,  //top_right
-        -1.0f, -1.0f, 0.0f,     0.0f, 0.0f,  //bot_left
+        -1.0f, 1.0f, 0.0f,      0.0f, 0.0f,  //top_left
+         1.0f, 1.0f, 0.0f,      1.0f, 0.0f,  //top_right
+        -1.0f, -1.0f, 0.0f,     0.0f, 1.0f,  //bot_left
 
-         1.0f, 1.0f, 0.0f,      1.0f, 1.0f,  //top_right
-         1.0f, -1.0f, 0.0f,     1.0f, 0.0f,  //bot_right
-        -1.0f, -1.0f, 0.0f,     0.0f, 0.0f   //bot_left
+         1.0f, 1.0f, 0.0f,      1.0f, 0.0f,  //top_right
+         1.0f, -1.0f, 0.0f,     1.0f, 1.0f,  //bot_right
+        -1.0f, -1.0f, 0.0f,     0.0f, 1.0f   //bot_left
     };
 };

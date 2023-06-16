@@ -60,10 +60,10 @@ private:
 
     bool m_integrationRangeLoaded = false;
 
-    std::shared_ptr<Plane> m_testPlane;
+    std::shared_ptr<VolumeRenderer> m_volumeRenderer;
 
 public:
-    explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> m_target,  const ivec3& volumeResolution);
+    explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<VolumeRenderer> volumeRenderer,  const ivec3& volumeResolution);
     AdamOptimizer(const AdamOptimizer&) = delete;
     ~AdamOptimizer() override = default;
 

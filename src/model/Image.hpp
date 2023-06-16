@@ -11,36 +11,30 @@
 
 using namespace glm;
 
-struct Patch {
-    /** The patch origin on the original image. 
-     * Unit is in pixel. Origin is the top-left 
-     * corner of the image. 
-     * Total: 16+16=32bits 
-     * ushort = max 65535 values. (safe enough)
-     * */
-    unsigned short x, y;
-
-    /** Pointer to data. */
-    unsigned char *data;
-
-    /** True if the patch is fully on the image, false if it is on a border and overlap void.*/
-    bool isComplete;
-};
+//struct Patch {
+//    /** The patch origin on the original image.
+//     * Unit is in pixel. Origin is the top-left
+//     * corner of the image.
+//     * Total: 16+16=32bits
+//     * ushort = max 65535 values. (safe enough)
+//     * */
+//    unsigned short x, y;
+//
+//    /** Pointer to data. */
+//    unsigned char *data;
+//
+//    /** True if the patch is fully on the image, false if it is on a border and overlap void.*/
+//    bool isComplete;
+//};
 
 class Image {
 private:
     bool m_isLoaded = false;
-    bool m_patchesLoaded = false;
-
-    std::vector<Patch> m_patches;
-    unsigned short m_patchWidth = 16;
-    unsigned short m_patchHeight = 16;
 
     GPUData<LinearImageDescriptor> m_desc;
 
 public:
     explicit Image(std::string filename) :
-            m_patches(),
             width(100),
             height(100),
             channels(4),
@@ -60,7 +54,7 @@ public:
     std::string filename;
 
     /** row-major storage */
-    unsigned char *data;
+    unsigned char *data = nullptr;
 
     /**
      * Get the GPU Linear Descriptor of this image.
@@ -68,12 +62,26 @@ public:
      *
      * @return A Device-Ready pointer to a struct containing the image.
      */
-    LinearImageDescriptor *GetGPUDescriptor() {
-        size_t size = width * height * channels * sizeof(unsigned char);
+    LinearImageDescriptor* GetGPUDescriptor() {
+        if(data == nullptr){
+            std::cerr << "Image: Cannot generate GPU Data, image is not loaded." << std::endl;
+            return nullptr;
+        }
+        size_t size = GetImageMemorySize();
         m_desc.Host()->res = ivec2(width, height);
-        m_desc.Host()->data = (unsigned char *) GPUData<LinearImageDescriptor>::AllocateOnDevice(size);
-        GPUData<LinearImageDescriptor>::ToDevice((void *) data, m_desc.Host()->data, size);
+//        m_desc.Host()->data = (unsigned char *) GPUData<LinearImageDescriptor>::AllocateOnDevice(size);
 
+        cudaError_t err = cudaGetLastError();
+        if (err != cudaSuccess)
+        {
+            std::cerr << "ERROR: " << cudaGetErrorString(err) << std::endl;
+        }
+
+        checkCudaErrors(cudaMalloc((void **) &m_desc.Host()->data, size));
+
+        checkCudaErrors(
+                cudaMemcpy((void *) m_desc.Host()->data, (void *) data, size, cudaMemcpyHostToDevice)
+        );
         m_desc.ToDevice();
         return m_desc.Device();
     }
@@ -124,58 +132,58 @@ public:
      * @param patchWidth : The width of the patches. (default: 8)
      * @param patchHeight : The height of the patches. (default: 8)
      */
-    void Patchify(unsigned short patchWidth = 8, unsigned short patchHeight = 8) {
-        m_patchWidth = patchWidth;
-        m_patchHeight = patchHeight;
-
-        int alpha_min = 1;
-
-        // #pragma omp parallel for collapse(2)
-        for (unsigned short y = 0; y < height; y += m_patchHeight) {
-            for (unsigned short x = 0; x < width; x += m_patchWidth) {
-                /** Search for valid pixels in the patch. */
-                /** This process can be optimized. omp or cuda kernel. */
-
-                bool is_patch_valid = false;
-
-                for (unsigned short i = 0; i < m_patchHeight; i++) {
-                    for (unsigned short j = 0; j < m_patchWidth; j++) {
-                        /** Get the (y+i, x+j) pixel and compare the 4th value (the alpha) with
-                         * the min-alpha. */
-                        if (data[((y + i) * width + (x + j)) * 4 + 3] > alpha_min) {
-                            is_patch_valid = true;
-                            break;
-                        }
-                    }
-                    if (is_patch_valid) break;
-                }
-
-                if (is_patch_valid) {
-                    /** create and store the new patch. */
-                    Patch patch = {
-                            .x = (unsigned short) (x),
-                            .y = (unsigned short) (y),
-                            .data = &data[((y) * width + (x)) * 4],
-                            .isComplete = (x + m_patchWidth < width && y + patchHeight < height) ? true : false
-                    };
-
-                    /** Critical operation that cannot be parallelized. Must use locks with openmp. */
-                    m_patches.push_back(patch);
-                }
-            }
-        }
-        m_patchesLoaded = true;
-    };
+//    void Patchify(unsigned short patchWidth = 8, unsigned short patchHeight = 8) {
+//        m_patchWidth = patchWidth;
+//        m_patchHeight = patchHeight;
+//
+//        int alpha_min = 1;
+//
+//        // #pragma omp parallel for collapse(2)
+//        for (unsigned short y = 0; y < height; y += m_patchHeight) {
+//            for (unsigned short x = 0; x < width; x += m_patchWidth) {
+//                /** Search for valid pixels in the patch. */
+//                /** This process can be optimized. omp or cuda kernel. */
+//
+//                bool is_patch_valid = false;
+//
+//                for (unsigned short i = 0; i < m_patchHeight; i++) {
+//                    for (unsigned short j = 0; j < m_patchWidth; j++) {
+//                        /** Get the (y+i, x+j) pixel and compare the 4th value (the alpha) with
+//                         * the min-alpha. */
+//                        if (data[((y + i) * width + (x + j)) * 4 + 3] > alpha_min) {
+//                            is_patch_valid = true;
+//                            break;
+//                        }
+//                    }
+//                    if (is_patch_valid) break;
+//                }
+//
+//                if (is_patch_valid) {
+//                    /** create and store the new patch. */
+//                    Patch patch = {
+//                            .x = (unsigned short) (x),
+//                            .y = (unsigned short) (y),
+//                            .data = &data[((y) * width + (x)) * 4],
+//                            .isComplete = (x + m_patchWidth < width && y + patchHeight < height) ? true : false
+//                    };
+//
+//                    /** Critical operation that cannot be parallelized. Must use locks with openmp. */
+//                    m_patches.push_back(patch);
+//                }
+//            }
+//        }
+//        m_patchesLoaded = true;
+//    };
 
     void UnloadImage() {
         free(data);
         m_isLoaded = false;
     }
 
-    void UnloadPatches() {
-        m_patches = std::vector<Patch>();
-        m_patchesLoaded = false;
-    }
+//    void UnloadPatches() {
+//        m_patches = std::vector<Patch>();
+//        m_patchesLoaded = false;
+//    }
 
     /**
      * @brief If it exist, get the image's filename.

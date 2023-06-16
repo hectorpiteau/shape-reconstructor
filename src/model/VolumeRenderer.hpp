@@ -112,6 +112,10 @@ public:
 
     std::shared_ptr<Volume3D> GetVolume3D();
 
+    GPUData<RayCasterDescriptor>& GetRayCasterGPUData();
+
+    GPUData<VolumeDescriptor>& GetVolumeGPUData();
+
     size_t amountOfRays = 0;
     vec2 m_renderZoneMinNDC{};
     vec2 m_renderZoneMaxNDC{};

@@ -64,8 +64,8 @@ Image* ImageSet::GetImage(size_t index) {
 }
 
 Image* ImageSet::GetImage(const std::string& filename) {
-    for(size_t i=0; i<m_images.size(); ++i){
-        if(strcmp(filename.c_str(), m_images[i]->filename.c_str()) == 0) return m_images[i];
+    for(auto & m_image : m_images){
+        if(strcmp(filename.c_str(), m_image->filename.c_str()) == 0) return m_image;
     }
     return nullptr;
 }
@@ -76,6 +76,6 @@ void ImageSet::Render(){
     }
 }
 
-bool ImageSet::AreImagesGenerated() {
+bool ImageSet::AreImagesGenerated() const {
     return m_areImagesGenerated;
 }

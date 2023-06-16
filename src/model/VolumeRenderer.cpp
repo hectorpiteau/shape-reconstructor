@@ -131,12 +131,12 @@ void VolumeRenderer::Render() {
     m_cameraDesc.Host()->width = cam->GetResolution().x;
     m_cameraDesc.Host()->height = cam->GetResolution().y;
 
-    m_raycasterDesc.Host()->width = cam->GetResolution().x;
-    m_raycasterDesc.Host()->height = cam->GetResolution().y;
     m_raycasterDesc.Host()->minPixelX = m_rayCaster->GetRenderingZoneMinPixel().x;
     m_raycasterDesc.Host()->minPixelY = m_rayCaster->GetRenderingZoneMinPixel().y;
     m_raycasterDesc.Host()->maxPixelX = m_rayCaster->GetRenderingZoneMaxPixel().x;
     m_raycasterDesc.Host()->maxPixelY = m_rayCaster->GetRenderingZoneMaxPixel().y;
+    m_raycasterDesc.Host()->renderAllPixels = false;
+
 
     m_volumeDesc.Host()->bboxMin = m_volume->GetBboxMin();
     m_volumeDesc.Host()->bboxMax = m_volume->GetBboxMax();
@@ -161,9 +161,29 @@ void VolumeRenderer::Render() {
     }
 
     if (m_isRendering) {
-//        m_outPlane->Render(true, m_cudaTex->GetTex());
+        m_outPlane->Render(true, m_cudaTex->GetTex());
     }
 }
+
+
+GPUData<RayCasterDescriptor>& VolumeRenderer::GetRayCasterGPUData() {
+    m_raycasterDesc.Host()->minPixelX = m_rayCaster->GetRenderingZoneMinPixel().x;
+    m_raycasterDesc.Host()->minPixelY = m_rayCaster->GetRenderingZoneMinPixel().y;
+    m_raycasterDesc.Host()->maxPixelX = m_rayCaster->GetRenderingZoneMaxPixel().x;
+    m_raycasterDesc.Host()->maxPixelY = m_rayCaster->GetRenderingZoneMaxPixel().y;
+    m_raycasterDesc.Host()->renderAllPixels = true;
+    return m_raycasterDesc;
+}
+
+GPUData<VolumeDescriptor>& VolumeRenderer::GetVolumeGPUData() {
+    m_volumeDesc.Host()->bboxMin = m_volume->GetBboxMin();
+    m_volumeDesc.Host()->bboxMax = m_volume->GetBboxMax();
+    m_volumeDesc.Host()->worldSize = m_volume->GetBboxMax() - m_volume->GetBboxMin();
+    m_volumeDesc.Host()->res = m_volume->GetCudaVolume()->GetResolution();
+    m_volumeDesc.Host()->data = m_volume->GetCudaVolume()->GetDevicePtr();
+    return m_volumeDesc;
+}
+
 
 
 const vec2 &VolumeRenderer::GetRenderingZoneMinNDC() const {

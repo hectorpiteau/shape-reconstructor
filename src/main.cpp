@@ -366,8 +366,24 @@ void GLInitialization()
     glEnable(GL_CULL_FACE);
 }
 
+void atexit_handler()
+{
+    std::cout << "atexit handler\n";
+}
+
+
 int main(void)
 {
+
+    const int result = std::atexit(atexit_handler); // handler will be called
+
+    if (result != 0)
+    {
+        std::cerr << "atexit registration failed\n";
+        return EXIT_FAILURE;
+    }
+
+
     Statistics();
 
     /** Initialize everything that matter GLFW. */

@@ -4,23 +4,26 @@
 
 #include "DataLoader.hpp"
 #include <algorithm>
+#include <utility>
 #include <vector>
 #include <random>
 
-DataLoader::DataLoader()
-: m_cameraSet(nullptr), m_imageSet(nullptr), m_batchSize(10), m_gpuBatchItemPointers(), m_indexes() {
+DataLoader::DataLoader(std::shared_ptr<CameraSet> cameraSet ,std::shared_ptr<ImageSet> imageSet)
+: m_cameraSet(std::move(cameraSet)), m_imageSet(std::move(imageSet)), m_batchSize(10), m_gpuBatchItemPointers(){
     /** Allocate */
-    m_batchItems = (GPUData<BatchItemDescriptor>*)malloc(m_batchSize * sizeof(GPUData<BatchItemDescriptor>));
-
-
+    m_batchItems = std::vector<GPUData<BatchItemDescriptor>*>(m_batchSize);
+    for (int i = 0; i < m_batchSize; ++i) {
+        auto tmp = new GPUData<BatchItemDescriptor>();
+        m_batchItems[i] = tmp;
+    }
 }
 
-void DataLoader::Init(){
-    if(!m_isReady) return;
+void DataLoader::Initialize(){
+    /** Initialize and shuffle indexes. */
     m_startIndex = 0;
     for(unsigned int i=0; i < m_cameraSet->Size(); i++) m_indexes.push_back(i);
     Shuffle();
-    LoadNext();
+    m_isReady = true;
 }
 
 bool DataLoader::IsReady() const {
@@ -49,17 +52,10 @@ void DataLoader::LoadNext(){
     }
     m_gpuBatchItemPointers.clear();
 
-    /** Increment the start_index or set it to 0 if it cannot generate a full batch. */
-    if(m_startIndex+m_batchSize >= m_indexes.size()){
-        Shuffle();
-        m_startIndex = 0;
-    }else{
-        m_startIndex += m_batchSize;
-    };
-
-
     /** Load new batch */
     for(unsigned int i=0; i < m_batchSize; ++i){
+//        std::cout << "DATASET Load Batch: index: " << std::to_string(m_startIndex +  i) << ", cam_id: " << std::to_string(m_indexes[m_startIndex +  i]) << std::endl;
+        std::cout << "DATASET: "<< std::to_string(i) << std::endl;
         auto camera = m_cameraSet->GetCamera(m_indexes[m_startIndex +  i]);
         auto cameraDesc = camera->GetGPUDescriptor();
 
@@ -68,14 +64,23 @@ void DataLoader::LoadNext(){
 
         auto integrationRangeDesc = camera->GetIntegrationRangeGPUDescriptor().Device();
 
-        m_batchItems[i].Host()->cam = cameraDesc;
-        m_batchItems[i].Host()->img = imageDesc;
-        m_batchItems[i].Host()->range = integrationRangeDesc;
-        m_batchItems[i].ToDevice();
+        m_batchItems[i]->Host()->cam = cameraDesc;
+        m_batchItems[i]->Host()->img = imageDesc;
+        m_batchItems[i]->Host()->range = integrationRangeDesc;
+        m_batchItems[i]->Host()->debugRender = false;
+        m_batchItems[i]->ToDevice();
 
         /** Store ready to use pointer array. */
-        m_gpuBatchItemPointers.push_back(m_batchItems[i].Device());
+        m_gpuBatchItemPointers.push_back(m_batchItems[i]->Device());
     }
+
+    /** Increment the start_index or set it to 0 if it cannot generate a full batch. */
+    if(m_startIndex+m_batchSize >= m_indexes.size()){
+        Shuffle();
+        m_startIndex = 0;
+    }else{
+        m_startIndex += m_batchSize;
+    };
 
     m_batchLoaded = true;
 }
@@ -90,9 +95,9 @@ void DataLoader::SetBatchSize(unsigned int size) {
             }
         }
 
-        free(m_batchItems);
-        m_batchSize = size;
-        m_batchItems = (GPUData<BatchItemDescriptor>*)malloc(m_batchSize * sizeof(GPUData<BatchItemDescriptor>));
+//        free(m_batchItems);
+//        m_batchSize = size;
+//        m_batchItems = (GPUData<BatchItemDescriptor>*)malloc(m_batchSize * sizeof(GPUData<BatchItemDescriptor>));
     }
 }
 
@@ -102,17 +107,4 @@ unsigned int DataLoader::GetBatchSize() const {
 
 BatchItemDescriptor* DataLoader::GetGPUDescriptors(){
     return m_gpuBatchItemPointers[0];
-}
-
-void DataLoader::SetCameraSet(std::shared_ptr<CameraSet> cameraSet) {
-    m_cameraSet = std::move(cameraSet);
-    m_isReady = (m_cameraSet != nullptr) && (m_imageSet != nullptr);
-    Init();
-
-}
-
-void DataLoader::SetImageSet(std::shared_ptr<ImageSet> imageSet) {
-    m_imageSet = std::move(imageSet);
-    m_isReady = (m_cameraSet != nullptr) && (m_imageSet != nullptr);
-    Init();
 }

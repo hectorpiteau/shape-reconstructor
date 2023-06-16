@@ -43,7 +43,7 @@ public:
 
     void Render() override;
 
-    bool AreImagesGenerated();
+    bool AreImagesGenerated() const;
 
 private:
     std::vector<Image *> m_images;

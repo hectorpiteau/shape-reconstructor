@@ -23,7 +23,8 @@ IntegrationRange(CameraDescriptor *camera, IntegrationRangeDescriptor *output_ra
     if (y >= camera->height)
         return;
 
-    Ray ray = SingleRayCaster::GetRay(vec2(camera->width - x, camera->height - y), camera);
+//    Ray ray = SingleRayCaster::GetRay(vec2(camera->width - x, camera->height - y), camera);
+    Ray ray = SingleRayCaster::GetRay(vec2(camera->width - x, y), camera);
 
     float t_near = 0.0f, t_far = 0.0f;
     uchar4 element = make_uchar4(0, 0, 0, 255);
@@ -49,7 +50,7 @@ extern "C" void integration_range_bbox_wrapper(GPUData<CameraDescriptor>& camera
                 (camera.Host()->height + threads.y - 1) / threads.y);
 
     IntegrationRange<<<blocks, threads>>>(camera.Device(), output_ranges, bbox);
-    std::cout << "Compute ranges. " << std::endl;
+
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         std::cerr << "ERROR: " << cudaGetErrorString(err) << std::endl;

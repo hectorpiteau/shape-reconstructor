@@ -13,7 +13,7 @@ public:
     OverlayPlane(std::shared_ptr<ShaderPipeline> pipeline,std::shared_ptr<SceneSettings> sceneSettings);
     ~OverlayPlane();
 
-    void Render(bool useTex, GLuint tex, Scene* m_scene);
+    void Render(bool useTex, GLuint tex);
 
     void SetTextureData(const unsigned char *data);
 

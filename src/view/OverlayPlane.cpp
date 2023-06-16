@@ -38,7 +38,7 @@ void OverlayPlane::Initialize(int width, int height){
 
 OverlayPlane::~OverlayPlane() = default;
 
-void OverlayPlane::Render(bool useTex, GLuint tex, Scene* m_scene)
+void OverlayPlane::Render(bool useTex, GLuint tex)
 {
     m_pipeline->UseShader();
     mat4 m_model = mat4(1.0);

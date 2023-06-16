@@ -132,10 +132,23 @@ public:
         volumeDesc.ToDevice();
         
         /** kernel */
-        volume_rendering_wrapper_linea_ui8(raycasterDesc, cameraDesc, volumeDesc, cuda_texture_surface);
+        volume_rendering_wrapper(raycasterDesc, cameraDesc, volumeDesc, cuda_texture_surface);
         
         CloseSurface();
     }
+//
+//    void RunVolumeRendering(GPUData<RayCasterDescriptor>& raycasterDesc, GPUData<CameraDescriptor>& cameraDesc, GPUData<VolumeDescriptor>& volumeDesc){
+//        OpenSurface();
+//        raycasterDesc.Host()->surface = cuda_texture_surface; // 64bits
+//        raycasterDesc.ToDevice();
+//        cameraDesc.ToDevice();
+//        volumeDesc.ToDevice();
+//
+//        /** kernel */
+//        volume_rendering_wrapper(raycasterDesc, cameraDesc, volumeDesc, cuda_texture_surface);
+//
+//        CloseSurface();
+//    }
 
     void RunCUDAPlaneCut(GPUData<PlaneCutDescriptor>& planeCutDesc, GPUData<VolumeDescriptor>& volumeDesc, GPUData<CameraDescriptor>& cameraDesc ){
         OpenSurface();

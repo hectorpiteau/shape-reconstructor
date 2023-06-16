@@ -51,7 +51,7 @@ void Plane::SetVertices(const vec3 &top_left, const vec3 &top_right, const vec3 
 }
 
 void Plane::Render() {
-    glDisable(GL_CULL_FACE);
+//    glDisable(GL_CULL_FACE);
     m_pipeline.UseShader();
 
     glActiveTexture(GL_TEXTURE0);
@@ -68,7 +68,7 @@ void Plane::Render() {
     glBindVertexArray(m_VAO);
 
     glDrawArrays(GL_TRIANGLES, 0, (int) m_size/5);
-    glEnable(GL_CULL_FACE);
+//    glEnable(GL_CULL_FACE);
 }
 
 void Plane::SetTexture2D(Texture2D *texture) {

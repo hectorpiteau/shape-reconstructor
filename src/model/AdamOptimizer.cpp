@@ -11,9 +11,12 @@
 
 using namespace glm;
 
-AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target, const ivec3 &volumeResolution) :
-        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_target(target),m_res(volumeResolution), m_dataset(std::move(dataset)), m_integrationRangeDescriptor() {
+AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<VolumeRenderer> volumeRenderer, const ivec3 &volumeResolution) :
+        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_res(volumeResolution),m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_volumeRenderer(std::move(volumeRenderer)) {
     SetName("Adam Optimizer");
+
+    m_target = m_volumeRenderer->GetVolume3D();
+
     /** Create the overlay plane that will be used to display the volume rendering texture on. */
     m_overlay = std::make_shared<OverlayPlane>(
             std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl",
@@ -27,21 +30,10 @@ AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std
     m_adamG1 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_adamG2 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_blurredVoxels = std::make_shared<CudaLinearVolume3D>(volumeResolution);
-    m_dataLoader = std::make_shared<DataLoader>();
-    m_dataLoader->SetCameraSet(m_dataset->GetCameraSet());
-    m_dataLoader->SetImageSet(m_dataset->GetImageSet());
+    m_dataLoader = std::make_shared<DataLoader>(m_dataset->GetCameraSet(), m_dataset->GetImageSet());
 
     m_integrationRangeDescriptor.Host()->surface = m_cudaTex->GetTex();
     m_integrationRangeDescriptor.ToDevice();
-
-    m_testPlane = std::make_shared<Plane>(scene);
-    m_testPlane->SetVertices(
-      vec3(-2, 2, 2),
-      vec3(2, 2, 2),
-      vec3(-2, -2, 2),
-      vec3(2, -2, 2)
-    );
-
 }
 
 void AdamOptimizer::SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume){
@@ -49,6 +41,8 @@ void AdamOptimizer::SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume){
 }
 
 void AdamOptimizer::Initialize(){
+
+
     /** Initialize integration ranges. */
     auto cameraSet = m_dataset->GetCameraSet();
     for(const auto& cam : cameraSet->GetCameras()){
@@ -56,18 +50,25 @@ void AdamOptimizer::Initialize(){
         cam->GetIntegrationRangeGPUDescriptor().Host()->data = (float2*)GPUData<IntegrationRangeDescriptor>::AllocateOnDevice(cam->GetResolution().x * cam->GetResolution().y * sizeof(float2));
         cam->GetIntegrationRangeGPUDescriptor().Host()->dim.x = cam->GetResolution().x;
         cam->GetIntegrationRangeGPUDescriptor().Host()->dim.y = cam->GetResolution().y;
-        cam->GetIntegrationRangeGPUDescriptor().Host()->renderInTexture = true;
+        cam->GetIntegrationRangeGPUDescriptor().Host()->renderInTexture = false;
 
-        cam->GetIntegrationRangeGPUDescriptor().Host()->surface = cam->GetCudaTexture()->OpenSurface();
+//        cam->GetIntegrationRangeGPUDescriptor().Host()->surface = cam->GetCudaTexture()->OpenSurface();
         cam->GetIntegrationRangeGPUDescriptor().ToDevice();
 
         integration_range_bbox_wrapper(cam->GetGPUData(), cam->GetIntegrationRangeGPUDescriptor().Device(), m_target->GetGPUDescriptor());
-        cam->GetCudaTexture()->CloseSurface();
+//        cam->UpdateGPUDescriptor();
+//        cam->GetCudaTexture()->RunKernel(m_volumeRenderer->GetRayCasterGPUData(), cam->GetGPUData(), m_volumeRenderer->GetVolumeGPUData());
+
+//        cam->GetCudaTexture()->CloseSurface();
     }
 
     m_integrationRangeLoaded = true;
 
-    /** Initialize volume. */
+    /** Initialize dataset. */
+    m_dataLoader->Initialize();
+    m_dataLoader->LoadNext();
+
+
 }
 
 bool AdamOptimizer::IntegrationRangeLoaded() const{
@@ -75,7 +76,7 @@ bool AdamOptimizer::IntegrationRangeLoaded() const{
 }
 
 void AdamOptimizer::Optimize(){
-
+    Step();
 }
 
 void AdamOptimizer::Render() {
@@ -86,14 +87,14 @@ void AdamOptimizer::Render() {
 //
 
 
-    m_integrationRangeDescriptor.Host()->dim = ivec2(m_scene->GetSceneSettings()->GetViewportWidth(),
-                                                     m_scene->GetSceneSettings()->GetViewportHeight());
-    m_integrationRangeDescriptor.Host()->renderInTexture = true;
-
-    m_scene->GetActiveCam()->UpdateGPUDescriptor();
-
-    m_cudaTex->RunCUDAIntegralRange(m_integrationRangeDescriptor, m_scene->GetActiveCam()->GetGPUData(), m_target->GetGPUDescriptor());
-    m_overlay->Render(true, m_cudaTex->GetTex(), m_scene);
+//    m_integrationRangeDescriptor.Host()->dim = ivec2(m_scene->GetSceneSettings()->GetViewportWidth(),
+//                                                     m_scene->GetSceneSettings()->GetViewportHeight());
+//    m_integrationRangeDescriptor.Host()->renderInTexture = true;
+//
+//    m_scene->GetActiveCam()->UpdateGPUDescriptor();
+//
+//    m_cudaTex->RunCUDAIntegralRange(m_integrationRangeDescriptor, m_scene->GetActiveCam()->GetGPUData(), m_target->GetGPUDescriptor());
+//    m_overlay->Render(true, m_cudaTex->GetTex(), m_scene);
 
 //    m_testPlane->SetUseCustomTex(true);
 //    m_testPlane->SetCustomTex(m_cudaTex->GetTex());
@@ -102,6 +103,7 @@ void AdamOptimizer::Render() {
 
 void AdamOptimizer::Step(){
     /**  */
+
 }
 
 void AdamOptimizer::UpdateGPUDescriptor() {

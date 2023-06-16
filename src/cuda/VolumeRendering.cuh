@@ -21,25 +21,10 @@ Modified: 2023-04-25T12:53:31.894Z
 
 using namespace glm;
 
-
-/**
- * @brief Volume Rendering Wrapper using Texture Allocation :
- * volume : cuda Texture3D
- * outTex : float4
- */
-// extern "C" void volume_rendering_wrapper(RayCasterParams& params, cudaTextureObject_t &volume, float4 *outTexture, size_t width, size_t height);
-
-/**
- * @brief Volume Rendering Wrapper using Linear Memory Allocation :
- * volume : float4
- * outTex : float4
- */
-// extern "C" void volume_rendering_wrapper_linear(RayCasterParams& params, float4* volume, float4 *outTexture, size_t width, size_t height);
-
 /**
  * @brief Volume Rendering Wrapper using Linear Memory Allocation :
  
  */
-extern "C" void volume_rendering_wrapper_linea_ui8(GPUData<RayCasterDescriptor>& raycaster, GPUData<CameraDescriptor>& camera, GPUData<VolumeDescriptor>& volume, cudaSurfaceObject_t surface);
+extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor>& raycaster, GPUData<CameraDescriptor>& camera, GPUData<VolumeDescriptor>& volume, cudaSurfaceObject_t surface);
 
 #endif // VOLUME_RENDERING_H
