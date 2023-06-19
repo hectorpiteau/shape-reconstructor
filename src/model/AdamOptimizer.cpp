@@ -76,6 +76,10 @@ bool AdamOptimizer::IntegrationRangeLoaded() const{
 }
 
 void AdamOptimizer::Optimize(){
+    if(!m_integrationRangeLoaded) {
+        std::cerr << "Adam Optimizer:  Cannot optimize, integration ranges are not computed." << std::endl;
+        return;
+    }
     Step();
 }
 
@@ -102,8 +106,11 @@ void AdamOptimizer::Render() {
 }
 
 void AdamOptimizer::Step(){
-    /**  */
+    /** Forward Pass  */
+    batched_forward_wrapper(m_dataLoader->GetGPUDescriptors(), m_dataLoader->GetBatchSize(), m_volumeRenderer->GetVolumeGPUData().Device());
 
+    /** Backward Pass  */
+    // batched_backward_wrapper();
 }
 
 void AdamOptimizer::UpdateGPUDescriptor() {

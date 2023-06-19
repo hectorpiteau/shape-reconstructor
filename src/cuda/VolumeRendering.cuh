@@ -27,4 +27,5 @@ using namespace glm;
  */
 extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor>& raycaster, GPUData<CameraDescriptor>& camera, GPUData<VolumeDescriptor>& volume, cudaSurfaceObject_t surface);
 
+extern "C" void batched_forward_wrapper(BatchItemDescriptor* items, size_t length, VolumeDescriptor* volume);
 #endif // VOLUME_RENDERING_H

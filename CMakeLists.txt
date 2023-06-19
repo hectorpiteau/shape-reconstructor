@@ -116,6 +116,7 @@ target_compile_options(DRTMCS PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories("include/")
+include_directories("include/tomlpp")
 include_directories("include/imgui")
 include_directories("include/imgui/backends")
 include_directories("include/glfw/include")
