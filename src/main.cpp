@@ -502,8 +502,11 @@ int main(void)
             {
                 ImGui::MenuItem("Open calibration images");
                 ImGui::Separator();
-                static bool test = true;
-                ImGui::MenuItem("Enable v-sync.", NULL, &test); // glfwSwapInterval(0);
+                static bool vsync = true;
+                if(ImGui::MenuItem("Enable v-sync.", NULL, &vsync)){
+                    glfwSwapInterval(vsync);
+                }
+
                 ImGui::Separator();
                 ImGui::MenuItem(ICON_FA_SQUARE_XMARK " Exit", "Esc");
                 ImGui::EndMenu();

@@ -3,10 +3,8 @@
 //
 
 #include <memory>
-#include <glm/glm.hpp>
 #include <utility>
 #include "AdamOptimizer.hpp"
-#include "../cuda/CudaLinearVolume3D.cuh"
 #include "Volume3D.hpp"
 
 using namespace glm;
@@ -30,15 +28,15 @@ AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std
     m_adamG1 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_adamG2 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_blurredVoxels = std::make_shared<CudaLinearVolume3D>(volumeResolution);
-    m_dataLoader = std::make_shared<DataLoader>(m_dataset->GetCameraSet(), m_dataset->GetImageSet());
+    m_dataLoader = std::make_shared<DataLoader>(m_dataset);
 
     m_integrationRangeDescriptor.Host()->surface = m_cudaTex->GetTex();
     m_integrationRangeDescriptor.ToDevice();
 }
 
-void AdamOptimizer::SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume){
-    m_target = std::move(targetVolume);
-}
+//void AdamOptimizer::SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume){
+//    m_target = std::move(targetVolume);
+//}
 
 void AdamOptimizer::Initialize(){
 
@@ -57,7 +55,7 @@ void AdamOptimizer::Initialize(){
 
         integration_range_bbox_wrapper(cam->GetGPUData(), cam->GetIntegrationRangeGPUDescriptor().Device(), m_target->GetGPUDescriptor());
 //        cam->UpdateGPUDescriptor();
-//        cam->GetCudaTexture()->RunKernel(m_volumeRenderer->GetRayCasterGPUData(), cam->GetGPUData(), m_volumeRenderer->GetVolumeGPUData());
+        cam->GetCudaTexture()->RunKernel(m_volumeRenderer->GetRayCasterGPUData(), cam->GetGPUData(), m_volumeRenderer->GetVolumeGPUData());
 
 //        cam->GetCudaTexture()->CloseSurface();
     }
@@ -66,8 +64,6 @@ void AdamOptimizer::Initialize(){
 
     /** Initialize dataset. */
     m_dataLoader->Initialize();
-    m_dataLoader->LoadNext();
-
 
 }
 
@@ -80,7 +76,11 @@ void AdamOptimizer::Optimize(){
         std::cerr << "Adam Optimizer:  Cannot optimize, integration ranges are not computed." << std::endl;
         return;
     }
+    m_dataLoader->LoadBatch();
     Step();
+    m_dataLoader->UnloadBatch();
+    m_dataLoader->NextBatch();
+
 }
 
 void AdamOptimizer::Render() {
@@ -107,10 +107,15 @@ void AdamOptimizer::Render() {
 
 void AdamOptimizer::Step(){
     /** Forward Pass  */
-    batched_forward_wrapper(m_dataLoader->GetGPUDescriptors(), m_dataLoader->GetBatchSize(), m_volumeRenderer->GetVolumeGPUData().Device());
+    auto items = m_dataLoader->GetGPUDatas();
+    for(int i=0; i<m_dataLoader->GetBatchSize(); ++i){
+        batched_forward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData());
+    }
 
     /** Backward Pass  */
     // batched_backward_wrapper();
+
+    m_steps += 1;
 }
 
 void AdamOptimizer::UpdateGPUDescriptor() {

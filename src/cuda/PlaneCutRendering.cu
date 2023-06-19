@@ -63,10 +63,11 @@ __global__ void planeCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor
 
     if (all(lessThan(intersection, planeCut->max)) && all(greaterThan(intersection, planeCut->min))){
         vec4 res = ReadVolume(intersection, volume);
-        res.w *= 255;
-        surf2Dwrite<uchar4>(make_uchar4((unsigned char)res.x, (unsigned char)res.y, (unsigned char)res.z, 255), planeCut->outSurface, x * sizeof(uchar4), y);
+        res *= 255.0f;
+
+        surf2Dwrite<uchar4>(make_uchar4((unsigned char)res.x, (unsigned char)res.y, (unsigned char)res.z, (unsigned char)res.w), planeCut->outSurface, x * sizeof(uchar4), y);
     }else{
-        surf2Dwrite<uchar4>(make_uchar4(0, 255, 0, 0), planeCut->outSurface, x * sizeof(uchar4), y);
+        surf2Dwrite<uchar4>(make_uchar4(0, 0, 0, 0), planeCut->outSurface, x * sizeof(uchar4), y);
     }
 }
 
@@ -85,6 +86,8 @@ void plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor>& planeCut, GPUData<
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess)
     {
-        std::cerr << "ERROR: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "(plane_cut_rendering_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
     }
+
+    cudaDeviceSynchronize();
 }

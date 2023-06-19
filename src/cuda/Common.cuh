@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <surface_types.h>
 #include <cuda_surface_types.h>
+#include "CudaLinearVolume3D.cuh"
 
 #ifdef __CUDACC__
 #define CUDA_HOSTDEV __host__ __device__
@@ -16,7 +17,25 @@
 
 using namespace glm;
 
+/** ************************************************************************** */
+//
+// Helpers for indexing arrays, buffer and images all unified in order to
+// be sure to have coherent indexing in all the code.
+//
+/** ************************************************************************** */
 
+#define STBI_IMG_INDEX(X, Y, RESX, RESY) ((RESY - Y) * RESX * 4 + X * 4)
+#define LINEAR_IMG_INDEX(X, Y, RESY) (X * RESY + Y)
+
+//#define VOLUME_INDEX(X, Y) ()
+
+
+/** ************************************************************************** */
+//
+// Structs used to transfer data from CPU memory to GPU memory. Common between
+// host and device.
+//
+/** ************************************************************************** */
 
 struct AdamOptimizerDescriptor {
     float epsilon;
@@ -52,7 +71,7 @@ struct VolumeDescriptor {
     /** volume resolution. */
     ivec3 res;
     /** volume's data pointer. Indexed: [ x * (res.y*res.z) + y * (res.z) + z] */
-    float4* data;
+    cell* data;
 };
 
 struct ImageDescriptor {
@@ -128,6 +147,8 @@ struct BatchItemDescriptor{
     CameraDescriptor* cam;
 
     LinearImageDescriptor* img;
+
+    ivec2 res;
 
     IntegrationRangeDescriptor* range;
 

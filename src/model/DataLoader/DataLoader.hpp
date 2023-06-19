@@ -12,17 +12,18 @@
 #include "../ImageSet.hpp"
 #include "Common.cuh"
 #include "GPUData.cuh"
+#include "../Dataset/Dataset.hpp"
 
 class DataLoader {
 private:
-    std::shared_ptr<CameraSet> m_cameraSet;
-    std::shared_ptr<ImageSet> m_imageSet;
+    /** The dataset to use. It defines how to recover each image.*/
+    std::shared_ptr<Dataset> m_dataset;
 
+    /** The amount if images in each batch. */
     unsigned int m_batchSize;
+
     /** Array of batch item descriptors. */
     std::vector<GPUData<BatchItemDescriptor>*> m_batchItems;
-    /** Array of GPU-Ready pointers to gpu-allocated batch-items descriptors. */
-    std::vector<BatchItemDescriptor*> m_gpuBatchItemPointers;
 
     /** A list of indexes that are used to select which cameras and images to
      * put in the batch. */
@@ -34,9 +35,8 @@ private:
     bool m_isReady = false;
     bool m_batchLoaded = false;
 
-
 public:
-    DataLoader(std::shared_ptr<CameraSet> cameraSet ,std::shared_ptr<ImageSet> imageSet);
+    explicit DataLoader(std::shared_ptr<Dataset> dataset);
     DataLoader(const DataLoader&) = delete;
     ~DataLoader() = default;
 
@@ -46,10 +46,22 @@ public:
     [[nodiscard]] unsigned int GetBatchSize() const;
 
     void Shuffle();
+    /**
+     * Load the current batch descriptors in memory.
+     */
+    void LoadBatch();
 
-    void LoadNext();
+    /**
+     * Go to the next batch indexes.
+     */
+    void NextBatch();
 
-    BatchItemDescriptor* GetGPUDescriptors();
+    /**
+     * Unload and unmap resources of the current batch.
+     */
+    void UnloadBatch();
+
+    std::vector<GPUData<BatchItemDescriptor>*> GetGPUDatas();
 
     [[nodiscard]] bool IsReady() const;
     [[nodiscard]] bool IsOnGPU() const;

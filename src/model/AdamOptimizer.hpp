@@ -18,6 +18,11 @@
 
 using namespace glm;
 
+
+struct BatchResult {
+    float psnr;
+};
+
 class AdamOptimizer : public SceneObject {
 private:
     Scene* m_scene;
@@ -73,7 +78,7 @@ public:
 
     void Initialize();
 
-    void SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume);
+//    void SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume);
 
     void SetBeta(const vec2& value);
     [[nodiscard]] const vec2& GetBeta() const;

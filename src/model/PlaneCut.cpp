@@ -52,11 +52,14 @@ float PlaneCut::GetPosition() {
 void PlaneCut::Render() {
     std::shared_ptr<Camera> cam = m_scene->GetActiveCam();
     /** Camera desc. TODO: Simplify by allocating it in the Camera Object directly and sharing the descriptor.*/
+//
     m_cameraDesc.Host()->camExt = cam->GetExtrinsic();
     m_cameraDesc.Host()->camInt = cam->GetIntrinsic();
     m_cameraDesc.Host()->camPos = cam->GetPosition();
     m_cameraDesc.Host()->width = cam->GetResolution().x;
     m_cameraDesc.Host()->height = cam->GetResolution().y;
+
+
 
     /** Filling the volume descriptor.  TODO: Same than cameraDesc. */
     m_volumeDesc.Host()->bboxMin = m_targetVolume->GetBboxMin();
@@ -73,5 +76,5 @@ void PlaneCut::Render() {
     /** Run kernel on texture. */
     m_cudaTex->RunCUDAPlaneCut(m_planeCutDesc, m_volumeDesc, m_cameraDesc);
 
-//    m_overlay->Render(true, m_cudaTex->GetTex());
+    m_overlay->Render(true, m_cudaTex->GetTex());
 }

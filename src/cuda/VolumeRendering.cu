@@ -30,16 +30,12 @@ Modified: 2023-05-11T22:28:51.324Z
 using namespace glm;
 
 
-__device__ float tsdfToAlpha(float tsdf, float previousTsdf, float density)
-{
-    if (previousTsdf > tsdf)
-    {
+__device__ float tsdfToAlpha(float tsdf, float previousTsdf, float density) {
+    if (previousTsdf > tsdf) {
         return (
-                   1.0f + exp(-density * previousTsdf)) /
+                       1.0f + exp(-density * previousTsdf)) /
                (1.0f + exp(-density * tsdf));
-    }
-    else
-    {
+    } else {
         return 1.0f;
     }
 }
@@ -52,8 +48,16 @@ __device__ float tsdfToAlpha(float tsdf, float previousTsdf, float density)
 //     bool gradWritten = false;
 // }
 
-__device__ int IsPointInVolume(const vec3 &point)
-{
+
+
+__device__ bool IsPointInBBox(const vec3 &point, VolumeDescriptor* volume) {
+    if(all(lessThan(point, volume->bboxMax)) && all(greaterThan(point, volume->bboxMin)))
+        return true;
+    else
+        return false;
+}
+
+__device__ short IsPointInVolume(const vec3 &point) {
     if (any(lessThan(point, vec3(-0.5, -0.5, -0.5))) || any(greaterThan(point, vec3(0.5, 0.5, 0.5))))
         return 0;
     return 1;
@@ -62,69 +66,35 @@ __device__ int IsPointInVolume(const vec3 &point)
 __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, const ivec3& resolution)
 {
     /** Partial transmittance. */
-    float Tpartial = 0.0f;
+    float Tpartial = 1.0f;
     /** Partial color. */
     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
 
-    // float previousTsdf = 1.0f;
-    float step = 0.001f;
-    // float density = 1.0f;
-
-    uint inside_counter = 0;
+    float step = 0.01f;
 
     /** The ray's min must be strictly smaller than max. */
-    if (ray.tmin < ray.tmax)
-    {
+    if (ray.tmin < ray.tmax) {
 
         /** Travel through the ray from it's min to max. */
-        for (float t = ray.tmin; t < ray.tmax; t += step)
-        {
+        for (float t = ray.tmin; t < ray.tmax; t += step) {
             vec3 pos = ray.origin + t * ray.dir;
 
-            auto res = IsPointInVolume(pos);
-            inside_counter += 1;
-            if (res)
-            {
+            if (IsPointInBBox(pos, volume)) {
                 vec4 data = ReadVolume(pos, volume);
-                if(data.w <= 0.1f){
-                    return {data.x, data.y, data.z, 255.0f};
-                }
+                vec3 color = vec3(data.r, data.g, data.b);
+                float alpha = data.a;
+
+                Cpartial += Tpartial * alpha * color;
+
+                Tpartial *= (1.0f - alpha);
+
+                if(Tpartial < 0.001f){
+                     Tpartial = 0.0f;
+                     break;
+                 }
             }
-
-            // struct VolumeData data = { };
-            // data.data = make_float4(0.0, 0.0, 0.0, 0.0);
-            // float4 data = ReadVolume(pos, volume, resolution);
-            // float4 data;
-            // data.x = pos.x * 255.0;
-            // data.y = pos.y * 255.0;
-            // data.z = pos.z * 255.0;
-            // data.w = (pos - vec3(0.5, 0.5, 0.5)).length()- 0.2;
-            // // Read from input surface
-            // // if(ReadVolume(data, pos, volume, resolution)){
-            //     vec3 color = vec3(data.x, data.y, data.z);
-
-            //     // // sample exactly on the zero_crossing.
-            //     // // if(){}
-
-            //     float alpha =  data.w; //tsdfToAlpha(data.w, previousTsdf, density);
-            //     previousTsdf = data.w;
-
-            //     Cpartial += color;// * (1.0f - alpha) * Tpartial;
-            //     Tpartial *= alpha;
-
-            //     if(Tpartial < MIN_TRANSMITTANCE){
-            //         Tpartial = 0.0f;
-            //         return vec4(0,0,255,255);
-            //         break;
-            //     }
-            // }
         }
-        return {255, 255, 255, 0};
-
-        // auto val = floor((inside_counter/MAX_ITER) * 255.0);
-        // return vec4(val, val, val, 255);
     }
-    // return vec4(255,0,0,255);
     return {Cpartial, Tpartial};
 }
 
@@ -200,14 +170,14 @@ __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, 
 //     outTexture[x * height + y].z = result.b;
 // }
 
-__global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescriptor *camera, VolumeDescriptor *volume, cudaSurfaceObject_t surface)
-{
+__global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescriptor *camera, VolumeDescriptor *volume,
+                                   cudaSurfaceObject_t surface) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= camera->width || y >= camera->height) return;
 
-    if(!raycaster->renderAllPixels){
+    if (!raycaster->renderAllPixels) {
         uint minpx = camera->width - raycaster->minPixelX;
         uint minpy = camera->height - raycaster->minPixelY;
 
@@ -220,72 +190,58 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
         maxpx = a.z;
         maxpy = a.w;
 
-        if (x > minpx - 5 && x < minpx + 5 && y > minpy - 5 && y < minpy + 5)
-        {
-            surf2Dwrite<uchar4>(make_uchar4(255, 255, 0, 255), surface, x * sizeof(uchar4), y);
-            return;
-        }
+//        if (x > minpx - 5 && x < minpx + 5 && y > minpy - 5 && y < minpy + 5) {
+//            surf2Dwrite<uchar4>(make_uchar4(255, 255, 0, 255), surface, x * sizeof(uchar4), y);
+//            return;
+//        }
+//
+//        if (x > maxpx - 5 && x < maxpx + 5 && y > maxpy - 5 && y < maxpy + 5) {
+//            surf2Dwrite<uchar4>(make_uchar4(0, 255, 255, 255), surface, x * sizeof(uchar4), y);
+//            return;
+//        }
 
-        if (x > maxpx - 5 && x < maxpx + 5 && y > maxpy - 5 && y < maxpy + 5)
-        {
-            surf2Dwrite<uchar4>(make_uchar4(0, 255, 255, 255), surface, x * sizeof(uchar4), y);
-            return;
-        }
-
-        if(x >= minpx && x <= maxpx && y >= minpy && y <= maxpy){
+        if (x >= minpx && x <= maxpx && y >= minpy && y <= maxpy) {
             Ray ray = SingleRayCaster::GetRay(vec2(camera->width - x, camera->height - y), camera);
+            bool res = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
+            if(!res){
+                uchar4 element = make_uchar4(0, 0, 0, 0);
+                surf2Dwrite<uchar4>(element, surface, x * sizeof(uchar4), y);
+                return;
+            }
+
             /** Call forward. */
-            vec4 result = forward(ray, volume);
-            uchar4 element = make_uchar4(result.x, result.y, result.z, result.w);
+            vec4 result = forward(ray, volume) * 255.0f;
+            uchar4 element = make_uchar4(result.x, result.y, result.z, 255.0f);
             surf2Dwrite<uchar4>(element, surface, (x) * sizeof(uchar4), y);
-        }else{
+        } else {
             uchar4 element = make_uchar4(0, 0, 0, 0);
             surf2Dwrite<uchar4>(element, surface, x * sizeof(uchar4), y);
         }
 
-    }else{
+    } else {
         Ray ray = SingleRayCaster::GetRay(vec2(camera->width - x, camera->height - y), camera);
         /** Call forward. */
-        vec4 result = forward(ray, volume);
+        vec4 result = forward(ray, volume) * 255.0f;
         uchar4 element = make_uchar4(result.x, result.y, result.z, result.w);
         surf2Dwrite<uchar4>(element, surface, (x) * sizeof(uchar4), y);
     }
-    // struct VolumeData data = {.data = make_float4(0, 0, 0, 255)};
-
-    // vec3 fakepos = vec3(0.2, 0.2, 0.2);
-    // Read from input surface
-    // size_t x_step = volumeResolution.y*volumeResolution.z;
-    // size_t y_step = volumeResolution.z;
-    // float4 bres = volume[y];
-
-    // element = make_uchar4(bres.x, bres.y, bres.z, 255);
-
-    /** Scale up. */
-    // result *= 255.0f;
-
-    /** Store value in Out Memory. */
-    // outTexture[x * height + y] = make_uint4(result.x, result.y, result.z, result.w);
-
-    // uchar4 element = make_uchar4(16*(x%16) , 100, 16*(y%16), 255);
-
 }
 
-extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster, GPUData<CameraDescriptor> &camera, GPUData<VolumeDescriptor> &volume, cudaSurfaceObject_t surface)
-{
+extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster, GPUData<CameraDescriptor> &camera,
+                                         GPUData<VolumeDescriptor> &volume, cudaSurfaceObject_t surface) {
     /** Max 1024 per block. As each pixel is independent, may be useful to search for optimal size. */
     dim3 threadsPerBlock(16, 16);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
     dim3 numBlocks(
-        (camera.Host()->width + threadsPerBlock.x - 1) / threadsPerBlock.x,
-        (camera.Host()->height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+            (camera.Host()->width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+            (camera.Host()->height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     /** Call the main volumeRendering kernel. **/
     volumeRenderingUI8<<<numBlocks, threadsPerBlock>>>(raycaster.Device(), camera.Device(), volume.Device(), surface);
 
     /** Get last error after rendering. */
     cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess)
-    {
+    if (err != cudaSuccess) {
         std::cerr << "ERROR: " << cudaGetErrorString(err) << std::endl;
     }
 
@@ -293,16 +249,27 @@ extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster
 }
 
 
-__global__ void batched_forward(VolumeDescriptor* volume, BatchItemDescriptor* item){
+__global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *item) {
     /** Pixel coords. */
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= item->cam->width || y >= item->cam->height) return;
 
+    uchar4 ground_truth = make_uchar4(
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y)],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 1],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 2],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 3]
+    );
+
+    uchar4 element = ground_truth;
+    surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
+
+
     Ray ray = SingleRayCaster::GetRay(ivec2(x,y), item->cam);
-    ray.tmin = item->range->data[x * item->range->dim.y + y].x;
-    ray.tmax = item->range->data[x * item->range->dim.y + y].y;
+    ray.tmin = item->range->data[LINEAR_IMG_INDEX(x, y, item->range->dim.y)].x;
+    ray.tmax = item->range->data[LINEAR_IMG_INDEX(x, y, item->range->dim.y)].y;
 
     vec4 res = forward(ray, volume);
 
@@ -318,19 +285,15 @@ __global__ void batched_forward(VolumeDescriptor* volume, BatchItemDescriptor* i
 }
 
 
-extern "C" void batched_forward_wrapper(BatchItemDescriptor* items, size_t length, VolumeDescriptor* volume){
-    auto item = items[0];
+extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor> &item, GPUData<VolumeDescriptor> &volume) {
     dim3 threads(16, 16);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
-    dim3 blocks((item.img->res.x + threads.x - 1) / threads.x,
-            (item.img->res.y + threads.y - 1) / threads.y);
+    dim3 blocks((item.Host()->res.x + threads.x - 1) / threads.x,
+                (item.Host()->res.y + threads.y - 1) / threads.y);
 
-    for(int i=0; i<length; ++i){
-        batched_forward<<<threads, blocks>>>(volume, items + i);
-        cudaError_t err = cudaGetLastError();
-        if (err != cudaSuccess)
-        {
-            std::cerr << "ERROR: " << cudaGetErrorString(err) << std::endl;
-        }
+    batched_forward<<<blocks, threads>>>(volume.Device(), item.Device());
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "(batched_forward_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
     }
 }

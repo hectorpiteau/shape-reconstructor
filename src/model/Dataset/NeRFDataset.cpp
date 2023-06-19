@@ -27,8 +27,9 @@ NeRFDataset::NeRFDataset(Scene *scene)
           m_validImagesPath("../data/nerf/val"),
           m_images(),
           m_imagesCalibration(),
+          m_entries(),
           m_isCalibrationLoaded(false),
-          m_camerasGenerated(false) {
+          m_camerasGenerated(false){
     SetName(std::string(ICON_FA_DATABASE " Nerf Dataset"));
     m_children = std::vector<std::shared_ptr<SceneObject>>();
 
@@ -236,10 +237,13 @@ void NeRFDataset::GenerateCameras() {
     for (size_t i = 0; i < m_imagesCalibration.size(); ++i) {
         NeRFImage imgInfo = m_images[i];
         CameraCalibrationInformations calibInfo = m_imagesCalibration[i];
+
         std::shared_ptr<Camera> cam = std::make_shared<Camera>(m_scene);
+
+        auto img = m_imageSet->GetImage(imgInfo.fileName);
         cam->SetIntrinsic(calibInfo.intrinsic);
         cam->SetExtrinsic(calibInfo.extrinsic);
-        cam->SetImage(m_imageSet->GetImage(imgInfo.fileName));
+        cam->SetImage(img);
         cam->SetResolution(ivec2(m_imageSet->GetImage(imgInfo.fileName)->width, m_imageSet->GetImage(imgInfo.fileName)->height));
         cam->SetActive(true);
         cam->SetIsChild(true);
@@ -249,7 +253,7 @@ void NeRFDataset::GenerateCameras() {
 
         m_scene->Add(cam, true, true);
 
-        std::cout << "image: " << cam->filename << " -> " << imgInfo.fileName << std::endl;
+        m_entries.push_back({.cam=cam, .img=img});
         m_cameraSet->AddCamera(cam);
     }
 
@@ -270,4 +274,9 @@ std::shared_ptr<CameraSet> NeRFDataset::GetCameraSet() {
 
 std::shared_ptr<ImageSet> NeRFDataset::GetImageSet() {
     return m_imageSet;
+}
+
+DatasetEntry NeRFDataset::GetEntry(size_t index) {
+    if(index >= Size()) return {};
+    return m_entries[index];
 }

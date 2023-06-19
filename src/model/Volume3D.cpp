@@ -31,6 +31,9 @@ Volume3D::Volume3D(Scene *scene, ivec3 res) : SceneObject{std::string("VOLUME3D"
     m_desc.Host()->min = m_bboxMin;
     m_desc.Host()->max = m_bboxMax;
     m_desc.ToDevice();
+
+    SetBBoxMin(m_bboxMin);
+    SetBBoxMax(m_bboxMax);
 }
 
 void Volume3D::SetBBoxMin(const vec3 &bboxMin)

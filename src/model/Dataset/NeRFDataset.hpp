@@ -57,6 +57,8 @@ private:
     std::vector<NeRFImage> m_images;
     std::vector<CameraCalibrationInformations> m_imagesCalibration;
 
+    std::vector<DatasetEntry> m_entries;
+
     bool m_isCalibrationLoaded;
     bool m_camerasGenerated;
 
@@ -131,4 +133,6 @@ public:
 
     std::shared_ptr<CameraSet> GetCameraSet() override;
     std::shared_ptr<ImageSet> GetImageSet() override;
+
+    DatasetEntry GetEntry(size_t index) override;
 };

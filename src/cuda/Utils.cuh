@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include "Common.cuh"
+#include "CudaLinearVolume3D.cuh"
 
 #ifdef __CUDACC__
 #define CUDA_HOSTDEV __host__ __device__
@@ -19,6 +20,12 @@ CUDA_DEV inline glm::vec4 float4ToVec4(float4 a) {
     return {a.x, a.y, a.z, a.w};
 }
 
+CUDA_DEV inline glm::vec4 cellToVec4(cell x) {
+    auto a = __half22float2(x.rg);
+    auto b = __half22float2(x.ba);
+    return {a.x, a.y, b.x, b.y};
+}
+
 CUDA_DEV inline float4 vec4ToFloat4(const glm::vec4 &a) {
     return make_float4(a.x, a.y, a.z, a.w);
 }
@@ -28,39 +35,40 @@ CUDA_DEV inline float4 vec4ToFloat4(const glm::vec4 &a) {
  * @brief Read inside a Dense Volume3D.
  *
  * @param data : A reference to a variable where the data will be written into.
- * @param pos : The sample position in range [0, 1.0]^3.
+ * @param pos : The sample position in world coordinate R3.
  * @param volume : The volume data storage.
  * @param resolution : The volume resolution in each direction.
  * @return bool :
  */
 CUDA_DEV inline glm::vec4 ReadVolume(glm::vec3 &pos, VolumeDescriptor *volume) {
     /** Manual tri-linear interpolation. */
-    glm::vec3 full_coords = (pos + glm::vec3(0.5, 0.5, 0.5)) * glm::vec3(volume->res);
+    auto local = (pos - volume->bboxMin) / volume->worldSize;
+    glm::vec3 full_coords = local * glm::vec3(volume->res);
+    full_coords -= vec3(0.5, 0.5, 0.5);
     glm::ivec3 min = glm::floor(full_coords); // first project [0,1] to [0, resolution], then take the floor index.
     glm::ivec3 max = glm::ceil(full_coords); // idem but to take the ceil index.
     min = glm::clamp(min, glm::ivec3(0, 0, 0), volume->res);
-    max = glm::clamp(min, glm::ivec3(0, 0, 0), volume->res);
+    max = glm::clamp(max, glm::ivec3(0, 0, 0), volume->res);
 
-    glm::vec3 weights = glm::vec3(full_coords.x - (float) min.x, full_coords.y - (float) min.y,
-                                  full_coords.z - (float) min.z);
+    glm::vec3 weights =  full_coords - vec3(min);
 
-    glm::vec4 wx = glm::vec4(weights.x, weights.x, weights.x, weights.x);
-    glm::vec4 wy = glm::vec4(weights.y, weights.y, weights.y, weights.y);
-    glm::vec4 wz = glm::vec4(weights.z, weights.z, weights.z, weights.z);
+    glm::vec4 wx = vec4(weights.x);
+    glm::vec4 wy = vec4(weights.y);
+    glm::vec4 wz = vec4(weights.z);
 
     size_t x_step = volume->res.y * volume->res.z;
     size_t y_step = volume->res.z;
 
     /** Sample all around the pos point in the grid.  (8 voxels) */
-    glm::vec4 c000 = float4ToVec4(volume->data[min.x * x_step + min.y * y_step + min.z]); // back face
-    glm::vec4 c001 = float4ToVec4(volume->data[min.x * x_step + max.y * y_step + min.z]);
-    glm::vec4 c010 = float4ToVec4(volume->data[min.x * x_step + min.y * y_step + max.z]);
-    glm::vec4 c011 = float4ToVec4(volume->data[min.x * x_step + max.y * y_step + max.z]);
+    glm::vec4 c000 = cellToVec4(volume->data[min.x * x_step + min.y * y_step + min.z]); // back face
+    glm::vec4 c001 = cellToVec4(volume->data[min.x * x_step + min.y * y_step + max.z]);
+    glm::vec4 c010 = cellToVec4(volume->data[min.x * x_step + max.y * y_step + min.z]);
+    glm::vec4 c011 = cellToVec4(volume->data[min.x * x_step + max.y * y_step + max.z]);
 
-    glm::vec4 c100 = float4ToVec4(volume->data[max.x * x_step + min.y * y_step + min.z]); // front face
-    glm::vec4 c101 = float4ToVec4(volume->data[max.x * x_step + max.y * y_step + min.z]);
-    glm::vec4 c110 = float4ToVec4(volume->data[max.x * x_step + min.y * y_step + max.z]);
-    glm::vec4 c111 = float4ToVec4(volume->data[max.x * x_step + max.y * y_step + max.z]);
+    glm::vec4 c100 = cellToVec4(volume->data[max.x * x_step + min.y * y_step + min.z]); // front face
+    glm::vec4 c101 = cellToVec4(volume->data[max.x * x_step + min.y * y_step + max.z]);
+    glm::vec4 c110 = cellToVec4(volume->data[max.x * x_step + max.y * y_step + min.z]);
+    glm::vec4 c111 = cellToVec4(volume->data[max.x * x_step + max.y * y_step + max.z]);
 
     glm::vec4 c00 = glm::mix(c000, c100, wx);
     glm::vec4 c01 = glm::mix(c001, c101, wx);
@@ -100,7 +108,7 @@ CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, VolumeDescriptor *volume, co
     glm::ivec3 min = glm::floor(full_coords); // first project [0,1] to [0, resolution], then take the floor index.
     glm::ivec3 max = glm::ceil(full_coords); // idem but to take the ceil index.
     min = glm::clamp(min, glm::ivec3(0, 0, 0), volume->res);
-    max = glm::clamp(min, glm::ivec3(0, 0, 0), volume->res);
+    max = glm::clamp(max, glm::ivec3(0, 0, 0), volume->res);
 
     glm::vec3 w = glm::vec3(full_coords.x - (float) min.x, full_coords.y - (float) min.y,
                             full_coords.z - (float) min.z);
@@ -122,15 +130,15 @@ CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, VolumeDescriptor *volume, co
     auto c110 = w.x * omw.y * w.z * value;
     auto c111 = w.x * w.y * w.z * value;
 
-    AtomicWriteFloat4(&volume->data[min.x * x_step + min.y * y_step + min.z], c000); // back face
-    AtomicWriteFloat4(&volume->data[min.x * x_step + max.y * y_step + min.z], c001);
-    AtomicWriteFloat4(&volume->data[min.x * x_step + min.y * y_step + max.z], c010);
-    AtomicWriteFloat4(&volume->data[min.x * x_step + max.y * y_step + max.z], c011);
-
-    AtomicWriteFloat4(&volume->data[max.x * x_step + min.y * y_step + min.z], c100); // front face
-    AtomicWriteFloat4(&volume->data[max.x * x_step + max.y * y_step + min.z], c101);
-    AtomicWriteFloat4(&volume->data[max.x * x_step + min.y * y_step + max.z], c110);
-    AtomicWriteFloat4(&volume->data[max.x * x_step + max.y * y_step + max.z], c111);
+//    AtomicWriteFloat4(&volume->data[min.x * x_step + min.y * y_step + min.z], c000); // back face
+//    AtomicWriteFloat4(&volume->data[min.x * x_step + max.y * y_step + min.z], c001);
+//    AtomicWriteFloat4(&volume->data[min.x * x_step + min.y * y_step + max.z], c010);
+//    AtomicWriteFloat4(&volume->data[min.x * x_step + max.y * y_step + max.z], c011);
+//
+//    AtomicWriteFloat4(&volume->data[max.x * x_step + min.y * y_step + min.z], c100); // front face
+//    AtomicWriteFloat4(&volume->data[max.x * x_step + max.y * y_step + min.z], c101);
+//    AtomicWriteFloat4(&volume->data[max.x * x_step + min.y * y_step + max.z], c110);
+//    AtomicWriteFloat4(&volume->data[max.x * x_step + max.y * y_step + max.z], c111);
 }
 
 

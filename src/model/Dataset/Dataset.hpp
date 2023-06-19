@@ -3,6 +3,12 @@
 #include <utility>
 #include "../Camera/CameraSet.hpp"
 
+
+struct DatasetEntry {
+    std::shared_ptr<Camera> cam;
+    Image* img;
+};
+
 /**
  * @brief 
  * 
@@ -30,6 +36,8 @@ virtual size_t Size() = 0;
 
 virtual std::shared_ptr<CameraSet> GetCameraSet() = 0;
 virtual std::shared_ptr<ImageSet> GetImageSet() = 0;
+
+virtual DatasetEntry GetEntry(size_t index) = 0;
 
 
 private:

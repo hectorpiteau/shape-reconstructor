@@ -76,6 +76,7 @@ void Camera::Initialize() {
     if (m_centerLine != nullptr) m_centerLine->SetColor(0.0, 1.0, 1.0, 1.0);
 
     UpdateWireframe();
+    UpdateGPUDescriptor();
 }
 
 Camera::~Camera() {

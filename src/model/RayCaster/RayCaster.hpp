@@ -103,13 +103,15 @@ public:
             ok = true;
         }
         if(!ok) return;
-        // std::cout << "Update rendering zone sizes (NDC) : " << std::endl;
-
-        // std::cout << std::to_string(zoneNDCMin.x) << " " << std::to_string(zoneNDCMin.y) << std::endl;
-        // std::cout << std::to_string(zoneNDCMax.x) << " " << std::to_string(zoneNDCMax.y) << std::endl;
         
         renderingZonePixelMin = floor(NDCToPixel(zoneNDCMin, m_camera->GetResolution().x, m_camera->GetResolution().y));
         renderingZonePixelMax = ceil(NDCToPixel(zoneNDCMax, m_camera->GetResolution().x, m_camera->GetResolution().y));
+
+        renderingZonePixelMin.x = max(renderingZonePixelMin.x, 0);
+        renderingZonePixelMin.y = max(renderingZonePixelMin.y, 0);
+//
+        renderingZonePixelMax.x = min(renderingZonePixelMax.x, m_camera->GetResolution().x);
+        renderingZonePixelMax.y = min(renderingZonePixelMax.y, m_camera->GetResolution().y);
 
         renderingZoneWidth = renderingZonePixelMax.x - renderingZonePixelMin.x;
         renderingZoneHeight = renderingZonePixelMax.y - renderingZonePixelMin.y;
