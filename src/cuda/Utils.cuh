@@ -21,9 +21,13 @@ CUDA_DEV inline glm::vec4 float4ToVec4(float4 a) {
 }
 
 CUDA_DEV inline glm::vec4 cellToVec4(cell x) {
+#ifdef VOLUME_FP16
     auto a = __half22float2(x.rg);
     auto b = __half22float2(x.ba);
     return {a.x, a.y, b.x, b.y};
+#elif defined VOLUME_FP32
+    return {x.data.x, x.data.y, x.data.z, x.data.w};
+#endif
 }
 
 CUDA_DEV inline float4 vec4ToFloat4(const glm::vec4 &a) {

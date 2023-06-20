@@ -46,10 +46,10 @@ struct AdamOptimizerDescriptor {
     /** Gradient grid resolution. */
     ivec3 res;
     /** Adam gradients. */
-    float4* adamG1;
-    float4* adamG2;
+    cell* adamG1;
+    cell* adamG2;
     /** 3D Data to optimize. */
-    float4* target;
+    cell* target;
 };
 
 struct PlaneCutDescriptor {

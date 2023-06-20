@@ -34,36 +34,36 @@
  * @param weights : Gaussian kernel to apply, struct containing weights.
  * @param center : The coordinates
  */
-CUDA_DEV inline void ImageGaussianFloat(ImageDescriptor *source, ImageDescriptor *target, GaussianWeightsDescriptor &weights,
-                                        const glm::ivec2 &center) {
-    if (weights.dim != 2) return;
-    unsigned short sizeDiv2 = floor((float) weights.size / 2.0f);
-    glm::vec4 result = {0.0, 0.0, 0.0, 0.0};
-    glm::vec4 tmp{};
-    for (unsigned short y = -sizeDiv2; y < sizeDiv2 + 1; y++) {
-        for (unsigned short x = -sizeDiv2; x < sizeDiv2 + 1; x++) {
-            surf2Dread((float4 * ) & tmp[0], source->surface, (center.x + x) * sizeof(float4), (center.y + y),
-                       cudaBoundaryModeClamp);
-            result += tmp * weights.weights[(y + sizeDiv2) + (x + sizeDiv2) * weights.size];
-        }
-    }
-    surf2Dwrite<float4>(result, target->surface, center.x * sizeof(float4), center.y);
-}
+//CUDA_DEV inline void ImageGaussianFloat(ImageDescriptor *source, ImageDescriptor *target, GaussianWeightsDescriptor &weights,
+//                                        const glm::ivec2 &center) {
+//    if (weights.dim != 2) return;
+//    unsigned short sizeDiv2 = floor((float) weights.size / 2.0f);
+//    glm::vec4 result = {0.0, 0.0, 0.0, 0.0};
+//    glm::vec4 tmp{};
+//    for (unsigned short y = -sizeDiv2; y < sizeDiv2 + 1; y++) {
+//        for (unsigned short x = -sizeDiv2; x < sizeDiv2 + 1; x++) {
+//            surf2Dread((float4 * ) & tmp[0], source->surface, (center.x + x) * sizeof(float4), (center.y + y),
+//                       cudaBoundaryModeClamp);
+//            result += tmp * weights.weights[(y + sizeDiv2) + (x + sizeDiv2) * weights.size];
+//        }
+//    }
+//    surf2Dwrite<float4>(result, target->surface, center.x * sizeof(float4), center.y);
+//}
 
 CUDA_DEV inline void
-VoxelGaussian(VolumeDescriptor *source, VolumeDescriptor *target, GaussianWeightsDescriptor &weights, const glm::ivec2 &center) {
-    if (weights.dim != 3) return;
-    unsigned short sizeDiv2 = floor((float) weights.size / 2.0f);
-    glm::vec4 result = {0.0, 0.0, 0.0, 0.0};
-    glm::vec4 tmp{};
-    for (unsigned short y = -sizeDiv2; y < sizeDiv2 + 1; y++) {
-        for (unsigned short x = -sizeDiv2; x < sizeDiv2 + 1; x++) {
-            tmp = source->data[]; //((float4 * ) & tmp[0], source->surface, (center.x + x) * sizeof(float4), (center.y + y), cudaBoundaryModeClamp);
-            result += tmp * weights.weights[(y + sizeDiv2) + (x + sizeDiv2) * weights.size];
-        }
-    }
-    target->data[];
-//    surf2Dwrite<float4>(result, target->surface, center.x * sizeof(float4), center.y);
-}
+//VoxelGaussian(VolumeDescriptor *source, VolumeDescriptor *target, GaussianWeightsDescriptor &weights, const glm::ivec2 &center) {
+//    if (weights.dim != 3) return;
+//    unsigned short sizeDiv2 = floor((float) weights.size / 2.0f);
+//    glm::vec4 result = {0.0, 0.0, 0.0, 0.0};
+//    glm::vec4 tmp{};
+//    for (unsigned short y = -sizeDiv2; y < sizeDiv2 + 1; y++) {
+//        for (unsigned short x = -sizeDiv2; x < sizeDiv2 + 1; x++) {
+//            tmp = source->data[]; //((float4 * ) & tmp[0], source->surface, (center.x + x) * sizeof(float4), (center.y + y), cudaBoundaryModeClamp);
+//            result += tmp * weights.weights[(y + sizeDiv2) + (x + sizeDiv2) * weights.size];
+//        }
+//    }
+//    target->data[];
+////    surf2Dwrite<float4>(result, target->surface, center.x * sizeof(float4), center.y);
+//}
 
 #endif //DRTMCS_CONVOLUTIONS_CUH

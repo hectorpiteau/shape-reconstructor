@@ -84,13 +84,9 @@ void AdamOptimizer::Optimize(){
 }
 
 void AdamOptimizer::Render() {
-    //nothing for now.
     if(m_optimize){
         Step();
     }
-//
-
-
 //    m_integrationRangeDescriptor.Host()->dim = ivec2(m_scene->GetSceneSettings()->GetViewportWidth(),
 //                                                     m_scene->GetSceneSettings()->GetViewportHeight());
 //    m_integrationRangeDescriptor.Host()->renderInTexture = true;

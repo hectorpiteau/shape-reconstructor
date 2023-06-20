@@ -13,6 +13,8 @@ Modified: 2023-04-24T13:03:22.194Z
 #include <surface_functions.h>
 #include <glm/glm.hpp>
 #include <cuda_fp16.h>
+#include <iostream>
+#include <cuda_fp16.hpp>
 #include "../utils/helper_cuda.h"
 
 #ifdef __CUDACC__
@@ -27,22 +29,20 @@ Modified: 2023-04-24T13:03:22.194Z
 
 using namespace glm;
 
-#define HERGE_BEA
-
-#ifdef HERGE_BEA
+#define VOLUME_FP32
+//#define VOLUME_FP32
+//#define VOLUME_UINT8
 
 struct cell {
+#ifdef VOLUME_FP16
     half2 rg; /** Hergé */
     half2 ba; /** Béa */
-};
-#else
-
-struct cell
-{
+#elif defined VOLUME_FP32
     float4 data;
-};
-
+#elif defined VOLUME_UINT8
+    ushort4 data;
 #endif
+};
 
 class CudaLinearVolume3D {
 private:
@@ -103,10 +103,14 @@ public:
     }
 
     CUDA_HOST void HSet(const ivec3 &loc, const vec4 &data) {
+#ifdef VOLUME_FP16
         m_hostData[GetIndex(loc)] = {
                 .rg =  __float22half2_rn(make_float2(data.r, data.g)),
                 .ba =  __float22half2_rn(make_float2(data.b, data.a))
         };
+#elif defined VOLUME_FP32
+        m_hostData[GetIndex(loc)].data = make_float4(data.x,data.y,data.z,data.w);
+#endif
     }
 
 
@@ -124,7 +128,7 @@ public:
      * 
      * @return float* : A pointer on the buffer allocated on the device. 
      */
-    CUDA_HOSTDEV float4 *GetDevicePtr() {
+    CUDA_HOSTDEV cell *GetDevicePtr() {
         return m_gpuData;
     }
 
