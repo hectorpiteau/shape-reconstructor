@@ -25,6 +25,10 @@ private:
     /** Array of batch item descriptors. */
     std::vector<GPUData<BatchItemDescriptor>*> m_batchItems;
 
+    std::vector<CudaBuffer<vec3>*> m_losses;
+    std::vector<CudaBuffer<vec3>*> m_cpreds;
+
+
     /** A list of indexes that are used to select which cameras and images to
      * put in the batch. */
     std::vector<unsigned int> m_indexes;

@@ -29,6 +29,34 @@ using namespace glm;
 
 //#define VOLUME_INDEX(X, Y) ()
 
+#define FLOAT4_NORM_TO_UCHAR4(F) make_uchar4( \
+(unsigned char)float2uint(F.x * 255.0f, cudaRoundNearest), \
+(unsigned char)float2uint(F.y * 255.0f, cudaRoundNearest), \
+(unsigned char)float2uint(F.z * 255.0f, cudaRoundNearest), \
+(unsigned char)float2uint(F.w * 255.0f, cudaRoundNearest))
+
+#define FLOAT4_TO_UCHAR4(F) make_uchar4( \
+(unsigned char)float2uint(F.x, cudaRoundNearest), \
+(unsigned char)float2uint(F.y, cudaRoundNearest), \
+(unsigned char)float2uint(F.z, cudaRoundNearest), \
+(unsigned char)float2uint(F.w, cudaRoundNearest))
+
+
+#define UCHAR4_TO_VEC3(UCH) vec3( \
+uint2float(UCH.x, cudaRoundNearest), \
+uint2float(UCH.y, cudaRoundNearest), \
+uint2float(UCH.z, cudaRoundNearest))
+
+#define UCHAR4_TO_VEC4(UCH) vec4( \
+uint2float(UCH.x, cudaRoundNearest), \
+uint2float(UCH.y, cudaRoundNearest), \
+uint2float(UCH.z, cudaRoundNearest), \
+uint2float(UCH.w, cudaRoundNearest))
+
+#define VEC3_255_TO_UCHAR4(VEC) make_uchar4( \
+(unsigned char)float2uint(VEC.x, cudaRoundNearest), \
+(unsigned char)float2uint(VEC.y, cudaRoundNearest), \
+(unsigned char)float2uint(VEC.z, cudaRoundNearest), 255)
 
 /** ************************************************************************** */
 //
@@ -126,7 +154,7 @@ struct GaussianWeightsDescriptor {
 struct LinearImageDescriptor {
     ivec2 res;
     unsigned char* data;
-    cudaArray* cdata;
+    vec3* vdata;
 };
 
 struct IntegrationRangeDescriptor {
@@ -146,11 +174,15 @@ struct BatchItemDescriptor{
     /** Combines Camera and Image Descriptors. */
     CameraDescriptor* cam;
 
+    /** Ground-Truth image. */
     LinearImageDescriptor* img;
-
     ivec2 res;
 
     IntegrationRangeDescriptor* range;
+
+    /** Data struct for storing the loss for each pixels. */
+    vec3* loss;
+    vec3* cpred;
 
     /** True for rendering the forward in the debugSurface. */
     bool debugRender;

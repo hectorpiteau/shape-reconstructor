@@ -40,18 +40,9 @@ __device__ float tsdfToAlpha(float tsdf, float previousTsdf, float density) {
     }
 }
 
-// __device__ vec4 backward(struct Ray ray, cudaTextureObject_t& volume, vec3 dLoss_dLo, vec3 Lo){
-//     float Tpartial = 1.0f;
-//     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
-//     float zeroCross = INFINITY; //0x7f800000; //std::numeric_limits<float>().infinity();
 
-//     bool gradWritten = false;
-// }
-
-
-
-__device__ bool IsPointInBBox(const vec3 &point, VolumeDescriptor* volume) {
-    if(all(lessThan(point, volume->bboxMax)) && all(greaterThan(point, volume->bboxMin)))
+__device__ bool IsPointInBBox(const vec3 &point, VolumeDescriptor *volume) {
+    if (all(lessThan(point, volume->bboxMax)) && all(greaterThan(point, volume->bboxMin)))
         return true;
     else
         return false;
@@ -84,91 +75,21 @@ __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, 
                 vec3 color = vec3(data.r, data.g, data.b);
                 float alpha = data.a;
 
-                Cpartial += Tpartial * alpha * color;
+                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
+//                Cpartial += Tpartial * alpha * color;
+//                Tpartial *= (1.0f - alpha);
+                Tpartial *= (1.0f / exp(alpha));
 
-                Tpartial *= (1.0f - alpha);
-
-                if(Tpartial < 0.001f){
-                     Tpartial = 0.0f;
-                     break;
-                 }
+                if (Tpartial < 0.001f) {
+                    Tpartial = 0.0f;
+                    break;
+                }
             }
         }
     }
     return {Cpartial, Tpartial};
 }
 
-// __device__ vec4 forward(Ray ray, cudaTextureObject_t& volume)
-// {
-//     /** Partial transmittance. */
-//     float Tpartial = 1.0f;
-//     /** Partial color. */
-//     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
-
-//     float previousTsdf = 1.0f;
-//     float step = 0.001f;
-//     float density = 1.0f;
-
-//     /** The ray's min must be strictly smaller than max. */
-//     if (ray.tmin < ray.tmax)
-//     {
-//         /** Travel through the ray from it's min to max. */
-//         for (float t = ray.tmin; t < ray.tmax; t += step)
-//         {
-//             vec3 worldPos = ray.origin + t * ray.dir;
-
-//             struct VolumeData data = {};
-
-//             // Read from input surface
-//             if(ReadVolume(data, worldPos, volume)){
-//                 vec3 color = vec3(data.data.x, data.data.y, data.data.z);
-
-//                 // sample exactly on the zero_crossing.
-//                 // if(){}
-
-//                 float alpha = tsdfToAlpha(data.data.w, previousTsdf, density);
-//                 previousTsdf = data.data.w;
-
-//                 Cpartial += color * (1.0f - alpha) * Tpartial;
-//                 Tpartial *= alpha;
-
-//                 if(Tpartial < MIN_TRANSMITTANCE){
-//                     Tpartial = 0.0f;
-//                     break;
-//                 }
-//             }
-//         }
-//     }
-//     return vec4(Cpartial, Tpartial);
-// }
-
-/** 2D kernel that project rays in the volume. */
-// __global__ void volumeRendering(RayCasterParams& params, cudaTextureObject_t& volume, float4* outTexture, size_t width, size_t height)
-// {
-//     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-//     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
-
-//     if(x >= width)return;
-//     if(y >= height)return;
-
-//     /** Compute Ray. */
-//     struct Ray ray = {
-//         .origin = vec3(0.0, 0.0, 0.0),
-//         .dir = vec3(1.0, 0.0, 0.0),
-//         .tmin = 0.0f,
-//         .tmax = 1.0f
-//     };
-
-//     ray = SingleRayCaster::GetRay(vec2(x, y), params);
-
-//     /** Call forward. */
-//     vec4 result = forward(ray, volume);
-
-//     /** Store value in Out Memory. */
-//     outTexture[x * height + y].x = result.r;
-//     outTexture[x * height + y].y = result.g;
-//     outTexture[x * height + y].z = result.b;
-// }
 
 __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescriptor *camera, VolumeDescriptor *volume,
                                    cudaSurfaceObject_t surface) {
@@ -203,7 +124,7 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
         if (x >= minpx && x <= maxpx && y >= minpy && y <= maxpy) {
             Ray ray = SingleRayCaster::GetRay(vec2(camera->width - x, camera->height - y), camera);
             bool res = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
-            if(!res){
+            if (!res) {
                 uchar4 element = make_uchar4(0, 0, 0, 0);
                 surf2Dwrite<uchar4>(element, surface, x * sizeof(uchar4), y);
                 return;
@@ -262,28 +183,108 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
             item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 2],
             item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 3]
     );
+    vec3 gt_color = UCHAR4_TO_VEC3(ground_truth);
 
-    uchar4 element = ground_truth;
-    surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
-
-
-    Ray ray = SingleRayCaster::GetRay(ivec2(x,y), item->cam);
+    Ray ray = SingleRayCaster::GetRay(ivec2(x, y), item->cam);
     ray.tmin = item->range->data[LINEAR_IMG_INDEX(x, y, item->range->dim.y)].x;
     ray.tmax = item->range->data[LINEAR_IMG_INDEX(x, y, item->range->dim.y)].y;
 
+    /** Run forward function. */
     vec4 res = forward(ray, volume);
+    item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)] = res;
 
-    if(item->debugRender){
+    /** Store loss. */
+    float epsilon = 0.001f;
+    vec3 pred_color = vec3(res);
+    vec3 loss = (gt_color - pred_color) / (pred_color + epsilon);
+    item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)] = loss;
 
+
+    if (item->debugRender) {
+//        uchar4 element = ground_truth;
+//        uchar4 element = FLOAT4_NORM_TO_UCHAR4(res);
+        uchar4 element = VEC3_255_TO_UCHAR4(loss);
+        surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
     }
 
-    /** Compute PSNR per ray. */
-    /** Compute Gradient. */
+}
 
+__global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *item) {
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x >= item->cam->width || y >= item->cam->height) return;
+
+    Ray ray = SingleRayCaster::GetRay(ivec2(x, y), item->cam);
+    ray.tmin = item->range->data[LINEAR_IMG_INDEX(x, y, item->range->dim.y)].x;
+    ray.tmax = item->range->data[LINEAR_IMG_INDEX(x, y, item->range->dim.y)].y;
+
+    uchar4 ground_truth = make_uchar4(
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y)],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 1],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 2],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 3]
+    );
+    vec3 cgt = UCHAR4_TO_VEC3(ground_truth);
+
+    float epsilon = 0.001f;
+    float zeroCross = INFINITY; //0x7f800000; //std::numeric_limits<float>().infinity();
+    bool gradWritten = false;
+
+    auto loss = item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)];
+    auto cpred = item->cpred[LINEAR_IMG_INDEX(x, y, item->res.y)];
+
+    auto dLdC = (2.0f * (cpred - cgt)) / (cpred + vec3(epsilon));
+    dLdC = clamp(dLdC, -10.0f, 10.0f);
+
+    /** Partial transmittance. */
+    float Tpartial = 1.0f;
+    /** Partial color. */
+    vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
+
+    float step = 0.01f;
+
+    /** The ray's min must be strictly smaller than max. */
+    if (ray.tmin < ray.tmax) {
+
+        /** Travel through the ray from it's min to max. */
+        for (float t = ray.tmin; t < ray.tmax; t += step) {
+            vec3 pos = ray.origin + t * ray.dir;
+
+            if (IsPointInBBox(pos, volume)) {
+                vec4 data = ReadVolume(pos, volume);
+                vec3 color = vec3(data.r, data.g, data.b);
+                float alpha = data.a;
+
+                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
+//                Cpartial += Tpartial * alpha * color;
+//                Tpartial *= (1.0f - alpha);
+                Tpartial *= (1.0f / exp(alpha));
+
+                if (Tpartial < 0.001f) {
+                    Tpartial = 0.0f;
+                    break;
+                }
+            }
+        }
+    }
 
 
 }
 
+
+extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor> &item, GPUData<VolumeDescriptor> &volume) {
+    dim3 threads(16, 16);
+    /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
+    dim3 blocks((item.Host()->res.x + threads.x - 1) / threads.x,
+                (item.Host()->res.y + threads.y - 1) / threads.y);
+
+    batched_backward<<<blocks, threads>>>(volume.Device(), item.Device());
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "(batched_forward_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
+    }
+}
 
 extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor> &item, GPUData<VolumeDescriptor> &volume) {
     dim3 threads(16, 16);

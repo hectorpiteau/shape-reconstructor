@@ -56,10 +56,10 @@
 //            /** Write x-pass result in shared memory Zone-2 */
 //            auto z2_index = threadIdx.y * blockDim.x + (threadIdx.x - ks);
 //#ifdef VOLUME_FP16
-//            z2[z2_index].rg.x = fma(val.rg.x, w, z2[z2_index].rg.x);
-//            z2[z2_index].rg.y = __hfma(val.rg.y, w, z2[z2_index].rg.y);
-//            z2[z2_index].ba.x = __hfma(val.ba.x, w, z2[z2_index].ba.x);
-//            z2[z2_index].ba.y = __hfma(val.ba.y, w, z2[z2_index].ba.y);
+//            z2[z2_index].rg = __hfma2(val.rg, __floats2half2_rn(w,w), z2[z2_index].rg);
+////            z2[z2_index].rg.y = __hfma2(val.rg.y, w, z2[z2_index].rg.y);
+////            z2[z2_index].ba.x = __hfma2(val.ba.x, w, z2[z2_index].ba.x);
+////            z2[z2_index].ba.y = __hfma2(val.ba.y, w, z2[z2_index].ba.y);
 //#elif defined VOLUME_FP32
 //            z2[z2_index].x += val.x * w;
 //            z2[z2_index].y += val.y * w;
@@ -82,10 +82,10 @@
 //            auto w = gauss->sw[abs(ks)];
 //
 //#ifdef VOLUME_FP16
-//            res.x = __hfma(val.rg.x, w, res.x);
-//            res.y = __hfma(val.rg.y, w, res.y);
-//            res.z = __hfma(val.ba.x, w, res.z);
-//            res.w = __hfma(val.ba.y, w, res.w);
+////            res.x = __hfma(val.rg.x, w, res.x);
+////            res.y = __hfma(val.rg.y, w, res.y);
+////            res.z = __hfma(val.ba.x, w, res.z);
+////            res.w = __hfma(val.ba.y, w, res.w);
 //#elif defined VOLUME_FP32
 //            res.x += val.x * w;
 //            res.y += val.y * w;
@@ -151,10 +151,10 @@
 //            auto z2_index = (threadIdx.x) * (blockDim.y * blockDim.z) + threadIdx.y * blockDim.z + threadIdx.z;
 //
 //#ifdef VOLUME_FP16
-//            z2[z2_index].rg.x = __hfma(val.rg.x, w, z2[z2_index].rg.x);
-//            z2[z2_index].rg.y = __hfma(val.rg.y, w, z2[z2_index].rg.y);
-//            z2[z2_index].ba.x = __hfma(val.ba.x, w, z2[z2_index].ba.x);
-//            z2[z2_index].ba.y = __hfma(val.ba.y,w, z2[z2_index].ba.y);
+////            z2[z2_index].rg.x = __hfma(val.rg.x, w, z2[z2_index].rg.x);
+////            z2[z2_index].rg.y = __hfma(val.rg.y, w, z2[z2_index].rg.y);
+////            z2[z2_index].ba.x = __hfma(val.ba.x, w, z2[z2_index].ba.x);
+////            z2[z2_index].ba.y = __hfma(val.ba.y,w, z2[z2_index].ba.y);
 //#elif defined VOLUME_FP32
 //            z2[z2_index].x += val.x * w;
 //            z2[z2_index].y += val.y * w;
@@ -180,10 +180,10 @@
 //            auto w = gauss->sw[abs(ks)];
 //            auto z1_index_y = (threadIdx.x) * (blockDim.y * blockDim.z) + (threadIdx.y + i) * blockDim.z + threadIdx.z;
 //#ifdef VOLUME_FP16
-//            z1[z1_index_y].rg.x = __hfma(val.rg.x, w, z1[z1_index_y].rg.x);
-//            z1[z1_index_y].rg.y = __hfma(val.rg.y, w, z1[z1_index_y].rg.y);
-//            z1[z1_index_y].ba.x = __hfma(val.ba.x, w, z1[z1_index_y].ba.x);
-//            z1[z1_index_y].ba.y = __hfma(val.ba.y,w, z1[z1_index_y].ba.y);
+////            z1[z1_index_y].rg.x = __hfma(val.rg.x, w, z1[z1_index_y].rg.x);
+////            z1[z1_index_y].rg.y = __hfma(val.rg.y, w, z1[z1_index_y].rg.y);
+////            z1[z1_index_y].ba.x = __hfma(val.ba.x, w, z1[z1_index_y].ba.x);
+////            z1[z1_index_y].ba.y = __hfma(val.ba.y,w, z1[z1_index_y].ba.y);
 //#elif defined VOLUME_FP32
 //            z1[z1_index_y].x += val.x * w;
 //            z1[z1_index_y].y += val.y * w;
@@ -210,10 +210,10 @@
 //            auto w = gauss->sw[abs(ks)];
 //
 //#ifdef VOLUME_FP16
-//            res.x = __hfma(val.rg.x, w, res.x);
-//            res.y = __hfma(val.rg.y, w, res.y);
-//            res.z = __hfma(val.ba.x, w, res.z);
-//            res.w = __hfma(val.ba.y,w, res.w);
+////            res.x = __hfma(val.rg.x, w, res.x);
+////            res.y = __hfma(val.rg.y, w, res.y);
+////            res.z = __hfma(val.ba.x, w, res.z);
+////            res.w = __hfma(val.ba.y,w, res.w);
 //#elif defined VOLUME_FP32
 //            res.x += val.x * w;
 //            res.y += val.y * w;

@@ -13,9 +13,17 @@ DataLoader::DataLoader(std::shared_ptr<Dataset> dataset)
         : m_dataset(std::move(dataset)), m_batchSize(10) {
     /** Allocate */
     m_batchItems = std::vector<GPUData<BatchItemDescriptor> *>(m_batchSize);
+    m_losses = std::vector<CudaBuffer<vec3>*>(m_batchSize);
+    m_cpreds = std::vector<CudaBuffer<vec3>*>(m_batchSize);
+
     for (int i = 0; i < m_batchSize; ++i) {
         auto tmp = new GPUData<BatchItemDescriptor>();
         m_batchItems[i] = tmp;
+
+        auto loss_buff = new CudaBuffer<vec3>();
+        auto cpred_buff = new CudaBuffer<vec3>();
+        m_losses[i] = loss_buff;
+        m_cpreds[i] = cpred_buff;
     }
 }
 
@@ -54,10 +62,16 @@ void DataLoader::LoadBatch() {
 
     /** Load new batch */
     for (unsigned int i = 0; i < m_batchSize; ++i) {
-        std::cout << "DATASET: " << std::to_string(i) << std::endl;
-        auto res = m_dataset->GetEntry(m_indexes[m_startIndex + i]);
+        auto index = m_indexes[m_startIndex + i];
+        auto res = m_dataset->GetEntry(index);
+
+        m_losses[i]->Allocate(res.img->width * res.img->height);
+        m_cpreds[i]->Allocate(res.img->width * res.img->height);
+
         m_batchItems[i]->Host()->cam = res.cam->GetGPUDescriptor();
         m_batchItems[i]->Host()->img = res.img->GetGPUDescriptor();
+        m_batchItems[i]->Host()->loss = m_losses[i]->Device();
+        m_batchItems[i]->Host()->cpred = m_cpreds[i]->Device();
         m_batchItems[i]->Host()->res = ivec2(res.img->width, res.img->height);
         m_batchItems[i]->Host()->range = res.cam->GetIntegrationRangeGPUDescriptor().Device();
         m_batchItems[i]->Host()->debugRender = true;

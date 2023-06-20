@@ -14,7 +14,6 @@ Modified: 2023-04-24T13:03:22.194Z
 #include <glm/glm.hpp>
 #include <cuda_fp16.h>
 #include <iostream>
-#include <cuda_fp16.hpp>
 #include "../utils/helper_cuda.h"
 
 #ifdef __CUDACC__
@@ -29,14 +28,14 @@ Modified: 2023-04-24T13:03:22.194Z
 
 using namespace glm;
 
+//#define VOLUME_FP16
 #define VOLUME_FP32
-//#define VOLUME_FP32
 //#define VOLUME_UINT8
 
 struct cell {
 #ifdef VOLUME_FP16
-    half2 rg; /** Hergé */
-    half2 ba; /** Béa */
+    __half2 rg; /** Hergé */
+    __half2 ba; /** Béa */
 #elif defined VOLUME_FP32
     float4 data;
 #elif defined VOLUME_UINT8
@@ -105,8 +104,8 @@ public:
     CUDA_HOST void HSet(const ivec3 &loc, const vec4 &data) {
 #ifdef VOLUME_FP16
         m_hostData[GetIndex(loc)] = {
-                .rg =  __float22half2_rn(make_float2(data.r, data.g)),
-                .ba =  __float22half2_rn(make_float2(data.b, data.a))
+                .rg =  __floats2half2_rn(data.r, data.g),
+                .ba =  __floats2half2_rn(data.b, data.a)
         };
 #elif defined VOLUME_FP32
         m_hostData[GetIndex(loc)].data = make_float4(data.x,data.y,data.z,data.w);
