@@ -6,9 +6,7 @@
 #define DRTMCS_ADAM_CUH
 
 
-class Adam {
 
-};
 
 
 #endif //DRTMCS_ADAM_CUH

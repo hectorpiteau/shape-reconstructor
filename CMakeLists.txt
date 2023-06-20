@@ -49,7 +49,7 @@ set(CUDA_SOURCE_FILES
         src/cuda/kernel.cu
         src/cuda/CudaSurface3D.cu
         src/cuda/VolumeRendering.cu
-        src/cuda/PlaneCutRendering.cu src/utils/filesystem.h src/model/AdamOptimizer.cpp src/model/AdamOptimizer.hpp src/view/ImUI/Inspectors/AdamEditor.hpp src/interactors/AdamInteractor.cpp src/interactors/AdamInteractor.hpp src/cuda/Losses.cuh src/cuda/Convolutions.cuh src/model/Gaussian/GPUGaussianKernelData.cpp src/model/Gaussian/GPUGaussianKernelData.hpp src/cuda/Convolutions.cu src/model/DataLoader/DataLoader.cpp src/model/DataLoader/DataLoader.hpp src/cuda/IntegrationRange.cu src/cuda/IntegrationRange.cuh)
+        src/cuda/PlaneCutRendering.cu src/utils/filesystem.h src/model/AdamOptimizer.cpp src/model/AdamOptimizer.hpp src/view/ImUI/Inspectors/AdamEditor.hpp src/interactors/AdamInteractor.cpp src/interactors/AdamInteractor.hpp src/cuda/Losses.cuh src/cuda/Convolutions.cuh src/model/Gaussian/GPUGaussianKernelData.cpp src/model/Gaussian/GPUGaussianKernelData.hpp src/cuda/Convolutions.cu src/model/DataLoader/DataLoader.cpp src/model/DataLoader/DataLoader.hpp src/cuda/IntegrationRange.cu src/cuda/IntegrationRange.cuh src/cuda/Adam.cu src/cuda/Adam.cuh)
 set(CUDA_ARCH "-arch=sm_75")
 set(CMAKE_CUDA_ARCHITECTURES "75")
 

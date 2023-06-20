@@ -209,7 +209,7 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
 
 }
 
-__global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *item) {
+__global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *item, AdamOptimizerDescriptor* adam) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -256,8 +256,15 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
                 vec3 color = vec3(data.r, data.g, data.b);
                 float alpha = data.a;
 
-                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
 //                Cpartial += Tpartial * alpha * color;
+                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
+
+                /** Compute full loss */
+                auto dLo_dCi = Tpartial * ( 1 - exp(-alpha));
+                auto color_grad = dLdC * dLo_dCi;
+
+                WriteVolumeTRI(adam->);
+
 //                Tpartial *= (1.0f - alpha);
                 Tpartial *= (1.0f / exp(alpha));
 
