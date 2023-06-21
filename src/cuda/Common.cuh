@@ -27,7 +27,7 @@ using namespace glm;
 #define STBI_IMG_INDEX(X, Y, RESX, RESY) ((RESY - Y) * RESX * 4 + X * 4)
 #define LINEAR_IMG_INDEX(X, Y, RESY) (X * RESY + Y)
 
-//#define VOLUME_INDEX(X, Y) ()
+#define VOLUME_INDEX(X, Y, Z, RES) (X * RES.y*RES.z + Y * RES.z + Z)
 
 #define FLOAT4_NORM_TO_UCHAR4(F) make_uchar4( \
 (unsigned char)float2uint(F.x * 255.0f, cudaRoundNearest), \
@@ -73,11 +73,15 @@ struct AdamOptimizerDescriptor {
     vec2 beta;
     /** Gradient grid resolution. */
     ivec3 res;
+    /** Gradients */
+    cell* grads;
     /** Adam gradients. */
     cell* adamG1;
     cell* adamG2;
     /** 3D Data to optimize. */
     cell* target;
+
+    int iteration;
 };
 
 struct PlaneCutDescriptor {
