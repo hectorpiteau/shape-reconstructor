@@ -109,8 +109,9 @@ cuda_add_executable(DRTMCS
         ${CUDA_SOURCE_FILES})
 
 target_compile_options(DRTMCS PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+        --generate-line-info
+        -g
         -G
-        # --use_fast_math
         --relocatable-device-code=true
         >)
 

@@ -15,7 +15,7 @@ protected:
     T *m_host;
     T *m_device;
 
-    bool m_isDeviceUpToDate;
+    bool m_isDeviceUpToDate = false;
 
 public:
     explicit GPUData() : m_host(nullptr), m_device(nullptr), m_isDeviceUpToDate(false) {

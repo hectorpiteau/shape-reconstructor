@@ -16,7 +16,7 @@ DataLoader::DataLoader(std::shared_ptr<Dataset> dataset)
     m_losses = std::vector<CudaBuffer<vec3>*>(m_batchSize);
     m_cpreds = std::vector<CudaBuffer<vec3>*>(m_batchSize);
 
-    for (int i = 0; i < m_batchSize; ++i) {
+    for (size_t i = 0; i < m_batchSize; ++i) {
         auto tmp = new GPUData<BatchItemDescriptor>();
         m_batchItems[i] = tmp;
 

@@ -27,7 +27,6 @@ void LineGrid::Initialize(){
     m_centerVertices = new float[m_centerVerticesLength];
 
     /** Fill the correct values in the list of vertices. */
-    glm::vec3 tmp = glm::vec3(0.0);
 
     /** Border lines. */
     WRITE_VEC3(m_borderVertices, 0, glm::vec3(-m_width / 2.0f, 0.0f, -m_width / 2.0f));
@@ -49,7 +48,6 @@ void LineGrid::Initialize(){
 
     /** Center lines. */
     int half_amount_of_lines = (int(m_width / m_xCellSize) - 2) / 2;
-    std::cout << "half: " << half_amount_of_lines << std::endl;
 
     float w2 = ((float)m_width) / 2.0f;
 

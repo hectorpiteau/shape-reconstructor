@@ -32,6 +32,8 @@ class Volume3D : public SceneObject
 public:
     Volume3D(Scene *scene, ivec3 res);
 
+    void UpdateGPUData();
+
     /**
      * @brief Set the Volume Min Bounding-Box coordinates.
      * 
@@ -66,6 +68,7 @@ public:
     vec3 m_bboxPoints[8] = {};
 
     BBoxDescriptor* GetGPUDescriptor();
+    GPUData<VolumeDescriptor>& GetGPUData();
 private:
     /** ext dep*/
     Scene *m_scene;
@@ -82,6 +85,8 @@ private:
     ivec3 m_res;
 
     GPUData<BBoxDescriptor> m_desc;
+    GPUData<VolumeDescriptor> m_volumeDescriptor;
+
 
     /** wireframe coordinates. */
     float m_wireframeVertices[12 * 2 * 3] = {

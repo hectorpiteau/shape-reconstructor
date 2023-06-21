@@ -30,22 +30,22 @@ using namespace glm;
 #define VOLUME_INDEX(X, Y, Z, RES) (X * RES.y*RES.z + Y * RES.z + Z)
 
 #define FLOAT4_NORM_TO_UCHAR4(F) make_uchar4( \
-(unsigned char)float2uint(F.x * 255.0f, cudaRoundNearest), \
-(unsigned char)float2uint(F.y * 255.0f, cudaRoundNearest), \
-(unsigned char)float2uint(F.z * 255.0f, cudaRoundNearest), \
-(unsigned char)float2uint(F.w * 255.0f, cudaRoundNearest))
+(unsigned char)__float2uint_rn(F.x * 255.0f), \
+(unsigned char)__float2uint_rn(F.y * 255.0f), \
+(unsigned char)__float2uint_rn(F.z * 255.0f), \
+(unsigned char)__float2uint_rn(F.w * 255.0f))
 
 #define FLOAT4_TO_UCHAR4(F) make_uchar4( \
-(unsigned char)float2uint(F.x, cudaRoundNearest), \
-(unsigned char)float2uint(F.y, cudaRoundNearest), \
-(unsigned char)float2uint(F.z, cudaRoundNearest), \
-(unsigned char)float2uint(F.w, cudaRoundNearest))
+(unsigned char)__float2uint_rn(F.x), \
+(unsigned char)__float2uint_rn(F.y), \
+(unsigned char)__float2uint_rn(F.z), \
+(unsigned char)__float2uint_rn(F.w))
 
 
 #define UCHAR4_TO_VEC3(UCH) vec3( \
-uint2float(UCH.x, cudaRoundNearest), \
-uint2float(UCH.y, cudaRoundNearest), \
-uint2float(UCH.z, cudaRoundNearest))
+__uint2float_rn(UCH.x), \
+__uint2float_rn(UCH.y), \
+__uint2float_rn(UCH.z))
 
 #define UCHAR4_TO_VEC4(UCH) vec4( \
 uint2float(UCH.x, cudaRoundNearest), \
@@ -58,12 +58,30 @@ uint2float(UCH.w, cudaRoundNearest))
 (unsigned char)float2uint(VEC.y, cudaRoundNearest), \
 (unsigned char)float2uint(VEC.z, cudaRoundNearest), 255)
 
+
+#define VEC4_TO_UCHAR4(VEC) make_uchar4( \
+__float2uint_rn(VEC.x), \
+__float2uint_rn(VEC.y), \
+__float2uint_rn(VEC.z), \
+__float2uint_rn(VEC.w))
+
 /** ************************************************************************** */
 //
 // Structs used to transfer data from CPU memory to GPU memory. Common between
 // host and device.
 //
 /** ************************************************************************** */
+struct VolumeDescriptor {
+    /** min and max coordinates in world pos. */
+    vec3 bboxMin;
+    vec3 bboxMax;
+    /** result of bbox min and max. gives the real world size. */
+    vec3 worldSize;
+    /** volume resolution. */
+    ivec3 res;
+    /** volume's data pointer. Indexed: [ x * (res.y*res.z) + y * (res.z) + z] */
+    cell* data;
+};
 
 struct AdamOptimizerDescriptor {
     float epsilon;
@@ -74,7 +92,7 @@ struct AdamOptimizerDescriptor {
     /** Gradient grid resolution. */
     ivec3 res;
     /** Gradients */
-    cell* grads;
+    VolumeDescriptor* grads;
     /** Adam gradients. */
     cell* adamG1;
     cell* adamG2;
@@ -94,17 +112,7 @@ struct PlaneCutDescriptor {
     cudaSurfaceObject_t outSurface;
 };
 
-struct VolumeDescriptor {
-    /** min and max coordinates in world pos. */
-    vec3 bboxMin;
-    vec3 bboxMax;
-    /** result of bbox min and max. gives the real world size. */
-    vec3 worldSize;
-    /** volume resolution. */
-    ivec3 res;
-    /** volume's data pointer. Indexed: [ x * (res.y*res.z) + y * (res.z) + z] */
-    cell* data;
-};
+
 
 struct ImageDescriptor {
     /** image information */

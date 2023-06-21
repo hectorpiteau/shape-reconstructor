@@ -301,7 +301,7 @@ public:
      */
     const ivec2& GetResolution();
 
-    ivec2 SetResolution(const ivec2& res);
+    void SetResolution(const ivec2& res);
 
     /**
      * @brief Render the camera in the scene. Render the gizmo, frustum and potentially 

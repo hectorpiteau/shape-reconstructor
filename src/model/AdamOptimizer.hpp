@@ -38,6 +38,10 @@ private:
     std::shared_ptr<CudaLinearVolume3D> m_adamG2;
     /** 3D Data to optimize. */
     std::shared_ptr<Volume3D> m_target;
+
+    std::shared_ptr<CudaLinearVolume3D> m_grads;
+    GPUData<VolumeDescriptor> m_gradsDescriptor;
+
     std::shared_ptr<CudaLinearVolume3D> m_blurredVoxels;
 
     /** Adam gradients. */
@@ -49,7 +53,7 @@ private:
     /** True if the optimizer is currently working. False if not running. */
     bool m_optimize = false;
     /** Amount of steps already processed. */
-    size_t m_steps = 0;
+    size_t m_steps = 1;
 
     std::shared_ptr<DataLoader> m_dataLoader;
 

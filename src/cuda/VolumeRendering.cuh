@@ -19,13 +19,12 @@ Modified: 2023-04-25T12:53:31.894Z
 #include "Common.cuh"
 #include "GPUData.cuh"
 
-using namespace glm;
 
 /**
  * @brief Volume Rendering Wrapper using Linear Memory Allocation :
  
  */
-extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor>& raycaster, GPUData<CameraDescriptor>& camera, GPUData<VolumeDescriptor>& volume, cudaSurfaceObject_t surface);
-
+extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor>& raycaster, GPUData<CameraDescriptor>& camera, GPUData<VolumeDescriptor>& volume);
 extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<VolumeDescriptor>& volume);
+extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<VolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam);
 #endif // VOLUME_RENDERING_H

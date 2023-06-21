@@ -41,7 +41,6 @@ OverlayPlane::~OverlayPlane() = default;
 void OverlayPlane::Render(bool useTex, GLuint tex)
 {
     m_pipeline->UseShader();
-    mat4 m_model = mat4(1.0);
 
     glUniform1f(m_scaleLocation, 1.0f);
 

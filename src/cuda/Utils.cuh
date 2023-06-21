@@ -51,8 +51,8 @@ CUDA_DEV inline glm::vec4 ReadVolume(glm::vec3 &pos, VolumeDescriptor *volume) {
     full_coords -= vec3(0.5, 0.5, 0.5);
     glm::ivec3 min = glm::floor(full_coords); // first project [0,1] to [0, resolution], then take the floor index.
     glm::ivec3 max = glm::ceil(full_coords); // idem but to take the ceil index.
-    min = glm::clamp(min, glm::ivec3(0, 0, 0), volume->res);
-    max = glm::clamp(max, glm::ivec3(0, 0, 0), volume->res);
+    min = glm::clamp(min, glm::ivec3(0, 0, 0), volume->res - 1);
+    max = glm::clamp(max, glm::ivec3(0, 0, 0), volume->res - 1);
 
     glm::vec3 weights =  full_coords - vec3(min);
 

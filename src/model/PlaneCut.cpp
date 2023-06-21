@@ -52,14 +52,13 @@ float PlaneCut::GetPosition() {
 void PlaneCut::Render() {
     std::shared_ptr<Camera> cam = m_scene->GetActiveCam();
     /** Camera desc. TODO: Simplify by allocating it in the Camera Object directly and sharing the descriptor.*/
-//
+
     m_cameraDesc.Host()->camExt = cam->GetExtrinsic();
     m_cameraDesc.Host()->camInt = cam->GetIntrinsic();
     m_cameraDesc.Host()->camPos = cam->GetPosition();
     m_cameraDesc.Host()->width = cam->GetResolution().x;
     m_cameraDesc.Host()->height = cam->GetResolution().y;
-
-
+    m_cameraDesc.ToDevice();
 
     /** Filling the volume descriptor.  TODO: Same than cameraDesc. */
     m_volumeDesc.Host()->bboxMin = m_targetVolume->GetBboxMin();
@@ -67,14 +66,18 @@ void PlaneCut::Render() {
     m_volumeDesc.Host()->worldSize = m_targetVolume->GetBboxMax() - m_targetVolume->GetBboxMin();
     m_volumeDesc.Host()->res = m_targetVolume->GetCudaVolume()->GetResolution();
     m_volumeDesc.Host()->data = m_targetVolume->GetCudaVolume()->GetDevicePtr();
+    m_volumeDesc.ToDevice();
 
     m_planeCutDesc.Host()->axis = m_dir;
     m_planeCutDesc.Host()->pos = m_pos[m_dir];
     m_planeCutDesc.Host()->min = m_targetVolume->GetBboxMin();
     m_planeCutDesc.Host()->max = m_targetVolume->GetBboxMax();
+    m_planeCutDesc.Host()->outSurface = m_cudaTex->OpenSurface();
+    m_planeCutDesc.ToDevice();
 
     /** Run kernel on texture. */
-    m_cudaTex->RunCUDAPlaneCut(m_planeCutDesc, m_volumeDesc, m_cameraDesc);
+    plane_cut_rendering_wrapper(m_planeCutDesc, m_volumeDesc, m_cameraDesc);
+    m_cudaTex->CloseSurface();
 
     m_overlay->Render(true, m_cudaTex->GetTex());
 }

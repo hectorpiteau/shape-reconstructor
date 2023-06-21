@@ -47,7 +47,7 @@ class CudaLinearVolume3D {
 private:
     cell *m_hostData = nullptr;
     cell *m_gpuData = nullptr;
-    ivec3 m_res = ivec3(100, 100, 100);
+    ivec3 m_res = ivec3(128, 128, 128);
 
     size_t m_size = 0;
     size_t m_size_gpu = 0;
@@ -73,7 +73,7 @@ public:
         if (m_gpuData != nullptr) cudaFree(m_gpuData);
     }
 
-    CUDA_HOST [[nodiscard]] inline size_t GetIndex(const ivec3 &loc) const {
+    CUDA_HOST inline size_t GetIndex(const ivec3 &loc) const {
         if (loc.x < 0 || loc.y < 0 || loc.z < 0 || loc.x > m_res.x || loc.y > m_res.y || loc.z > m_res.z) {
             std::cout << "Error : trying to get index out of range. " << std::endl;
             return 0;

@@ -133,9 +133,9 @@ const mat4 &Camera::GetProjectionMatrix() {
 }
 
 void Camera::ComputeMatricesFromInputs(GLFWwindow *window) {
-    static double lastTime = glfwGetTime();
+//    static double lastTime = glfwGetTime();
     /** Compute time difference between current and last frame */
-    double currentTime = glfwGetTime();
+//    double currentTime = glfwGetTime();
     // Get mouse position
     double xpos = 0.0, ypos = 0.0;
     glfwGetCursorPos(window, &xpos, &ypos);
@@ -147,7 +147,7 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window) {
         if (!m_sceneSettings->GetMouseLeftClick()) {
             m_previousCursorPos.x = (float) xpos;
             m_previousCursorPos.y = (float) ypos;
-            lastTime = currentTime;
+//            lastTime = currentTime;
             return;
         }
 
@@ -167,7 +167,7 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window) {
 
             m_previousCursorPos.x = (float) xpos;
             m_previousCursorPos.y = (float) ypos;
-            lastTime = currentTime;
+//            lastTime = currentTime;
             return;
         }
 
@@ -191,7 +191,7 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window) {
 
             m_previousCursorPos.x = (float) xpos;
             m_previousCursorPos.y = (float) ypos;
-            lastTime = currentTime;
+//            lastTime = currentTime;
             return;
         }
 
@@ -238,7 +238,7 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window) {
     m_previousCursorPos.y = (float) ypos;
 
     // For the next frame, the "last time" will be "now"
-    lastTime = currentTime;
+//    lastTime = currentTime;
 }
 
 const vec3 &Camera::GetTarget() { return m_target; }
@@ -502,7 +502,7 @@ void Camera::UpdateGPUDescriptor() {
     m_desc.ToDevice();
 }
 
-ivec2 Camera::SetResolution(const ivec2& res) {
+void Camera::SetResolution(const ivec2& res) {
     m_resolution = res;
     UpdateGPUDescriptor();
 }

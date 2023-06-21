@@ -6,11 +6,12 @@
 #include <utility>
 #include "AdamOptimizer.hpp"
 #include "Volume3D.hpp"
+#include "Adam.cuh"
 
 using namespace glm;
 
 AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<VolumeRenderer> volumeRenderer, const ivec3 &volumeResolution) :
-        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_res(volumeResolution),m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_volumeRenderer(std::move(volumeRenderer)) {
+        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_res(volumeResolution),m_gradsDescriptor(), m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_volumeRenderer(std::move(volumeRenderer)) {
     SetName("Adam Optimizer");
 
     m_target = m_volumeRenderer->GetVolume3D();
@@ -27,6 +28,8 @@ AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std
 
     m_adamG1 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_adamG2 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
+    m_grads = std::make_shared<CudaLinearVolume3D>(volumeResolution);
+
     m_blurredVoxels = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_dataLoader = std::make_shared<DataLoader>(m_dataset);
 
@@ -102,24 +105,47 @@ void AdamOptimizer::Render() {
 }
 
 void AdamOptimizer::Step(){
+    /** Update adam descriptor's data on GPU. */
+    UpdateGPUDescriptor();
+    m_volumeRenderer->UpdateGPUDescriptors();
+
+    /** Zero gradients. */
+    zero_adam_wrapper(&m_adamDescriptor);
+
     /** Forward Pass  */
     auto items = m_dataLoader->GetGPUDatas();
-    for(int i=0; i<m_dataLoader->GetBatchSize(); ++i){
+    for(size_t i=0; i<m_dataLoader->GetBatchSize(); ++i){
         batched_forward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData());
     }
 
     /** Backward Pass  */
-    // batched_backward_wrapper();
+    for(size_t i=0; i < m_dataLoader->GetBatchSize(); ++i){
+//        batched_backward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor);
+    }
+
+    /** Update target volume weights. */
+    update_adam_wrapper(&m_adamDescriptor);
 
     m_steps += 1;
 }
 
 void AdamOptimizer::UpdateGPUDescriptor() {
+    m_gradsDescriptor.Host()->data = m_grads->GetDevicePtr();
+    m_gradsDescriptor.Host()->bboxMin = m_target->GetBboxMin();
+    m_gradsDescriptor.Host()->bboxMax = m_target->GetBboxMax();
+    m_gradsDescriptor.Host()->worldSize = m_target->GetBboxMax() - m_target->GetBboxMin();
+    m_gradsDescriptor.Host()->res = m_target->GetResolution();
+    m_gradsDescriptor.ToDevice();
+
     m_adamDescriptor.Host()->epsilon = m_epsilon;
     m_adamDescriptor.Host()->eta = m_eta;
     m_adamDescriptor.Host()->adamG1 = m_adamG1->GetDevicePtr();
     m_adamDescriptor.Host()->adamG2 = m_adamG1->GetDevicePtr();
     m_adamDescriptor.Host()->target = m_target->GetCudaVolume()->GetDevicePtr();
+    m_adamDescriptor.Host()->grads = m_gradsDescriptor.Device();
+    m_adamDescriptor.Host()->iteration = (int) m_steps;
+    m_adamDescriptor.Host()->res = m_target->GetResolution();
+    m_adamDescriptor.ToDevice();
 }
 
 void AdamOptimizer::SetBeta(const vec2& value) {

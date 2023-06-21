@@ -91,8 +91,7 @@ __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, 
 }
 
 
-__global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescriptor *camera, VolumeDescriptor *volume,
-                                   cudaSurfaceObject_t surface) {
+__global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescriptor *camera, VolumeDescriptor *volume) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -112,12 +111,12 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
         maxpy = a.w;
 
 //        if (x > minpx - 5 && x < minpx + 5 && y > minpy - 5 && y < minpy + 5) {
-//            surf2Dwrite<uchar4>(make_uchar4(255, 255, 0, 255), surface, x * sizeof(uchar4), y);
+//            surf2Dwrite<uchar4>(make_uchar4(255, 255, 0, 255), raycaster->surface, x * sizeof(uchar4), y);
 //            return;
 //        }
 //
 //        if (x > maxpx - 5 && x < maxpx + 5 && y > maxpy - 5 && y < maxpy + 5) {
-//            surf2Dwrite<uchar4>(make_uchar4(0, 255, 255, 255), surface, x * sizeof(uchar4), y);
+//            surf2Dwrite<uchar4>(make_uchar4(0, 255, 255, 255), raycaster->surface, x * sizeof(uchar4), y);
 //            return;
 //        }
 
@@ -126,17 +125,17 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
             bool res = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
             if (!res) {
                 uchar4 element = make_uchar4(0, 0, 0, 0);
-                surf2Dwrite<uchar4>(element, surface, x * sizeof(uchar4), y);
+                surf2Dwrite<uchar4>(element, raycaster->surface, x * sizeof(uchar4), y);
                 return;
             }
 
             /** Call forward. */
             vec4 result = forward(ray, volume) * 255.0f;
             uchar4 element = make_uchar4(result.x, result.y, result.z, 255.0f);
-            surf2Dwrite<uchar4>(element, surface, (x) * sizeof(uchar4), y);
+            surf2Dwrite<uchar4>(element, raycaster->surface, (x) * sizeof(uchar4), y);
         } else {
             uchar4 element = make_uchar4(0, 0, 0, 0);
-            surf2Dwrite<uchar4>(element, surface, x * sizeof(uchar4), y);
+            surf2Dwrite<uchar4>(element, raycaster->surface, x * sizeof(uchar4), y);
         }
 
     } else {
@@ -144,12 +143,11 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
         /** Call forward. */
         vec4 result = forward(ray, volume) * 255.0f;
         uchar4 element = make_uchar4(result.x, result.y, result.z, result.w);
-        surf2Dwrite<uchar4>(element, surface, (x) * sizeof(uchar4), y);
+        surf2Dwrite<uchar4>(element, raycaster->surface, (x) * sizeof(uchar4), y);
     }
 }
 
-extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster, GPUData<CameraDescriptor> &camera,
-                                         GPUData<VolumeDescriptor> &volume, cudaSurfaceObject_t surface) {
+extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster, GPUData<CameraDescriptor> &camera, GPUData<VolumeDescriptor> &volume) {
     /** Max 1024 per block. As each pixel is independent, may be useful to search for optimal size. */
     dim3 threadsPerBlock(16, 16);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
@@ -158,7 +156,7 @@ extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster
             (camera.Host()->height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     /** Call the main volumeRendering kernel. **/
-    volumeRenderingUI8<<<numBlocks, threadsPerBlock>>>(raycaster.Device(), camera.Device(), volume.Device(), surface);
+    volumeRenderingUI8<<<numBlocks, threadsPerBlock>>>(raycaster.Device(), camera.Device(), volume.Device());
 
     /** Get last error after rendering. */
     cudaError_t err = cudaGetLastError();
@@ -228,8 +226,8 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
     vec3 cgt = UCHAR4_TO_VEC3(ground_truth);
 
     float epsilon = 0.001f;
-    float zeroCross = INFINITY; //0x7f800000; //std::numeric_limits<float>().infinity();
-    bool gradWritten = false;
+//    float zeroCross = INFINITY; //0x7f800000; //std::numeric_limits<float>().infinity();
+//    bool gradWritten = false;
 
     auto loss = item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)];
     auto cpred = item->cpred[LINEAR_IMG_INDEX(x, y, item->res.y)];
@@ -263,7 +261,7 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
                 auto dLo_dCi = Tpartial * ( 1 - exp(-alpha));
                 auto color_grad = dLdC * dLo_dCi;
 
-                WriteVolumeTRI(adam->);
+                WriteVolumeTRI(pos, adam->grads, vec4(color_grad, 0.0f));
 
 //                Tpartial *= (1.0f - alpha);
                 Tpartial *= (1.0f / exp(alpha));
@@ -280,16 +278,16 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
 }
 
 
-extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor> &item, GPUData<VolumeDescriptor> &volume) {
+extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<VolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam) {
     dim3 threads(16, 16);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
     dim3 blocks((item.Host()->res.x + threads.x - 1) / threads.x,
                 (item.Host()->res.y + threads.y - 1) / threads.y);
 
-    batched_backward<<<blocks, threads>>>(volume.Device(), item.Device());
+    batched_backward<<<blocks, threads>>>(volume.Device(), item.Device(), adam.Device());
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
-        std::cerr << "(batched_forward_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "(batched_backward_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
     }
 }
 

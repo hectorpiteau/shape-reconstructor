@@ -28,6 +28,8 @@ public:
         /** Create the Scene */
         m_scene = new Scene(m_sceneSettings, window);
 
+        ivec3 volumeResolution = {128, 128, 128};
+
         /** Fill default Scene. */
         // auto volume = m_scene->Add(std::make_shared<Volume3D>(m_scene));
         auto cam1 = std::make_shared<Camera>(m_scene, std::string("CameraT"), vec3(-4.0, 3.0, -4.0), vec3(0.0, 0.0, 0.0));
@@ -39,30 +41,25 @@ public:
         auto nerfdataset = std::make_shared<NeRFDataset>(m_scene);
         m_scene->Add(nerfdataset);
 
-        auto volumeRenderer1 = std::make_shared<VolumeRenderer>(m_scene);
+        auto volumeRenderer1 = std::make_shared<VolumeRenderer>(m_scene, volumeResolution);
         m_scene->Add(volumeRenderer1);
 
         m_scene->Add(std::make_shared<PlaneCut>(m_scene, volumeRenderer1->GetVolume3D()));
 
-        auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volumeRenderer1, volumeRenderer1->GetVolume3D()->GetResolution());
+        auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volumeRenderer1, volumeResolution);
         m_scene->Add(adamOptimizer);
 
         /** Create Views and Interactors */
         m_objectListView = std::make_shared<ObjectListView>();
-        // m_inspectorView = std::make_shared<InspectorView>();
 
         m_sceneObjectInteractor = std::make_shared<SceneObjectInteractor>(m_scene);
         m_objectListInteractor = std::make_shared<ObjectListInteractor>(m_scene, m_objectListView, m_sceneObjectInteractor);
-
-        m_volume = new DenseFloat32Volume(100);
-        SphereSDF::PopulateVolume(m_volume);
 
         m_calibrator = new OpenCVCalibrator();
 
     }
 
     ~AppController(){
-        delete m_volume;
         delete m_scene;
     }
 
@@ -89,8 +86,6 @@ private:
     /** views */
     std::shared_ptr<ObjectListView> m_objectListView;
     std::shared_ptr<InspectorView> m_inspectorView;
-
-    DenseFloat32Volume* m_volume;
 
     OpenCVCalibrator* m_calibrator;
 

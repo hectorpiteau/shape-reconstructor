@@ -30,7 +30,7 @@ using namespace glm;
 
 class VolumeRenderer : public SceneObject {
 public:
-    explicit VolumeRenderer(Scene* scene);
+    explicit VolumeRenderer(Scene* scene, const ivec3& res);
     VolumeRenderer(const VolumeRenderer&) = delete;
     ~VolumeRenderer() override = default;
 
@@ -115,6 +115,9 @@ public:
     GPUData<RayCasterDescriptor>& GetRayCasterGPUData();
 
     GPUData<VolumeDescriptor>& GetVolumeGPUData();
+//    GPUData<VolumeDescriptor>* GetVolumeGPUDataPtr();
+
+    void UpdateGPUDescriptors();
 
     size_t amountOfRays = 0;
     vec2 m_renderZoneMinNDC{};

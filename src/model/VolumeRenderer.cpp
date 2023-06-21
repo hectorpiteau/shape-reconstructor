@@ -35,11 +35,11 @@ Modified: 2023-04-26T13:51:29.197Z
 
 using namespace glm;
 
-VolumeRenderer::VolumeRenderer(Scene *scene)
+VolumeRenderer::VolumeRenderer(Scene *scene, const ivec3& res)
         : SceneObject{std::string("VolumeRenderer"), SceneObjectTypes::VOLUMERENDERER}, m_scene(scene) {
     SetName(std::string(ICON_FA_SPINNER " Volume Renderer"));
 
-    m_volume = std::make_shared<Volume3D>(scene, ivec3(128, 128, 128));
+    m_volume = std::make_shared<Volume3D>(scene, res);
     m_scene->Add(m_volume, true, true);
     m_children.push_back(m_volume);
 
@@ -125,28 +125,35 @@ void VolumeRenderer::Render() {
 
     ComputeRenderingZone();
 
-    m_cameraDesc.Host()->camExt = cam->GetExtrinsic();
-    m_cameraDesc.Host()->camInt = cam->GetIntrinsic();
-    m_cameraDesc.Host()->camPos = cam->GetPosition();
-    m_cameraDesc.Host()->width = cam->GetResolution().x;
-    m_cameraDesc.Host()->height = cam->GetResolution().y;
 
-    m_raycasterDesc.Host()->minPixelX = m_rayCaster->GetRenderingZoneMinPixel().x;
-    m_raycasterDesc.Host()->minPixelY = m_rayCaster->GetRenderingZoneMinPixel().y;
-    m_raycasterDesc.Host()->maxPixelX = m_rayCaster->GetRenderingZoneMaxPixel().x;
-    m_raycasterDesc.Host()->maxPixelY = m_rayCaster->GetRenderingZoneMaxPixel().y;
-    m_raycasterDesc.Host()->renderAllPixels = false;
-
-
-    m_volumeDesc.Host()->bboxMin = m_volume->GetBboxMin();
-    m_volumeDesc.Host()->bboxMax = m_volume->GetBboxMax();
-    m_volumeDesc.Host()->worldSize = m_volume->GetBboxMax() - m_volume->GetBboxMin();
-    m_volumeDesc.Host()->res = m_volume->GetCudaVolume()->GetResolution();
-    m_volumeDesc.Host()->data = m_volume->GetCudaVolume()->GetDevicePtr();
 
     /** Render volume using the raycaster. */
     if (m_isRendering) {
-        m_cudaTex->RunKernel(m_raycasterDesc, m_cameraDesc, m_volumeDesc);
+        cam->UpdateGPUDescriptor();
+//        m_cameraDesc.Host()->camExt = cam->GetExtrinsic();
+//        m_cameraDesc.Host()->camInt = cam->GetIntrinsic();
+//        m_cameraDesc.Host()->camPos = cam->GetPosition();
+//        m_cameraDesc.Host()->width = cam->GetResolution().x;
+//        m_cameraDesc.Host()->height = cam->GetResolution().y;
+//        m_cameraDesc.ToDevice();
+
+        m_raycasterDesc.Host()->minPixelX = m_rayCaster->GetRenderingZoneMinPixel().x;
+        m_raycasterDesc.Host()->minPixelY = m_rayCaster->GetRenderingZoneMinPixel().y;
+        m_raycasterDesc.Host()->maxPixelX = m_rayCaster->GetRenderingZoneMaxPixel().x;
+        m_raycasterDesc.Host()->maxPixelY = m_rayCaster->GetRenderingZoneMaxPixel().y;
+        m_raycasterDesc.Host()->renderAllPixels = false;
+        m_raycasterDesc.Host()->surface = m_cudaTex->OpenSurface();
+        m_raycasterDesc.ToDevice();
+
+//        m_volumeDesc.Host()->bboxMin = m_volume->GetBboxMin();
+//        m_volumeDesc.Host()->bboxMax = m_volume->GetBboxMax();
+//        m_volumeDesc.Host()->worldSize = m_volume->GetBboxMax() - m_volume->GetBboxMin();
+//        m_volumeDesc.Host()->res = m_volume->GetCudaVolume()->GetResolution();
+//        m_volumeDesc.Host()->data = m_volume->GetCudaVolume()->GetDevicePtr();
+//        m_volumeDesc.ToDevice();
+
+        volume_rendering_wrapper(m_raycasterDesc, cam->GetGPUData(), m_volume->GetGPUData());
+        m_cudaTex->CloseSurface();
     }
 
     // /** Rendering zone. */
@@ -175,16 +182,18 @@ GPUData<RayCasterDescriptor>& VolumeRenderer::GetRayCasterGPUData() {
     return m_raycasterDesc;
 }
 
-GPUData<VolumeDescriptor>& VolumeRenderer::GetVolumeGPUData() {
+void VolumeRenderer::UpdateGPUDescriptors(){
     m_volumeDesc.Host()->bboxMin = m_volume->GetBboxMin();
     m_volumeDesc.Host()->bboxMax = m_volume->GetBboxMax();
     m_volumeDesc.Host()->worldSize = m_volume->GetBboxMax() - m_volume->GetBboxMin();
     m_volumeDesc.Host()->res = m_volume->GetCudaVolume()->GetResolution();
     m_volumeDesc.Host()->data = m_volume->GetCudaVolume()->GetDevicePtr();
-    return m_volumeDesc;
+    m_volumeDesc.ToDevice();
 }
 
-
+GPUData<VolumeDescriptor>& VolumeRenderer::GetVolumeGPUData() {
+    return m_volumeDesc;
+}
 
 const vec2 &VolumeRenderer::GetRenderingZoneMinNDC() const {
     return m_renderZoneMinNDC;
