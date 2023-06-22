@@ -51,6 +51,7 @@ public:
      * @param targetVolume : The volume where it will read from.
      */
     explicit PlaneCut(Scene* scene, std::shared_ptr<Volume3D> targetVolume);
+
     PlaneCut(const PlaneCut&) = delete;
     ~PlaneCut() override = default;
 

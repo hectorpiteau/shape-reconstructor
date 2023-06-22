@@ -27,7 +27,8 @@ __global__ void UpdateAdam(AdamOptimizerDescriptor* adam){
     auto v_dw_corr = v_g2 / (float)(1.0f - pow(adam->beta.y,adam->iteration));
 
     /** Update target volume weights. */
-    adam->target[VOLUME_INDEX(x,y,z, adam->res)].data = vec4ToFloat4(adam->eta * ( m_dw_corr /(sqrt( v_dw_corr ) + adam->epsilon)));
+    auto tmp = target - (adam->eta * ( m_dw_corr /(sqrt( v_dw_corr ) + adam->epsilon)));
+    adam->target[VOLUME_INDEX(x,y,z, adam->res)].data = vec4ToFloat4(tmp);
 
     /** Update adam gradients. */
     adam->adamG1[VOLUME_INDEX(x,y,z, adam->res)].data = vec4ToFloat4(m_g1);
@@ -42,15 +43,20 @@ __global__ void ZeroAdam(AdamOptimizerDescriptor* adam){
     if(x > adam->res.x || y > adam->res.y || z > adam->res.z) return;
 
     adam->grads->data[VOLUME_INDEX(x,y,z,adam->res)].data = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+
 }
 
 extern "C" void update_adam_wrapper(GPUData<AdamOptimizerDescriptor>* adam){
     dim3 threads(8, 8, 8);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
     dim3 blocks((adam->Host()->res.x + threads.x - 1) / threads.x,
-                (adam->Host()->res.y + threads.y - 1) / threads.y);
+                (adam->Host()->res.y + threads.y - 1) / threads.y,
+                (adam->Host()->res.z + threads.z - 1) / threads.z);
 
     UpdateAdam<<<blocks, threads>>>(adam->Device());
+
+    cudaDeviceSynchronize();
+
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         std::cerr << "(update_adam_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
@@ -61,9 +67,13 @@ extern "C" void zero_adam_wrapper(GPUData<AdamOptimizerDescriptor>* adam){
     dim3 threads(8, 8, 8);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
     dim3 blocks((adam->Host()->res.x + threads.x - 1) / threads.x,
-                (adam->Host()->res.y + threads.y - 1) / threads.y);
+                (adam->Host()->res.y + threads.y - 1) / threads.y,
+                (adam->Host()->res.z + threads.z - 1) / threads.z);
 
     ZeroAdam<<<blocks, threads>>>(adam->Device());
+
+    cudaDeviceSynchronize();
+
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         std::cerr << "(zero_adam_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;

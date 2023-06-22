@@ -27,10 +27,16 @@ AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std
             scene->GetSceneSettings()->GetViewportHeight());
 
     m_adamG1 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
-    m_adamG2 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
-    m_grads = std::make_shared<CudaLinearVolume3D>(volumeResolution);
+    m_adamG1->InitZeros();
+    m_adamG1->ToGPU();
 
-    m_blurredVoxels = std::make_shared<CudaLinearVolume3D>(volumeResolution);
+    m_adamG2 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
+    m_adamG2->InitZeros();
+    m_adamG2->ToGPU();
+
+    m_grads = std::make_shared<Volume3D>(scene, volumeResolution);
+
+//    m_blurredVoxels = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_dataLoader = std::make_shared<DataLoader>(m_dataset);
 
     m_integrationRangeDescriptor.Host()->surface = m_cudaTex->GetTex();
@@ -42,31 +48,32 @@ AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std
 //}
 
 void AdamOptimizer::Initialize(){
-
+    UpdateGPUDescriptor();
 
     /** Initialize integration ranges. */
     auto cameraSet = m_dataset->GetCameraSet();
     for(const auto& cam : cameraSet->GetCameras()){
-
+        cam->UpdateGPUDescriptor();
         cam->GetIntegrationRangeGPUDescriptor().Host()->data = (float2*)GPUData<IntegrationRangeDescriptor>::AllocateOnDevice(cam->GetResolution().x * cam->GetResolution().y * sizeof(float2));
         cam->GetIntegrationRangeGPUDescriptor().Host()->dim.x = cam->GetResolution().x;
         cam->GetIntegrationRangeGPUDescriptor().Host()->dim.y = cam->GetResolution().y;
         cam->GetIntegrationRangeGPUDescriptor().Host()->renderInTexture = false;
 
-//        cam->GetIntegrationRangeGPUDescriptor().Host()->surface = cam->GetCudaTexture()->OpenSurface();
+        cam->GetIntegrationRangeGPUDescriptor().Host()->surface = cam->GetCudaTexture()->OpenSurface();
         cam->GetIntegrationRangeGPUDescriptor().ToDevice();
 
         integration_range_bbox_wrapper(cam->GetGPUData(), cam->GetIntegrationRangeGPUDescriptor().Device(), m_target->GetGPUDescriptor());
-//        cam->UpdateGPUDescriptor();
-        cam->GetCudaTexture()->RunKernel(m_volumeRenderer->GetRayCasterGPUData(), cam->GetGPUData(), m_volumeRenderer->GetVolumeGPUData());
+//        cam->GetCudaTexture()->RunKernel(m_volumeRenderer->GetRayCasterGPUData(), cam->GetGPUData(), m_volumeRenderer->GetVolumeGPUData());
 
-//        cam->GetCudaTexture()->CloseSurface();
+        cam->GetCudaTexture()->CloseSurface();
     }
 
     m_integrationRangeLoaded = true;
 
     /** Initialize dataset. */
     m_dataLoader->Initialize();
+
+    zero_adam_wrapper(&m_adamDescriptor);
 
 }
 
@@ -120,7 +127,7 @@ void AdamOptimizer::Step(){
 
     /** Backward Pass  */
     for(size_t i=0; i < m_dataLoader->GetBatchSize(); ++i){
-//        batched_backward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor);
+        batched_backward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor);
     }
 
     /** Update target volume weights. */
@@ -130,17 +137,17 @@ void AdamOptimizer::Step(){
 }
 
 void AdamOptimizer::UpdateGPUDescriptor() {
-    m_gradsDescriptor.Host()->data = m_grads->GetDevicePtr();
-    m_gradsDescriptor.Host()->bboxMin = m_target->GetBboxMin();
-    m_gradsDescriptor.Host()->bboxMax = m_target->GetBboxMax();
-    m_gradsDescriptor.Host()->worldSize = m_target->GetBboxMax() - m_target->GetBboxMin();
-    m_gradsDescriptor.Host()->res = m_target->GetResolution();
+    m_gradsDescriptor.Host()->data = m_grads->GetCudaVolume()->GetDevicePtr();
+    m_gradsDescriptor.Host()->bboxMin = m_grads->GetBboxMin();
+    m_gradsDescriptor.Host()->bboxMax = m_grads->GetBboxMax();
+    m_gradsDescriptor.Host()->worldSize = m_grads->GetBboxMax() - m_grads->GetBboxMin();
+    m_gradsDescriptor.Host()->res = m_grads->GetResolution();
     m_gradsDescriptor.ToDevice();
 
     m_adamDescriptor.Host()->epsilon = m_epsilon;
     m_adamDescriptor.Host()->eta = m_eta;
     m_adamDescriptor.Host()->adamG1 = m_adamG1->GetDevicePtr();
-    m_adamDescriptor.Host()->adamG2 = m_adamG1->GetDevicePtr();
+    m_adamDescriptor.Host()->adamG2 = m_adamG2->GetDevicePtr();
     m_adamDescriptor.Host()->target = m_target->GetCudaVolume()->GetDevicePtr();
     m_adamDescriptor.Host()->grads = m_gradsDescriptor.Device();
     m_adamDescriptor.Host()->iteration = (int) m_steps;
@@ -182,4 +189,8 @@ void AdamOptimizer::SetBatchSize(unsigned int batchSize) {
 
 unsigned int AdamOptimizer::GetBatchSize() {
     return m_dataLoader->GetBatchSize();
+}
+
+std::shared_ptr<Volume3D> AdamOptimizer::GetGradVolume() {
+    return m_grads;
 }

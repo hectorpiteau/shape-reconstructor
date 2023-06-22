@@ -40,14 +40,16 @@ public:
 
         auto nerfdataset = std::make_shared<NeRFDataset>(m_scene);
         m_scene->Add(nerfdataset);
+        nerfdataset->Load();
 
         auto volumeRenderer1 = std::make_shared<VolumeRenderer>(m_scene, volumeResolution);
         m_scene->Add(volumeRenderer1);
 
-        m_scene->Add(std::make_shared<PlaneCut>(m_scene, volumeRenderer1->GetVolume3D()));
 
         auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volumeRenderer1, volumeResolution);
         m_scene->Add(adamOptimizer);
+
+        m_scene->Add(std::make_shared<PlaneCut>(m_scene, adamOptimizer->GetGradVolume() ));
 
         /** Create Views and Interactors */
         m_objectListView = std::make_shared<ObjectListView>();

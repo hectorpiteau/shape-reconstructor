@@ -39,7 +39,8 @@ private:
     /** 3D Data to optimize. */
     std::shared_ptr<Volume3D> m_target;
 
-    std::shared_ptr<CudaLinearVolume3D> m_grads;
+    std::shared_ptr<Volume3D> m_grads;
+
     GPUData<VolumeDescriptor> m_gradsDescriptor;
 
     std::shared_ptr<CudaLinearVolume3D> m_blurredVoxels;
@@ -81,6 +82,8 @@ public:
     void Step();
 
     void Initialize();
+
+    std::shared_ptr<Volume3D> GetGradVolume();
 
 //    void SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume);
 

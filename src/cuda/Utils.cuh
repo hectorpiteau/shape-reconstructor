@@ -93,10 +93,10 @@ CUDA_DEV inline void AtomicWriteVec4(glm::vec4 *addr, const glm::vec4 &data) {
 }
 
 CUDA_DEV inline void AtomicWriteFloat4(float4 *addr, const glm::vec4 &data) {
-    atomicAdd((float *) (addr), data.x);
-    atomicAdd((float *) (addr + 1), data.y);
-    atomicAdd((float *) (addr + 2), data.z);
-    atomicAdd((float *) (addr + 3), data.w);
+    atomicAdd((float *) (&addr->x), data.x);
+    atomicAdd((float *) (&addr->y), data.y);
+    atomicAdd((float *) (&addr->z), data.z);
+    atomicAdd((float *) (&addr->w), data.w);
 }
 
 CUDA_DEV inline void AtomicWriteCell(cell *addr, const glm::vec4 &data) {
@@ -120,8 +120,8 @@ CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, VolumeDescriptor *volume, co
     full_coords -= vec3(0.5, 0.5, 0.5);
     glm::ivec3 min = glm::floor(full_coords); // first project [0,1] to [0, resolution], then take the floor index.
     glm::ivec3 max = glm::ceil(full_coords); // idem but to take the ceil index.
-    min = glm::clamp(min, glm::ivec3(0, 0, 0), volume->res);
-    max = glm::clamp(max, glm::ivec3(0, 0, 0), volume->res);
+    min = glm::clamp(min, glm::ivec3(0, 0, 0), volume->res - 1);
+    max = glm::clamp(max, glm::ivec3(0, 0, 0), volume->res - 1);
 
     glm::vec3 w = full_coords - vec3(min);
 

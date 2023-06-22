@@ -63,7 +63,12 @@ __global__ void planeCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor
 
     if (all(lessThan(intersection, planeCut->max)) && all(greaterThan(intersection, planeCut->min))) {
         vec4 res = ReadVolume(intersection, volume);
-        res *= 255.0f;
+        res = abs(res);
+//        res.x *= 1.0f;
+//        res.y *= 255.0f;
+//        res.z *= 1000.0f;
+        res.w = 255.0f;
+        res = clamp(res, vec4(0.0f), vec4(255.0f));
         surf2Dwrite<uchar4>(VEC4_TO_UCHAR4(res), planeCut->outSurface, x * sizeof(uchar4), y);
     } else {
         surf2Dwrite<uchar4>(make_uchar4(0, 0, 0, 0), planeCut->outSurface, x * sizeof(uchar4), y);

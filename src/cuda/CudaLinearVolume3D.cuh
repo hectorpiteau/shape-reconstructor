@@ -81,6 +81,14 @@ public:
         return loc.x * (m_res.y * m_res.z) + loc.y * (m_res.z) + loc.z;
     }
 
+    CUDA_HOST void InitZeros() {
+        for (int x = 0; x < m_res.x; ++x)
+            for (int y = 0; y < m_res.y; ++y)
+                for (int z = 0; z < m_res.z; ++z) {
+                    HSet(ivec3(x, y, z), vec4(0.0, 0.0, 0.0, 0.0));
+                }
+    }
+
     CUDA_HOST void InitStub() {
         for (int x = 0; x < m_res.x; ++x)
             for (int y = 0; y < m_res.y; ++y)
@@ -108,7 +116,7 @@ public:
                 .ba =  __floats2half2_rn(data.b, data.a)
         };
 #elif defined VOLUME_FP32
-        m_hostData[GetIndex(loc)].data = make_float4(data.x,data.y,data.z,data.w);
+        m_hostData[GetIndex(loc)].data = make_float4(data.x, data.y, data.z, data.w);
 #endif
     }
 

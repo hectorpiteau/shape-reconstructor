@@ -78,9 +78,9 @@ private:
     std::shared_ptr<Lines> m_lines;
 
     /** bbox coordinates. */
-    vec3 m_bboxMin = vec3(-2.0, -1.0, -3.0);
+    vec3 m_bboxMin = vec3(-2.0, -2.0, -2.0);
 //    vec3 m_bboxMin = vec3(-0.5, -0.5, -0.5);
-    vec3 m_bboxMax = vec3(2.0, 3.0, 3.0);
+    vec3 m_bboxMax = vec3(2.0, 2.0, 2.0);
 //    vec3 m_bboxMax = vec3(0.5, 0.5, 0.5);
     ivec3 m_res;
 
