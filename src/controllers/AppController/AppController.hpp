@@ -28,7 +28,7 @@ public:
         /** Create the Scene */
         m_scene = new Scene(m_sceneSettings, window);
 
-        ivec3 volumeResolution = {128, 128, 128};
+        ivec3 volumeResolution = {64, 64, 64};
 
         /** Fill default Scene. */
         // auto volume = m_scene->Add(std::make_shared<Volume3D>(m_scene));

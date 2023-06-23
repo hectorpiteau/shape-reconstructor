@@ -112,6 +112,11 @@ struct PlaneCutDescriptor {
     cudaSurfaceObject_t outSurface;
 };
 
+struct CursorPixel {
+    ivec2 loc;
+    vec4 value;
+};
+
 
 
 struct ImageDescriptor {
@@ -195,6 +200,8 @@ struct BatchItemDescriptor{
     /** Data struct for storing the loss for each pixels. */
     vec3* loss;
     vec3* cpred;
+
+
 
     /** True for rendering the forward in the debugSurface. */
     bool debugRender;

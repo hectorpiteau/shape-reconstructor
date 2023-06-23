@@ -30,6 +30,7 @@ using namespace glm;
 class Image {
 private:
     bool m_isLoaded = false;
+    bool m_isOnGpu = false;
 
     GPUData<LinearImageDescriptor> m_desc;
 
@@ -56,6 +57,30 @@ public:
     /** row-major storage */
     unsigned char *data = nullptr;
 
+
+    void LoadGPUData(){
+        if(data == nullptr){
+            std::cerr << "Image: Cannot generate GPU Data, image is not loaded." << std::endl;
+            return;
+        }
+        size_t size = GetImageMemorySize();
+
+        unsigned char* ptr;
+        checkCudaErrors(cudaMalloc((void **) &ptr, size));
+        m_desc.Host()->data = ptr;
+
+        std::cout << "Image: Allocate cudaMemory: " << filename << std::endl;
+
+        checkCudaErrors(
+                cudaMemcpy((void *) m_desc.Host()->data, (void *) data, size, cudaMemcpyHostToDevice)
+        );
+
+        m_desc.Host()->res = ivec2(width, height);
+        m_desc.ToDevice();
+
+        m_isOnGpu = true;
+    }
+
     /**
      * Get the GPU Linear Descriptor of this image.
      * Allocates memory on GPU and copy all data on GPU ready to be processed.
@@ -67,22 +92,6 @@ public:
             std::cerr << "Image: Cannot generate GPU Data, image is not loaded." << std::endl;
             return nullptr;
         }
-        size_t size = GetImageMemorySize();
-        m_desc.Host()->res = ivec2(width, height);
-//        m_desc.Host()->data = (unsigned char *) GPUData<LinearImageDescriptor>::AllocateOnDevice(size);
-
-        cudaError_t err = cudaGetLastError();
-        if (err != cudaSuccess)
-        {
-            std::cerr << "ERROR: " << cudaGetErrorString(err) << std::endl;
-        }
-
-        checkCudaErrors(cudaMalloc((void **) &m_desc.Host()->data, size));
-
-        checkCudaErrors(
-                cudaMemcpy((void *) m_desc.Host()->data, (void *) data, size, cudaMemcpyHostToDevice)
-        );
-        m_desc.ToDevice();
         return m_desc.Device();
     }
 
@@ -90,8 +99,11 @@ public:
      * Free the buffer used for storing the image's data on GPU.
      */
     void FreeGPUDescriptor() {
+        std::cout << "Image: Free cudaMemory: " << filename << ", " << std::to_string(m_isOnGpu) << std::endl;
+        if(!m_isOnGpu) return;
         /** Free the linear buffer allocated on GPU. */
         GPUData<LinearImageDescriptor>::FreeOnDevice(m_desc.Host()->data);
+        m_isOnGpu = false;
     }
 
     [[nodiscard]] int GetWidth() const { return width; }

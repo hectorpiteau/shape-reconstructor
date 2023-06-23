@@ -60,3 +60,7 @@ void AdamInteractor::Optimize(){
     m_adam->Optimize();
 }
 
+void AdamInteractor::Step() {
+    m_adam->Step();
+}
+

@@ -32,3 +32,7 @@ float PlaneCutInteractor::GetPosition()
 {
     return m_planeCut->GetPosition();
 }
+
+vec4 PlaneCutInteractor::GetCursorValue() {
+    return m_planeCut->GetCursorPixelValue();
+}

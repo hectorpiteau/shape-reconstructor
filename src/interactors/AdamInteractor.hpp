@@ -38,6 +38,8 @@ public:
     void Initialize();
 
     void Optimize();
+
+    void Step();
 };
 
 

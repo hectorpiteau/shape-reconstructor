@@ -142,6 +142,7 @@ CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, VolumeDescriptor *volume, co
     auto c110 = w.x * omw.y * w.z * value;
     auto c111 = w.x * w.y * w.z * value;
 
+
     AtomicWriteCell(&volume->data[min.x * x_step + min.y * y_step + min.z], c000); // back face
     AtomicWriteCell(&volume->data[min.x * x_step + min.y * y_step + max.z], c001);
     AtomicWriteCell(&volume->data[min.x * x_step + max.y * y_step + min.z], c010);

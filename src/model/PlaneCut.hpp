@@ -41,6 +41,7 @@ private:
     GPUData<CameraDescriptor> m_cameraDesc;
     GPUData<PlaneCutDescriptor> m_planeCutDesc;
     GPUData<VolumeDescriptor> m_volumeDesc;
+    GPUData<CursorPixel> m_cursorPixel;
 
 public:
 
@@ -81,5 +82,7 @@ public:
     float GetPosition();
     
     void Render() override;
+
+    vec4 GetCursorPixelValue();
 };
 

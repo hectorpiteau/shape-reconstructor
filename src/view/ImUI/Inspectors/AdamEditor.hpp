@@ -91,6 +91,10 @@ public:
             ImGui::Text("Not Loaded");
         }
         ImGui::Spacing();
+        if(ImGui::Button("Step", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
+            m_interactor->Step();
+        }
+        ImGui::Spacing();
         if(ImGui::Button("Optimize", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
             m_interactor->Optimize();
         }

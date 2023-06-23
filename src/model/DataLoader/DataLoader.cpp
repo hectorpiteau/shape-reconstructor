@@ -10,7 +10,7 @@
 #include <random>
 
 DataLoader::DataLoader(std::shared_ptr<Dataset> dataset)
-        : m_dataset(std::move(dataset)), m_batchSize(20) {
+        : m_dataset(std::move(dataset)), m_batchSize(1) {
     /** Allocate */
     m_batchItems = std::vector<GPUData<BatchItemDescriptor> *>(m_batchSize);
     m_losses = std::vector<CudaBuffer<vec3>*>(m_batchSize);
@@ -22,6 +22,7 @@ DataLoader::DataLoader(std::shared_ptr<Dataset> dataset)
 
         auto loss_buff = new CudaBuffer<vec3>();
         auto cpred_buff = new CudaBuffer<vec3>();
+
         m_losses[i] = loss_buff;
         m_cpreds[i] = cpred_buff;
     }
@@ -33,6 +34,16 @@ void DataLoader::Initialize() {
     for (unsigned int i = 0; i < m_dataset->Size(); i++) m_indexes.push_back(i);
     Shuffle();
     m_isReady = true;
+
+    for (size_t i = 0; i < m_batchSize; ++i) {
+        m_losses[i]->Allocate(m_dataset->GetImageSet()->GetImage(0)->width * m_dataset->GetImageSet()->GetImage(0)->height);
+        m_cpreds[i]->Allocate(m_dataset->GetImageSet()->GetImage(0)->width * m_dataset->GetImageSet()->GetImage(0)->height);
+    }
+
+    for (unsigned int i = 0; i < m_dataset->Size(); i++) {
+        m_dataset->GetImageSet()->GetImage(i)->LoadGPUData();
+    }
+
 }
 
 bool DataLoader::IsReady() const {
@@ -52,21 +63,18 @@ void DataLoader::Shuffle() {
 void DataLoader::LoadBatch() {
     if (!m_isReady || !m_dataset->GetCameraSet()->AreCamerasGenerated() || !m_dataset->GetImageSet()->AreImagesGenerated()) return;
     /** Unload current batch. */
-    if (m_batchLoaded) {
-        /** Unload previously loaded images in memory. */
-        for (unsigned int i = 0; i < m_batchSize; ++i) {
-            auto image = m_dataset->GetImageSet()->GetImage(m_indexes[m_startIndex + i]);
-            image->FreeGPUDescriptor();
-        }
-    }
+//    if (m_batchLoaded) {
+//        /** Unload previously loaded images in memory. */
+//        for (unsigned int i = 0; i < m_batchSize; ++i) {
+//            auto image = m_dataset->GetImageSet()->GetImage(m_indexes[m_startIndex + i]);
+//            image->FreeGPUDescriptor();
+//        }
+//    }
 
     /** Load new batch */
     for (unsigned int i = 0; i < m_batchSize; ++i) {
         auto index = m_indexes[m_startIndex + i];
         auto res = m_dataset->GetEntry(index);
-
-        m_losses[i]->Allocate(res.img->width * res.img->height);
-        m_cpreds[i]->Allocate(res.img->width * res.img->height);
 
         m_batchItems[i]->Host()->cam = res.cam->GetGPUDescriptor();
         m_batchItems[i]->Host()->img = res.img->GetGPUDescriptor();
@@ -96,6 +104,9 @@ void DataLoader::UnloadBatch() {
     for (unsigned int i = 0; i < m_batchSize; ++i) {
         auto camera = m_dataset->GetCameraSet()->GetCamera(m_indexes[m_startIndex + i]);
         camera->GetCudaTexture()->CloseSurface();
+        /** Unload previously loaded images in memory. */
+//        auto image = m_dataset->GetImageSet()->GetImage(m_indexes[m_startIndex + i]);
+//        image->FreeGPUDescriptor();
     }
     m_batchLoaded = false;
 }

@@ -30,7 +30,7 @@ Modified: 2023-04-25T12:53:31.894Z
 using namespace glm;
 
 
-__global__ void planeCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor *camera, VolumeDescriptor *volume) {
+__global__ void planeCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor *camera, VolumeDescriptor *volume, CursorPixel* cursorPixel) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -63,6 +63,7 @@ __global__ void planeCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor
 
     if (all(lessThan(intersection, planeCut->max)) && all(greaterThan(intersection, planeCut->min))) {
         vec4 res = ReadVolume(intersection, volume);
+        if(x == cursorPixel->loc.x && (camera->height - y) == cursorPixel->loc.y) cursorPixel->value = res;
         res = abs(res);
 //        res.x *= 1.0f;
 //        res.y *= 255.0f;
@@ -77,7 +78,7 @@ __global__ void planeCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor
 
 extern "C"
 void plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor> &planeCut, GPUData<VolumeDescriptor> &volume,
-                                 GPUData<CameraDescriptor> &camera) {
+                                 GPUData<CameraDescriptor> &camera, GPUData<CursorPixel>& cursorPixel) {
     /** Max 1024 per block. As each pixel is independent, may be useful to search for optimal size. */
     dim3 threadsPerBlock(16, 16);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
@@ -86,7 +87,7 @@ void plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor> &planeCut, GPUData<
             (camera.Host()->height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     /** Call the main rendering kernel. **/
-    planeCutRendering<<<numBlocks, threadsPerBlock>>>(planeCut.Device(), camera.Device(), volume.Device());
+    planeCutRendering<<<numBlocks, threadsPerBlock>>>(planeCut.Device(), camera.Device(), volume.Device(), cursorPixel.Device());
 
     /** Get last error after rendering. */
     cudaError_t err = cudaGetLastError();

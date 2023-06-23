@@ -86,10 +86,9 @@ void AdamOptimizer::Optimize(){
         std::cerr << "Adam Optimizer:  Cannot optimize, integration ranges are not computed." << std::endl;
         return;
     }
-    m_dataLoader->LoadBatch();
-    Step();
-    m_dataLoader->UnloadBatch();
-    m_dataLoader->NextBatch();
+
+    m_optimize = !m_optimize;
+
 
 }
 
@@ -112,6 +111,8 @@ void AdamOptimizer::Render() {
 }
 
 void AdamOptimizer::Step(){
+    m_dataLoader->LoadBatch();
+
     /** Update adam descriptor's data on GPU. */
     UpdateGPUDescriptor();
     m_volumeRenderer->UpdateGPUDescriptors();
@@ -119,13 +120,13 @@ void AdamOptimizer::Step(){
     /** Zero gradients. */
     zero_adam_wrapper(&m_adamDescriptor);
 
-    /** Forward Pass  */
+    /** Forward Pass.  */
     auto items = m_dataLoader->GetGPUDatas();
-    for(size_t i=0; i<m_dataLoader->GetBatchSize(); ++i){
+    for(size_t i=0; i < m_dataLoader->GetBatchSize(); ++i){
         batched_forward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData());
     }
 
-    /** Backward Pass  */
+    /** Backward Pass.  */
     for(size_t i=0; i < m_dataLoader->GetBatchSize(); ++i){
         batched_backward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor);
     }
@@ -134,6 +135,9 @@ void AdamOptimizer::Step(){
     update_adam_wrapper(&m_adamDescriptor);
 
     m_steps += 1;
+
+    m_dataLoader->UnloadBatch();
+    m_dataLoader->NextBatch();
 }
 
 void AdamOptimizer::UpdateGPUDescriptor() {

@@ -38,4 +38,6 @@ public:
     void SetPosition(float value);
 
     float GetPosition();
+
+    vec4 GetCursorValue();
 };

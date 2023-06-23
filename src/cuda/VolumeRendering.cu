@@ -197,6 +197,7 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
     /** Run forward function. */
     vec4 res = forward(ray, volume);
     item->cpred[LINEAR_IMG_INDEX(x, y, item->res.y)] = vec3(res);
+
     /** Store loss. */
     float epsilon = 0.001f;
     vec3 pred_color = vec3(res);
@@ -248,7 +249,7 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
     /** Partial color. */
     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
 
-    float step = 0.01f;
+    float step = 0.06f;
 
     /** The ray's min must be strictly smaller than max. */
     if (ray.tmin < ray.tmax) {
@@ -269,7 +270,11 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
                 auto dLo_dCi = Tpartial * ( 1 - exp(-alpha));
                 auto color_grad = dLdC * dLo_dCi;
 
-                WriteVolumeTRI(pos, adam->grads, vec4(color_grad, 1.0f));
+                auto dCdAlpha = Tpartial * color * exp(-alpha) - (cpred - color);
+
+                auto alpha_grad = dot(dLdC, dCdAlpha);
+
+                WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad));
 
 //                Tpartial *= (1.0f - alpha);
                 Tpartial *= exp(-alpha);

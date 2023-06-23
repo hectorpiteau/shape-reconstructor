@@ -29,6 +29,7 @@ public:
     void Render() {
         auto dir = m_interactor->GetDirection();
         auto pos = m_interactor->GetPosition();
+        auto cursorValue = m_interactor->GetCursorValue();
 
         ImGui::SeparatorText(ICON_FA_INFO " PlaneCut - Information");
         ImGui::Spacing();
@@ -70,5 +71,9 @@ public:
         if (ImGui::DragFloat("PlaneCut position", &pos, 0.01f)) {
             m_interactor->SetPosition(pos);
         }
+
+        ImGui::Spacing();
+
+        ImGui::InputFloat4("cursor ", &cursorValue[0]);
     }
 };

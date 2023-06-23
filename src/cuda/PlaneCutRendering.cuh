@@ -18,6 +18,6 @@ Modified: 2023-04-25T12:53:31.894Z
 
 using namespace glm;
 
-extern "C" void plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor>& planeCut, GPUData<VolumeDescriptor>& volume, GPUData<CameraDescriptor>& camera);
+extern "C" void plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor>& planeCut, GPUData<VolumeDescriptor>& volume, GPUData<CameraDescriptor>& camera, GPUData<CursorPixel>& cursorPixel);
 
 #endif // PLANE_CUT_RENDERING_H

@@ -20,7 +20,7 @@ PlaneCut::PlaneCut(Scene *scene, std::shared_ptr<Volume3D> targetVolume) : Scene
                                                                            m_scene(scene),
                                                                            m_dir(PlaneCutDirection::Y),
                                                                            m_pos(vec3(0, 0, 0)),
-                                                                           m_targetVolume(std::move(targetVolume)) {
+                                                                           m_targetVolume(std::move(targetVolume)), m_cursorPixel() {
     SetName("PlaneCut");
     /** Create the overlay plane that will be used to display the volume rendering texture on. */
     m_overlay = std::make_shared<OverlayPlane>(
@@ -31,6 +31,8 @@ PlaneCut::PlaneCut(Scene *scene, std::shared_ptr<Volume3D> targetVolume) : Scene
     m_cudaTex = std::make_shared<CudaTexture>(
             scene->GetSceneSettings()->GetViewportWidth(),
             scene->GetSceneSettings()->GetViewportHeight());
+
+    m_cursorPixel.Host()->value = vec4(0.0);
 }
 
 void PlaneCut::SetDirection(PlaneCutDirection dir) {
@@ -49,9 +51,17 @@ float PlaneCut::GetPosition() {
     return m_pos[m_dir];
 }
 
+vec4 PlaneCut::GetCursorPixelValue(){
+    return m_cursorPixel.Host()->value;
+}
+
 void PlaneCut::Render() {
     std::shared_ptr<Camera> cam = m_scene->GetActiveCam();
     /** Camera desc. TODO: Simplify by allocating it in the Camera Object directly and sharing the descriptor.*/
+    double x,y;
+    glfwGetCursorPos(m_scene->GetWindow(), &x, &y);
+    m_cursorPixel.Host()->loc = ivec2(x,y);
+    m_cursorPixel.ToDevice();
 
     m_cameraDesc.Host()->camExt = cam->GetExtrinsic();
     m_cameraDesc.Host()->camInt = cam->GetIntrinsic();
@@ -76,8 +86,10 @@ void PlaneCut::Render() {
     m_planeCutDesc.ToDevice();
 
     /** Run kernel on texture. */
-    plane_cut_rendering_wrapper(m_planeCutDesc, m_volumeDesc, m_cameraDesc);
+    plane_cut_rendering_wrapper(m_planeCutDesc, m_volumeDesc, m_cameraDesc, m_cursorPixel);
     m_cudaTex->CloseSurface();
 
     m_overlay->Render(true, m_cudaTex->GetTex());
+
+    m_cursorPixel.ToHost();
 }

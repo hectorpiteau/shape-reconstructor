@@ -29,7 +29,7 @@ private:
     /** Epsilon */
     float m_epsilon=1.0E-8f;
     /** Step size. */
-    float m_eta=1.0E-3f;
+    float m_eta=1.0E-5f;
     /** Initialize default beta values. */
     vec2 m_beta = {0.9, 0.95};
     /** Gradient grid resolution. */
