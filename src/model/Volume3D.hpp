@@ -79,10 +79,10 @@ private:
 
     /** bbox coordinates. */
     vec3 m_bboxMin = vec3(-2.0, -2.0, -2.0);
-//    vec3 m_bboxMin = vec3(-0.5, -0.5, -0.5);
     vec3 m_bboxMax = vec3(2.0, 2.0, 2.0);
-//    vec3 m_bboxMax = vec3(0.5, 0.5, 0.5);
+
     ivec3 m_res;
+    float m_pixelSize = 0.01f;
 
     GPUData<BBoxDescriptor> m_desc;
     GPUData<VolumeDescriptor> m_volumeDescriptor;

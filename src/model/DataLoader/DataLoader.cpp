@@ -10,7 +10,7 @@
 #include <random>
 
 DataLoader::DataLoader(std::shared_ptr<Dataset> dataset)
-        : m_dataset(std::move(dataset)), m_batchSize(1) {
+        : m_dataset(std::move(dataset)), m_batchSize(50) {
     /** Allocate */
     m_batchItems = std::vector<GPUData<BatchItemDescriptor> *>(m_batchSize);
     m_losses = std::vector<CudaBuffer<vec3>*>(m_batchSize);

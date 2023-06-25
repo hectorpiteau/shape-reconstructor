@@ -20,6 +20,7 @@ using namespace glm;
 Volume3D::Volume3D(Scene *scene, ivec3 res) : SceneObject{std::string("VOLUME3D"), SceneObjectTypes::VOLUME3D},
                                               m_scene(scene), m_res(res), m_desc(), m_volumeDescriptor() {
     SetName(std::string(ICON_FA_CUBES " Volume 3D"));
+
     m_lines = std::make_shared<Lines>(scene, m_wireframeVertices, 12 * 2 * 3);
     m_lines->SetActive(true);
     ComputeBBoxPoints();

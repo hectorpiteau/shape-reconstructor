@@ -209,7 +209,7 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
         loss *= 255.0f;
         loss = clamp(loss, vec3(0.0, 0.0, 0.0), vec3(255.0, 255.0, 255.0));
 
-        uchar4 element = VEC3_255_TO_UCHAR4(loss);
+        uchar4 element = VEC3_255_TO_UCHAR4((gt_color * 255.0f));
         surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
     }
 
