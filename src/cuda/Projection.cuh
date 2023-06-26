@@ -45,16 +45,18 @@ CUDA_HOSTDEV inline vec4 CameraToWorld(const vec4 &vec, const mat4 &extrinsic) {
     ext[3][2] = 0;
     ext[3][3] = 1;
 
-    mat4 trans = mat4(0.0);
-    trans[0][0] = 1.0;
-    trans[1][1] = 1.0;
-    trans[2][2] = 1.0;
-    trans[3][3] = 1.0;
-    trans[3][0] = -extrinsic[3][0];
-    trans[3][1] = -extrinsic[3][1];
-    trans[3][2] = -extrinsic[3][2];
+    vec4 trans = vec4(extrinsic[3]);
 
-    return ext * trans * vec;
+//    mat4 trans = mat4(0.0);
+//    trans[0][0] = 1.0;
+//    trans[1][1] = 1.0;
+//    trans[2][2] = 1.0;
+//    trans[3][3] = 1.0;
+//    trans[3][0] = -extrinsic[3][0];
+//    trans[3][1] = -extrinsic[3][1];
+//    trans[3][2] = -extrinsic[3][2];
+
+    return ext * vec - ext * trans;
 }
 
 /**
@@ -104,13 +106,17 @@ CUDA_HOSTDEV inline vec2 CameraToPixel(vec3 cameraCoords, mat3 intrinsic) {
 /**
  * @brief Convert normalized Device Coordinates to Camera coordinates.
  *
- * @param ndcCoords : Normalized Device Coordinates in range [-1, 1] for eacch elements.
+ * @param ndcCoords : Normalized Device Coordinates in range [-1, 1] for each elements.
  * @param intrinsic : The camera's intrinsic matrix.
  * @return vec3 : A vec3 that correspond to the point in ndcCoords but in the
  * camera coordinate system.
  */
 CUDA_HOSTDEV inline vec3 NDCToCamera(const vec2 &ndcCoords, const mat4 &intrinsic) {
-    return vec3(ndcCoords.x * 1 / intrinsic[0][0], ndcCoords.y * 1 / intrinsic[1][1], 1.0);
+    return {(ndcCoords.x * intrinsic[2][0] / intrinsic[0][0]),
+            (ndcCoords.y * intrinsic[2][1] / intrinsic[1][1]), intrinsic[2][2]};
+//    return {
+//            ndcCoords.x * 1 / intrinsic[0][0],
+//            ndcCoords.y * 1 / intrinsic[1][1], 1.0};
 }
 
 /**
@@ -169,7 +175,7 @@ CUDA_HOSTDEV inline vec2 GetPixelSizeVec(int width, int height, double sensorWid
  * @return vec2 : A vector in Normalized Device Coordinates ([-1, 1], [-1, 1])
  */
 CUDA_HOSTDEV inline vec2 PixelToNDC(const vec2 &pixelCoords, size_t width, size_t height) {
-    vec2 tmp = (2.0f * pixelCoords / vec2(width, height)) - vec2(1.0f);
+    vec2 tmp = (2.0f * pixelCoords / vec2((float)width, (float)height)) + vec2(-1.0f, -1.0f);
     // Account for image aspect ratio
     // tmp.x *= (height / width); // TODO: division can be moved sooner in code.
     return tmp;
@@ -179,7 +185,7 @@ CUDA_HOSTDEV inline vec3
 PixelToWorld(const vec2 &pixelCoords, const mat4 &intrinsic, const mat4 &extrinsic, size_t width, size_t height) {
     auto ndc = PixelToNDC(pixelCoords, width, height);
 
-    auto cam = vec4(NDCToCamera(ndc, intrinsic) * -1.0f, 1.0f);
+    auto cam = vec4(NDCToCamera(ndc, intrinsic), 1.0f);
 
     return CameraToWorld(cam, extrinsic);
 }

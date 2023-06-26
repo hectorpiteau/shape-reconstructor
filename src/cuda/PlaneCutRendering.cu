@@ -39,7 +39,9 @@ __global__ void planeCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor
     if (y >= camera->height)
         return;
 
-    Ray ray = SingleRayCaster::GetRay(vec2(camera->width - x, camera->height - y), camera);
+    surf2Dwrite<uchar4>(make_uchar4(x%255, 0, (1080 - y)%255, 255), planeCut->outSurface, x * sizeof(uchar4), y);
+    return;
+    Ray ray = SingleRayCaster::GetRay(vec2(x, 1080 - y), camera);
 
     vec3 planeOrigin = vec3(0.0, 0.0, 0.0);
     vec3 planeNormal = vec3(0.0, 0.0, 0.0);
@@ -60,19 +62,28 @@ __global__ void planeCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor
     }
 
     vec3 intersection = VectorPlaneIntersection(ray.origin, ray.dir, planeOrigin, planeNormal);
+    if(x > cursorPixel->loc.x - 5
+    && x < cursorPixel->loc.x + 5
+    && y > 1080 - cursorPixel->loc.y - 5
+    && y < 1080 - cursorPixel->loc.y + 5
+    ) {
+        cursorPixel->value = vec4(255, 0, 0, 255);
+        surf2Dwrite<uchar4>(make_uchar4(255, 0, 128, 255), planeCut->outSurface, x * sizeof(uchar4), y);
+        return;
+    }
 
     if (all(lessThan(intersection, planeCut->max)) && all(greaterThan(intersection, planeCut->min))) {
         vec4 res = ReadVolume(intersection, volume);
-        if(x == cursorPixel->loc.x && (camera->height - y) == cursorPixel->loc.y) cursorPixel->value = res;
+
         res = abs(res);
-//        res.x *= 1.0f;
-//        res.y *= 255.0f;
-//        res.z *= 1000.0f;
-        res.w = 255.0f;
+        res.w = 200.0f;
+        res.x = intersection.x * 255.0f;
+        res.y = intersection.y * 255.0f;
+        res.z = intersection.z * 255.0f;
         res = clamp(res, vec4(0.0f), vec4(255.0f));
         surf2Dwrite<uchar4>(VEC4_TO_UCHAR4(res), planeCut->outSurface, x * sizeof(uchar4), y);
     } else {
-        surf2Dwrite<uchar4>(make_uchar4(0, 0, 0, 0), planeCut->outSurface, x * sizeof(uchar4), y);
+        surf2Dwrite<uchar4>(make_uchar4(0, 0, 128, 128), planeCut->outSurface, x * sizeof(uchar4), y);
     }
 }
 

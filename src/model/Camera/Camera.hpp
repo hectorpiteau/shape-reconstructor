@@ -64,13 +64,12 @@ private:
      * Projection of points from camera-space to image-space.
      */
     mat4 m_projectionMatrix{};
+    mat4 m_volumeK{};
 
     float m_scroll = 0.0f;
     float m_speed = 3.0f;
-    float m_horizontalAngle = 3.14f*1.25f;
-    // Initial vertical angle : none
-    float m_verticalAngle = -3.14f * 0.2f;
     // Initial Field of View
+//    float m_initialFoV = 39.59775f;
     float m_initialFoV = 65.0f;
 
     float m_mouseSpeed = 0.005f;

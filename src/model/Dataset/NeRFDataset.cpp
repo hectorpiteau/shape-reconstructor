@@ -110,29 +110,38 @@ bool NeRFDataset::LoadCalibrations() {
                 tmp.transformMatrix[i][j] = value;
             }
         }
+        tmp.transformMatrix = glm::transpose(tmp.transformMatrix);
+        tmp.transformMatrix = glm::inverse(tmp.transformMatrix);
+        /** negate row 1 */
+        tmp.transformMatrix[0][1] = -tmp.transformMatrix[0][1];
+        tmp.transformMatrix[1][1] = -tmp.transformMatrix[1][1];
+        tmp.transformMatrix[2][1] = -tmp.transformMatrix[2][1];
+        tmp.transformMatrix[3][1] = -tmp.transformMatrix[3][1];
+
+        /** negate row 2 */
+        tmp.transformMatrix[0][2] = -tmp.transformMatrix[0][2];
+        tmp.transformMatrix[1][2] = -tmp.transformMatrix[1][2];
+        tmp.transformMatrix[2][2] = -tmp.transformMatrix[2][2];
+        tmp.transformMatrix[3][2] = -tmp.transformMatrix[3][2];
+
+//        tmp.transformMatrix[0][3] = -tmp.transformMatrix[0][3];
+//        tmp.transformMatrix[1][3] = -tmp.transformMatrix[1][3];
+//        tmp.transformMatrix[2][3] = -tmp.transformMatrix[2][3];
+//        tmp.transformMatrix[3][3] = -tmp.transformMatrix[3][3];
+
         /** Create intrinsic and extrinsic matrices. */
         mat4 K = mat4(1.0f);
-        // float fx = m_imageSize.x / (2.0 * tan(tmp.fov / 2.0));
-        // float fy = m_imageSize.y / (2.0 * tan(tmp.fov / 2.0));
-        K[0][0] = tmp.fov;
-        K[1][1] = tmp.fov;
+        float fx = m_imageSize.x / (2.0 * tan(tmp.fov / 2.0));
+        float fy = m_imageSize.y / (2.0 * tan(tmp.fov / 2.0));
+        K[0][0] = fx;
+        K[1][1] = fy;
         K[2][0] = m_imageSize.x / 2.0;
         K[2][1] = m_imageSize.y / 2.0;
+        K[2][2] =  1.0f;
+        K[3][3] =  1.0f;
         tmp.intrinsic = K;
 
-        mat4 ext_inv = glm::inverse(glm::transpose(tmp.transformMatrix));
-
-        tmp.extrinsic = ext_inv;
-
-//        tmp.extrinsic[0][1] = -tmp.extrinsic[0][1];
-//        tmp.extrinsic[1][1] = -tmp.extrinsic[1][1];
-//        tmp.extrinsic[2][1] = -tmp.extrinsic[2][1];
-//        tmp.extrinsic[3][1] = -tmp.extrinsic[3][1];
-//
-//        tmp.extrinsic[0][2] = -tmp.extrinsic[0][2];
-//        tmp.extrinsic[1][2] = -tmp.extrinsic[1][2];
-//        tmp.extrinsic[2][2] = -tmp.extrinsic[2][2];
-//        tmp.extrinsic[3][2] = -tmp.extrinsic[3][2];
+        tmp.extrinsic = tmp.transformMatrix;
 
         // mat3x3 R = mat3x3(tmp.extrinsic);
         // vec4 T = vec4(tmp.extrinsic[3]);

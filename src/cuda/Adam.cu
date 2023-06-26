@@ -23,8 +23,8 @@ __global__ void UpdateAdam(AdamOptimizerDescriptor* adam){
     auto m_g1 = adam->beta.x * g1 + (1.0f - adam->beta.x) * grad;
     auto v_g2 = adam->beta.y * g2 + (1.0f - adam->beta.y)*( grad * grad) ;
 
-    auto m_dw_corr = m_g1 / (float)(1.0f - pow(adam->beta.x, 1)); // adam->iteration
-    auto v_dw_corr = v_g2 / (float)(1.0f - pow(adam->beta.y,1)); // adam->iteration
+    auto m_dw_corr = m_g1 / (float)(1.0f - pow(adam->beta.x, adam->iteration)); // adam->iteration
+    auto v_dw_corr = v_g2 / (float)(1.0f - pow(adam->beta.y,adam->iteration)); // adam->iteration
 
     /** Update target volume weights. */
     auto adamRes = (adam->eta * ( m_dw_corr /(sqrt( v_dw_corr ) + adam->epsilon)));

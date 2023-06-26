@@ -78,11 +78,11 @@ private:
     std::shared_ptr<Lines> m_lines;
 
     /** bbox coordinates. */
-    vec3 m_bboxMin = vec3(-2.0, -2.0, -2.0);
-    vec3 m_bboxMax = vec3(2.0, 2.0, 2.0);
+    vec3 m_bboxMin = vec3(-1.0, -1.0, -2.0);
+    vec3 m_bboxMax = vec3(1.0, 1.0, 2.0);
 
     ivec3 m_res;
-    float m_pixelSize = 0.01f;
+    float m_voxelSize = 0.01f;
 
     GPUData<BBoxDescriptor> m_desc;
     GPUData<VolumeDescriptor> m_volumeDescriptor;

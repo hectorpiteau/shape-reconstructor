@@ -63,7 +63,7 @@ void AdamOptimizer::Initialize(){
         cam->GetIntegrationRangeGPUDescriptor().ToDevice();
 
         integration_range_bbox_wrapper(cam->GetGPUData(), cam->GetIntegrationRangeGPUDescriptor().Device(), m_target->GetGPUDescriptor());
-//        cam->GetCudaTexture()->RunKernel(m_volumeRenderer->GetRayCasterGPUData(), cam->GetGPUData(), m_volumeRenderer->GetVolumeGPUData());
+        cam->GetCudaTexture()->RunKernel(m_volumeRenderer->GetRayCasterGPUData(), cam->GetGPUData(), m_volumeRenderer->GetVolumeGPUData());
 
         cam->GetCudaTexture()->CloseSurface();
     }

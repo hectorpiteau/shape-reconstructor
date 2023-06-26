@@ -112,10 +112,6 @@ static glm::mat4 InitCameraTransform(const glm::vec3& Pos, const glm::vec3& Targ
     return res;
 }
 
-static void InitPersProjTransform(glm::mat4 &mat, float fov, float width, float height, float zNear, float zFar){
-    mat = glm::perspectiveFovLH(glm::radians(fov), width, height, zNear, zFar);
-}
-
 };
 
 

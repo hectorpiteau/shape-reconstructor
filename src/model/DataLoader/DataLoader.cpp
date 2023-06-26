@@ -10,18 +10,18 @@
 #include <random>
 
 DataLoader::DataLoader(std::shared_ptr<Dataset> dataset)
-        : m_dataset(std::move(dataset)), m_batchSize(50) {
+        : m_dataset(std::move(dataset)), m_batchSize(5) {
     /** Allocate */
     m_batchItems = std::vector<GPUData<BatchItemDescriptor> *>(m_batchSize);
-    m_losses = std::vector<CudaBuffer<vec3>*>(m_batchSize);
-    m_cpreds = std::vector<CudaBuffer<vec3>*>(m_batchSize);
+    m_losses = std::vector<CudaBuffer<vec4>*>(m_batchSize);
+    m_cpreds = std::vector<CudaBuffer<vec4>*>(m_batchSize);
 
     for (size_t i = 0; i < m_batchSize; ++i) {
         auto tmp = new GPUData<BatchItemDescriptor>();
         m_batchItems[i] = tmp;
 
-        auto loss_buff = new CudaBuffer<vec3>();
-        auto cpred_buff = new CudaBuffer<vec3>();
+        auto loss_buff = new CudaBuffer<vec4>();
+        auto cpred_buff = new CudaBuffer<vec4>();
 
         m_losses[i] = loss_buff;
         m_cpreds[i] = cpred_buff;

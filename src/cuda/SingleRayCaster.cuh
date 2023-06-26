@@ -30,7 +30,7 @@ public:
     __device__ static Ray GetRay(const glm::vec2 &pixel, CameraDescriptor *camera) {
         vec3 dir = vec3(0.0);
         /** Compute ray from camera to pixel. Undistorted. */
-        dir = PixelToWorld(pixel, camera->camInt, camera->camExt, camera->width, camera->height);
+        dir = PixelToWorld(pixel + vec2(0.5f, 0.5f), camera->camInt, camera->camExt, camera->width, camera->height);
         dir = dir - camera->camPos;
         Ray ray = {
                 .origin = camera->camPos,

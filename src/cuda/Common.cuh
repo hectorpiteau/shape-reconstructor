@@ -24,7 +24,7 @@ using namespace glm;
 //
 /** ************************************************************************** */
 
-#define STBI_IMG_INDEX(X, Y, RESX, RESY) ((RESY - Y) * RESX * 4 + X * 4)
+#define STBI_IMG_INDEX(X, Y, RESX) ((Y) * RESX * 4 + X * 4)
 #define LINEAR_IMG_INDEX(X, Y, RESY) (X * RESY + Y)
 
 #define VOLUME_INDEX(X, Y, Z, RES) (X * RES.y*RES.z + Y * RES.z + Z)
@@ -198,10 +198,8 @@ struct BatchItemDescriptor{
     IntegrationRangeDescriptor* range;
 
     /** Data struct for storing the loss for each pixels. */
-    vec3* loss;
-    vec3* cpred;
-
-
+    vec4* loss;
+    vec4* cpred;
 
     /** True for rendering the forward in the debugSurface. */
     bool debugRender;

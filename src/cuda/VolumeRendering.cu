@@ -121,7 +121,7 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
 //        }
 
         if (x >= minpx && x <= maxpx && y >= minpy && y <= maxpy) {
-            Ray ray = SingleRayCaster::GetRay(vec2(camera->width - x, camera->height - y), camera);
+            Ray ray = SingleRayCaster::GetRay(vec2(x, y), camera);
             bool res = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
             if (!res) {
                 uchar4 element = make_uchar4(0, 0, 0, 0);
@@ -139,7 +139,7 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
         }
 
     } else {
-        Ray ray = SingleRayCaster::GetRay(vec2(camera->width - x, camera->height - y), camera);
+        Ray ray = SingleRayCaster::GetRay(vec2(x, y), camera);
         /** Call forward. */
         vec4 result = forward(ray, volume) * 255.0f;
         uchar4 element = make_uchar4(result.x, result.y, result.z, result.w);
@@ -175,18 +175,25 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
 
     if (x >= item->cam->width || y >= item->cam->height) return;
 
+
     uchar4 ground_truth = make_uchar4(
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y)],
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 1],
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 2],
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 3]
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x)],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 1],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 2],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 3]
     );
     vec3 gt_color = UCHAR4_TO_VEC3(ground_truth) / 255.0f;
-//    vec3 gt_color = vec3(1.0f , 0.0f ,0.0f);
+    auto alpha_gt = __uint2float_rn(ground_truth.w);
 
     Ray ray = SingleRayCaster::GetRay(ivec2(x, y), item->cam);
     bool bboxres = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
-    if(!bboxres) return;
+//    if(!bboxres){
+//        if (item->debugRender) {
+//            uchar4 element = make_uchar4(255, 0, 0, 255);
+//            surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
+//        }
+//        return;
+//    }
 
 //    ray.tmin = item->range->data[LINEAR_IMG_INDEX(x, y, item->range->dim.y)].x;
 //    ray.tmax = item->range->data[LINEAR_IMG_INDEX(x, y, item->range->dim.y)].y;
@@ -196,20 +203,27 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
 
     /** Run forward function. */
     vec4 res = forward(ray, volume);
-    item->cpred[LINEAR_IMG_INDEX(x, y, item->res.y)] = vec3(res);
+    item->cpred[LINEAR_IMG_INDEX(x, y, item->res.y)] = res;
 
     /** Store loss. */
     float epsilon = 0.001f;
     vec3 pred_color = vec3(res);
     vec3 loss = (gt_color - pred_color) / ((pred_color + epsilon) * (pred_color + epsilon));
-    item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)] = loss;
+    auto alpha_loss = (alpha_gt - res.w) / ((res.w + epsilon) * (res.w + epsilon));
 
+    item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)] = vec4(loss, alpha_loss);
 
     if (item->debugRender) {
         loss *= 255.0f;
         loss = clamp(loss, vec3(0.0, 0.0, 0.0), vec3(255.0, 255.0, 255.0));
 
-        uchar4 element = VEC3_255_TO_UCHAR4((gt_color * 255.0f));
+        uchar4 element = VEC3_255_TO_UCHAR4((res * 255.0f));
+        if(alpha_gt == 0.0f) {
+            element.x = 255;
+//            element.w = 255;
+
+        }
+//        uchar4 element = VEC3_255_TO_UCHAR4((res * 255.0f));
         surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
     }
 
@@ -229,19 +243,22 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
     ray.tmax = clamp(ray.tmax, 0.0f, INFINITY);
 
     uchar4 ground_truth = make_uchar4(
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y)],
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 1],
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 2],
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x, item->img->res.y) + 3]
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x)],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 1],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 2],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 3]
     );
     vec3 cgt = UCHAR4_TO_VEC3(ground_truth) / 255.0f;
+    auto alpha_gt = __uint2float_rn(ground_truth.w);
 
     float epsilon = 0.001f;
 
     auto loss = item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)];
     auto cpred = item->cpred[LINEAR_IMG_INDEX(x, y, item->res.y)];
+    auto colorPred = vec3(cpred);
+    auto dLdC = (2.0f * (colorPred - cgt)) / ((colorPred + vec3(epsilon)) * (colorPred + vec3(epsilon)));
+    auto dLdalpha = (2.0f * (cpred.w - alpha_gt)) / ((cpred.w + vec3(epsilon)) * (cpred.w + vec3(epsilon)));
 
-    auto dLdC = (2.0f * (cpred - cgt)) / ((cpred + vec3(epsilon)) * (cpred + vec3(epsilon)));
     dLdC = clamp(dLdC, -10.0f, 10.0f);
 
     /** Partial transmittance. */
@@ -270,9 +287,9 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
                 auto dLo_dCi = Tpartial * ( 1 - exp(-alpha));
                 auto color_grad = dLdC * dLo_dCi;
 
-                auto dCdAlpha = Tpartial * color * exp(-alpha) - (cpred - color);
+                auto dCdAlpha = Tpartial * color * exp(-alpha) - (colorPred - color);
 
-                auto alpha_grad = dot(dLdC, dCdAlpha);
+                auto alpha_grad = dot(dLdalpha, dCdAlpha);
 
                 WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad));
 

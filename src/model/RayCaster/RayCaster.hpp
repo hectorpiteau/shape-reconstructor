@@ -152,18 +152,32 @@ public:
         size_t index = 0;
         auto origin = m_camera->GetPosition();
 
-        for(int x=renderingZonePixelMin.x; x < renderingZonePixelMax.x; x += 16){
-            for(int y=renderingZonePixelMin.y; y < renderingZonePixelMax.y; y += 16){
+        for(int x=0; x < 1; x += 16){
+//        for(int x=renderingZonePixelMin.x; x < renderingZonePixelMax.x; x += 16){
+            for(int y=0; y < 1; y += 16){
+//            for(int y=renderingZonePixelMin.y; y < renderingZonePixelMax.y; y += 16){
                 WRITE_VEC3(m_rayLinesVertices, index, origin);
                 index += 3;
 
-                auto dest = PixelToWorld(vec2(x,y),
-                    m_camera->GetIntrinsic(), m_camera->GetExtrinsic(), 
-                    m_camera->GetResolution().x,
-                    m_camera->GetResolution().y
-                );
-                auto dir =  dest - origin;
-                auto dest2 = dest + dir* 8.0f;
+//                auto dest = PixelToWorld(vec2((float)x + 0.5f,(float)y + 0.5f),
+//                    m_camera->GetIntrinsic(), m_camera->GetExtrinsic(),
+//                    m_camera->GetResolution().x,
+//                    m_camera->GetResolution().y
+//                );
+                auto ndc = PixelToNDC(vec2((float)x + 0.5f,(float)y + 0.5f), m_camera->GetResolution().x, m_camera->GetResolution().y);
+
+                auto cam = vec4(NDCToCamera(ndc, m_camera->GetIntrinsic()), 1.0f);
+
+                auto dest = CameraToWorld(cam, m_camera->GetExtrinsic());
+
+                std::cout << "RAY ndc: " << std::endl;
+                Utils::print(ndc);
+                std::cout << "RAY cam: " << std::endl;
+                Utils::print(cam);
+                std::cout << "RAY dest: " << std::endl;
+                Utils::print(dest);
+                auto dir =  vec3(dest) - origin;
+                auto dest2 = vec3(dest) + dir* 8.0f;
 
                 WRITE_VEC3(m_rayLinesVertices, index, dest2);
                 index += 3;

@@ -46,17 +46,30 @@ void Camera::Initialize() {
     /** Set the camera's resolution to the same as the viewport for now.*/
     m_resolution.x = m_sceneSettings->GetViewportWidth();
     m_resolution.y = m_sceneSettings->GetViewportHeight();
+    auto aspect = (float)m_resolution.y / (float)m_resolution.x;
 
     /** Initialize camera's properties. */
     m_up = vec3(0.0f, 1.0f, 0.0f);
-    m_forward = normalize(m_target - m_pos);
+    m_forward = normalize(m_target - m_pos) * -1.0f;
     m_right = cross(m_forward, m_up);
-    m_realUp = cross(m_forward, m_right);
+    m_realUp = cross(m_forward, m_right) * -1.0f;
     m_projectionMatrix = perspective(
             radians(m_initialFoV),
             m_sceneSettings->GetViewportRatio(),
             m_near,
             m_far);
+
+    mat4 K = mat4(1.0f);
+    float fx = m_resolution.x / (2.0f * tan(radians(m_initialFoV) / 2.0f));
+    float fy = m_resolution.y / (2.0f * tan(radians(m_initialFoV* aspect) / 2.0f));
+    K[0][0] = fx;
+    K[1][1] = fy ;
+    K[2][0] = m_resolution.x / 2.0;
+    K[2][1] = m_resolution.y / 2.0;
+    K[2][2] =  -1.0f;
+
+    m_volumeK = K;
+
     m_viewMatrix = lookAt(m_pos, m_target, m_up);
 
     /** Initialize cursor pos. */
@@ -237,8 +250,6 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window) {
     m_previousCursorPos.x = (float) xpos;
     m_previousCursorPos.y = (float) ypos;
 
-    // For the next frame, the "last time" will be "now"
-//    lastTime = currentTime;
 }
 
 const vec3 &Camera::GetTarget() { return m_target; }
@@ -247,9 +258,9 @@ void Camera::SetTarget(const vec3 &target) {
     m_target = target;
     m_viewMatrix = lookAt(m_pos, m_target, m_up);
     UpdateWireframe();
-    m_forward = normalize(m_pos - m_target);
+    m_forward = normalize(m_pos - m_target) * -1.0f;
     m_right = normalize(cross(m_forward, m_up));
-    m_realUp = normalize(cross(m_forward, m_right));
+    m_realUp = normalize(cross(m_forward, m_right)) * -1.0f;
 
     m_gizmo->SetX(m_right * 0.5f);
     m_gizmo->SetY(m_realUp * 0.5f);
@@ -284,20 +295,20 @@ const float *Camera::GetWireframe() {
 }
 
 void Camera::UpdateWireframe() {
-    vec3 corner_top_left_tmp = NDCToCamera(vec2(-1.0, 1.0), m_projectionMatrix) * m_wireSize;
-    corner_top_left_tmp.z *= -1.0f;
+    vec3 corner_top_left_tmp = NDCToCamera(vec2(-1.0, 1.0), m_volumeK) * m_wireSize;
+//    corner_top_left_tmp.z *= -1.0f;
     vec3 corner_top_left = CameraToWorld(vec4(corner_top_left_tmp, 1.0f), m_viewMatrix);
 
-    vec3 corner_top_right_tmp = NDCToCamera(vec2(1.0, 1.0), m_projectionMatrix) * m_wireSize;
-    corner_top_right_tmp.z *= -1.0f;
+    vec3 corner_top_right_tmp = NDCToCamera(vec2(1.0, 1.0), m_volumeK) * m_wireSize;
+//    corner_top_right_tmp.z *= -1.0f;
     vec3 corner_top_right = CameraToWorld(vec4(corner_top_right_tmp, 1.0f), m_viewMatrix);
 
-    vec3 corner_bot_left_tmp = NDCToCamera(vec2(-1.0, -1.0), m_projectionMatrix) * m_wireSize;
-    corner_bot_left_tmp.z *= -1.0f;
+    vec3 corner_bot_left_tmp = NDCToCamera(vec2(-1.0, -1.0), m_volumeK) * m_wireSize;
+//    corner_bot_left_tmp.z *= -1.0f;
     vec3 corner_bot_left = CameraToWorld(vec4(corner_bot_left_tmp, 1.0f), m_viewMatrix);
 
-    vec3 corner_bot_right_tmp = NDCToCamera(vec2(1.0, -1.0), m_projectionMatrix) * m_wireSize;
-    corner_bot_right_tmp.z *= -1.0f;
+    vec3 corner_bot_right_tmp = NDCToCamera(vec2(1.0, -1.0), m_volumeK) * m_wireSize;
+//    corner_bot_right_tmp.z *= -1.0f;
     vec3 corner_bot_right = CameraToWorld(vec4(corner_bot_right_tmp, 1.0f), m_viewMatrix);
 
     if (m_imagePlane != nullptr)
@@ -399,8 +410,9 @@ std::shared_ptr<CudaTexture> Camera::GetCudaTexture(){
 
 void Camera::SetIntrinsic(const mat4 &intrinsic) {
     m_projectionMatrix = intrinsic;
-    UpdateWireframe();
+    m_volumeK = intrinsic;
 
+    UpdateWireframe();
     UpdateGPUDescriptor();
 }
 
@@ -410,10 +422,10 @@ void Camera::SetExtrinsic(const mat4 &extrinsic) {
     mat3 rotMat(m_viewMatrix);
     vec3 d(m_viewMatrix[3]);
 
-    m_forward = transpose(m_viewMatrix)[2];
+    m_forward = transpose(m_viewMatrix)[2] * -1.0f;
     m_right = transpose(m_viewMatrix)[0];
     m_up = vec3(0.0, 1.0, 0.0);
-    m_realUp = normalize(cross(m_forward, m_right));
+    m_realUp = normalize(cross(m_forward, m_right)) * -1.0f;
 
     m_pos = -d * rotMat;
 
@@ -434,7 +446,18 @@ void Camera::SetExtrinsic(const mat4 &extrinsic) {
 }
 
 const mat4 &Camera::GetIntrinsic() {
-    return m_projectionMatrix;
+//    auto aspect = (float)m_resolution.x / (float)m_resolution.y;
+//    mat4 K = mat4(1.0f);
+//    float fx = m_resolution.x / (2.0 * tan(m_initialFoV / 2.0));
+//    float fy = m_resolution.y / (2.0 * tan(m_initialFoV  / 2.0));
+//    K[0][0] = fx;
+//    K[1][1] = fy * aspect;
+//    K[2][0] = m_resolution.x / 2.0;
+//    K[2][1] = m_resolution.y / 2.0;
+//    K[2][2] = -1.0f;
+//
+//    m_volumeK = K;
+    return m_volumeK;
 }
 
 const mat4 &Camera::GetExtrinsic() {
@@ -496,7 +519,7 @@ void Camera::SetFrustumSize(float value) {
 void Camera::UpdateGPUDescriptor() {
     m_desc.Host()->camPos = m_pos;
     m_desc.Host()->camExt = m_viewMatrix;
-    m_desc.Host()->camInt = m_projectionMatrix;
+    m_desc.Host()->camInt = m_volumeK;
     m_desc.Host()->width = m_resolution.x;
     m_desc.Host()->height = m_resolution.y;
     m_desc.ToDevice();
