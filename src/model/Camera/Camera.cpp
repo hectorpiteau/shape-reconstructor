@@ -46,7 +46,6 @@ void Camera::Initialize() {
     /** Set the camera's resolution to the same as the viewport for now.*/
     m_resolution.x = m_sceneSettings->GetViewportWidth();
     m_resolution.y = m_sceneSettings->GetViewportHeight();
-    auto aspect = (float)m_resolution.y / (float)m_resolution.x;
 
     /** Initialize camera's properties. */
     m_up = vec3(0.0f, 1.0f, 0.0f);
@@ -59,14 +58,16 @@ void Camera::Initialize() {
             m_near,
             m_far);
 
+
     mat4 K = mat4(1.0f);
-    float fx = m_resolution.x / (2.0f * tan(radians(m_initialFoV) / 2.0f));
-    float fy = m_resolution.y / (2.0f * tan(radians(m_initialFoV* aspect) / 2.0f));
-    K[0][0] = fx;
-    K[1][1] = fy ;
-    K[2][0] = m_resolution.x / 2.0;
-    K[2][1] = m_resolution.y / 2.0;
+    float fx = m_resolution.x / (m_sceneSettings->GetViewportRatio() * tan(radians(m_initialFoV) / 2.0f));
+    float fy = m_resolution.y / (tan(radians(m_initialFoV) / 2.0f));
+    K[0][0] = fx * 0.5f;
+    K[1][1] = fy * 0.5f;
+    K[2][0] = m_resolution.x / 2.0f;
+    K[2][1] = m_resolution.y / 2.0f;
     K[2][2] =  -1.0f;
+    K[3][3] =  -1.0f;
 
     m_volumeK = K;
 
@@ -78,7 +79,7 @@ void Camera::Initialize() {
     /** Parameters to visual components. */
     m_frustumLines = new Lines(m_scene, m_wireframeVertices, 16 * 3);
     if (m_frustumLines != nullptr) m_frustumLines->SetColor(1.0, 0.8, 0.8, 0.8);
-//    if(m_frustumLines != nullptr) m_frustumLines->SetColor(0.0, 0.0, 0.0, 0.8);
+
     m_gizmo = new Gizmo(m_scene, m_pos, m_right, m_realUp, m_forward);
 
     /** Create the camera's image plane. */

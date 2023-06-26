@@ -218,11 +218,9 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
         loss = clamp(loss, vec3(0.0, 0.0, 0.0), vec3(255.0, 255.0, 255.0));
 
         uchar4 element = VEC3_255_TO_UCHAR4((res * 255.0f));
-        if(alpha_gt == 0.0f) {
-            element.x = 255;
-//            element.w = 255;
-
-        }
+//        if(alpha_gt == 0.0f) {
+//            element.x = 255;
+//        }
 //        uchar4 element = VEC3_255_TO_UCHAR4((res * 255.0f));
         surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
     }
@@ -249,15 +247,17 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
             item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 3]
     );
     vec3 cgt = UCHAR4_TO_VEC3(ground_truth) / 255.0f;
-    auto alpha_gt = __uint2float_rn(ground_truth.w);
+    auto alpha_gt = 1.0f - (__uint2float_rn(ground_truth.w) / 255.0f);
 
     float epsilon = 0.001f;
 
-    auto loss = item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)];
+//    auto loss = item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)];
     auto cpred = item->cpred[LINEAR_IMG_INDEX(x, y, item->res.y)];
     auto colorPred = vec3(cpred);
     auto dLdC = (2.0f * (colorPred - cgt)) / ((colorPred + vec3(epsilon)) * (colorPred + vec3(epsilon)));
     auto dLdalpha = (2.0f * (cpred.w - alpha_gt)) / ((cpred.w + vec3(epsilon)) * (cpred.w + vec3(epsilon)));
+
+    auto reg_alpha = 2;
 
     dLdC = clamp(dLdC, -10.0f, 10.0f);
 
@@ -287,9 +287,13 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
                 auto dLo_dCi = Tpartial * ( 1 - exp(-alpha));
                 auto color_grad = dLdC * dLo_dCi;
 
+//                vec3 posp1 = (ray.origin + (t+1) * ray.dir);
+//                auto c_k1 = ReadVolume(posp1, volume);  //TEST WITH COLOR_k+1
                 auto dCdAlpha = Tpartial * color * exp(-alpha) - (colorPred - color);
 
-                auto alpha_grad = dot(dLdalpha, dCdAlpha);
+
+                auto alpha_reg_i = 2.0f * (-alpha * (1.0f - cpred.w)) - 2.0f * alpha_gt * ( -alpha * (1.0f - cpred.w));
+                auto alpha_grad = dot(dLdC, dCdAlpha) + 50.0f * (alpha_reg_i);
 
                 WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad));
 
