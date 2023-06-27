@@ -55,6 +55,10 @@ vec4 PlaneCut::GetCursorPixelValue(){
     return m_cursorPixel.Host()->value;
 }
 
+PlaneCutMode PlaneCut::GetMode(){
+    return m_mode;
+}
+
 void PlaneCut::Render() {
     std::shared_ptr<Camera> cam = m_scene->GetActiveCam();
     /** Camera desc. TODO: Simplify by allocating it in the Camera Object directly and sharing the descriptor.*/
@@ -84,6 +88,7 @@ void PlaneCut::Render() {
     m_planeCutDesc.Host()->min = m_targetVolume->GetBboxMin();
     m_planeCutDesc.Host()->max = m_targetVolume->GetBboxMax();
     m_planeCutDesc.Host()->outSurface = m_cudaTex->OpenSurface();
+    m_planeCutDesc.Host()->mode = m_mode;
     m_planeCutDesc.ToDevice();
 
     /** Run kernel on texture. */
@@ -93,4 +98,8 @@ void PlaneCut::Render() {
     m_overlay->Render(true, m_cudaTex->GetTex());
 
     m_cursorPixel.ToHost();
+}
+
+void PlaneCut::SetMode(PlaneCutMode mode) {
+    m_mode = mode;
 }

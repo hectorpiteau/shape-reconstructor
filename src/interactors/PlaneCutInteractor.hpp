@@ -40,4 +40,8 @@ public:
     float GetPosition();
 
     vec4 GetCursorValue();
+
+    PlaneCutMode GetMode();
+
+    void SetMode(PlaneCutMode mode);
 };

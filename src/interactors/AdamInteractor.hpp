@@ -40,6 +40,10 @@ public:
     void Optimize();
 
     void Step();
+
+    void SetRenderMode(RenderMode mode);
+
+    RenderMode GetRenderMode();
 };
 
 

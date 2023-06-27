@@ -14,6 +14,12 @@
 #include "../../../interactors/AdamInteractor.hpp"
 
 
+#define RADIO_BUTTON(RDMODE, BTN_NAME) if(mode == RDMODE) ImGui::BeginDisabled();\
+if(ImGui::Button(BTN_NAME)){\
+m_interactor->SetRenderMode(RDMODE);\
+}\
+if(mode == RDMODE) ImGui::EndDisabled();
+
 class AdamEditor {
 private:
     AdamInteractor *m_interactor;
@@ -37,7 +43,7 @@ public:
         auto isReady = m_interactor->IsReady();
         auto isOnGPU = m_interactor->IsOnGPU();
         auto intRangeLoaded = m_interactor->IntegrationRangeLoaded();
-
+        auto mode = m_interactor->GetRenderMode();
 
         ImGui::SeparatorText(ICON_FA_INFO " Adam Optimizer - Information");
         ImGui::Spacing();
@@ -76,6 +82,20 @@ public:
         if(ImGui::DragInt("Batch-Size", (int*)&batchSize, 1, 1)){
             m_interactor->SetBatchSize(batchSize);
         }
+
+        /** RENDER MODE */
+
+        RADIO_BUTTON(RenderMode::GROUND_TRUTH, "Ground Truth")
+        ImGui::SameLine();
+        RADIO_BUTTON(RenderMode::PREDICTED_COLOR, "Color Pred")
+        ImGui::SameLine();
+        RADIO_BUTTON(RenderMode::PREDICTED_TRANSMIT, "Transmit Pred")
+
+        RADIO_BUTTON(RenderMode::COLOR_LOSS, "Color Loss")
+        ImGui::SameLine();
+        RADIO_BUTTON(RenderMode::ALPHA_LOSS, "Transmit Loss")
+
+
 
         ImGui::SeparatorText( "Actions");
         ImGui::Spacing();

@@ -78,8 +78,8 @@ private:
     std::shared_ptr<Lines> m_lines;
 
     /** bbox coordinates. */
-    vec3 m_bboxMin = vec3(-1.0, -1.0, -2.0);
-    vec3 m_bboxMax = vec3(1.0, 1.0, 2.0);
+    vec3 m_bboxMin = vec3(-1.0, -1.0, -1.5);
+    vec3 m_bboxMax = vec3(1.0, 1.0, 1.5);
 
     ivec3 m_res;
     float m_voxelSize = 0.01f;

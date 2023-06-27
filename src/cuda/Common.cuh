@@ -102,6 +102,11 @@ struct AdamOptimizerDescriptor {
     int iteration;
 };
 
+enum PlaneCutMode {
+    COLOR,
+    ALPHA
+};
+
 struct PlaneCutDescriptor {
     ushort axis; /** 0:X, y:1, 2:Z */
     float pos; /** Position along the axis. */
@@ -110,6 +115,8 @@ struct PlaneCutDescriptor {
 
     /** The output texture that represent a screen overlay. */
     cudaSurfaceObject_t outSurface;
+
+    PlaneCutMode mode;
 };
 
 struct CursorPixel {
@@ -187,6 +194,15 @@ struct IntegrationRangeDescriptor {
     cudaSurfaceObject_t surface;
 };
 
+enum RenderMode{
+    GROUND_TRUTH,
+    PREDICTED_COLOR,
+    PREDICTED_TRANSMIT,
+    COLOR_LOSS,
+    ALPHA_LOSS,
+
+};
+
 struct BatchItemDescriptor{
     /** Combines Camera and Image Descriptors. */
     CameraDescriptor* cam;
@@ -204,6 +220,8 @@ struct BatchItemDescriptor{
     /** True for rendering the forward in the debugSurface. */
     bool debugRender;
     cudaSurfaceObject_t debugSurface;
+
+    RenderMode mode;
 };
 
 

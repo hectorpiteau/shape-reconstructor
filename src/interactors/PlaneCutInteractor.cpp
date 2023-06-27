@@ -36,3 +36,11 @@ float PlaneCutInteractor::GetPosition()
 vec4 PlaneCutInteractor::GetCursorValue() {
     return m_planeCut->GetCursorPixelValue();
 }
+
+PlaneCutMode PlaneCutInteractor::GetMode(){
+    return m_planeCut->GetMode();
+}
+
+void PlaneCutInteractor::SetMode(PlaneCutMode mode){
+    m_planeCut->SetMode(mode);
+}

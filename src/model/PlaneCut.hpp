@@ -43,6 +43,8 @@ private:
     GPUData<VolumeDescriptor> m_volumeDesc;
     GPUData<CursorPixel> m_cursorPixel;
 
+    PlaneCutMode m_mode = PlaneCutMode::COLOR;
+
 public:
 
     /**
@@ -84,5 +86,9 @@ public:
     void Render() override;
 
     vec4 GetCursorPixelValue();
+
+    PlaneCutMode GetMode();
+
+    void SetMode(PlaneCutMode mode);
 };
 

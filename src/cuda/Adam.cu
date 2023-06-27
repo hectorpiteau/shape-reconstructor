@@ -30,6 +30,7 @@ __global__ void UpdateAdam(AdamOptimizerDescriptor* adam){
     auto adamRes = (adam->eta * ( m_dw_corr /(sqrt( v_dw_corr ) + adam->epsilon)));
     auto tmp = target - clamp(adamRes, vec4(-0.01), vec4(0.01));
     tmp = clamp(tmp, vec4(0.0), vec4(1.0));
+    tmp.w = clamp(tmp.w, 0.0f, 0.99f);
 
     adam->target[VOLUME_INDEX(x,y,z, adam->res)].data = vec4ToFloat4(tmp);
 

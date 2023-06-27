@@ -48,12 +48,6 @@ __device__ bool IsPointInBBox(const vec3 &point, VolumeDescriptor *volume) {
         return false;
 }
 
-__device__ short IsPointInVolume(const vec3 &point) {
-    if (any(lessThan(point, vec3(-0.5, -0.5, -0.5))) || any(greaterThan(point, vec3(0.5, 0.5, 0.5))))
-        return 0;
-    return 1;
-}
-
 __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, const ivec3& resolution)
 {
     /** Partial transmittance. */
@@ -61,7 +55,7 @@ __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, 
     /** Partial color. */
     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
 
-    float step = 0.01f;
+    float step = (volume->worldSize.x / (float)volume->res.x) * 0.5f;
 
     /** The ray's min must be strictly smaller than max. */
     if (ray.tmin < ray.tmax) {
@@ -74,11 +68,12 @@ __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, 
                 vec4 data = ReadVolume(pos, volume);
                 vec3 color = vec3(data.r, data.g, data.b);
                 float alpha = data.a;
+                alpha = clamp(alpha, 0.0f, 0.99f);
 
-                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
-//                Cpartial += Tpartial * alpha * color;
-//                Tpartial *= (1.0f - alpha);
-                Tpartial *= (1.0f / exp(alpha));
+//                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
+                Cpartial += Tpartial * alpha * color;
+                Tpartial *= (1.0f - alpha);
+//                Tpartial *= (1.0f / exp(alpha));
 
                 if (Tpartial < 0.001f) {
                     Tpartial = 0.0f;
@@ -110,16 +105,6 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
         maxpx = a.z;
         maxpy = a.w;
 
-//        if (x > minpx - 5 && x < minpx + 5 && y > minpy - 5 && y < minpy + 5) {
-//            surf2Dwrite<uchar4>(make_uchar4(255, 255, 0, 255), raycaster->surface, x * sizeof(uchar4), y);
-//            return;
-//        }
-//
-//        if (x > maxpx - 5 && x < maxpx + 5 && y > maxpy - 5 && y < maxpy + 5) {
-//            surf2Dwrite<uchar4>(make_uchar4(0, 255, 255, 255), raycaster->surface, x * sizeof(uchar4), y);
-//            return;
-//        }
-
         if (x >= minpx && x <= maxpx && y >= minpy && y <= maxpy) {
             Ray ray = SingleRayCaster::GetRay(vec2(x, y), camera);
             bool res = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
@@ -130,8 +115,10 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
             }
 
             /** Call forward. */
-            vec4 result = forward(ray, volume) * 255.0f;
-            uchar4 element = make_uchar4(result.x, result.y, result.z, 255.0f);
+            vec4 result = forward(ray, volume);
+            result.w = 1.0f - result.w;
+            result *= 255.0f;
+            uchar4 element = make_uchar4(result.x, result.y, result.z, result.w);
             surf2Dwrite<uchar4>(element, raycaster->surface, (x) * sizeof(uchar4), y);
         } else {
             uchar4 element = make_uchar4(0, 0, 0, 0);
@@ -214,14 +201,29 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
     item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)] = vec4(loss, alpha_loss);
 
     if (item->debugRender) {
-        loss *= 255.0f;
-        loss = clamp(loss, vec3(0.0, 0.0, 0.0), vec3(255.0, 255.0, 255.0));
+        uchar4 element;
+        switch(item->mode){
+            case RenderMode::COLOR_LOSS:
+                loss *= 255.0f;
+                loss = clamp(loss, vec3(0.0, 0.0, 0.0), vec3(255.0, 255.0, 255.0));
+                element = VEC3_255_TO_UCHAR4((loss));
+                break;
+            case RenderMode::ALPHA_LOSS:
+                alpha_loss = clamp(alpha_loss, 0.0f, 255.0f);
+                element = VEC3_255_TO_UCHAR4((vec3(alpha_loss,alpha_loss,alpha_loss)));
+                break;
+            case RenderMode::PREDICTED_COLOR:
+                pred_color *= 255.0f;
+                pred_color = clamp(pred_color, 0.0f, 255.0f);
+                element = VEC3_255_TO_UCHAR4(pred_color);
+                break;
+            case RenderMode::GROUND_TRUTH:
+            default:
+                element = ground_truth;
+                break;
 
-        uchar4 element = VEC3_255_TO_UCHAR4((res * 255.0f));
-//        if(alpha_gt == 0.0f) {
-//            element.x = 255;
-//        }
-//        uchar4 element = VEC3_255_TO_UCHAR4((res * 255.0f));
+        }
+
         surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
     }
 
@@ -254,12 +256,15 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
 //    auto loss = item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)];
     auto cpred = item->cpred[LINEAR_IMG_INDEX(x, y, item->res.y)];
     auto colorPred = vec3(cpred);
-    auto dLdC = (2.0f * (colorPred - cgt)) / ((colorPred + vec3(epsilon)) * (colorPred + vec3(epsilon)));
+//    auto dLdC = (2.0f * (colorPred - cgt)) / ((colorPred + vec3(epsilon)) * (colorPred + vec3(epsilon)));
+    auto dLdC = (2.0f * (colorPred - cgt));
+
+
     auto dLdalpha = (2.0f * (cpred.w - alpha_gt)) / ((cpred.w + vec3(epsilon)) * (cpred.w + vec3(epsilon)));
 
-    auto reg_alpha = 2;
-
     dLdC = clamp(dLdC, -10.0f, 10.0f);
+
+    auto Tinf = cpred.w;
 
     /** Partial transmittance. */
     float Tpartial = 1.0f;
@@ -279,26 +284,30 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
                 vec4 data = ReadVolume(pos, volume);
                 vec3 color = vec3(data.r, data.g, data.b);
                 float alpha = data.a;
+                alpha = clamp(alpha, 0.0f, 0.99f);
 
-//                Cpartial += Tpartial * alpha * color;
-                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
+//                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
+                Cpartial += Tpartial * alpha * color;
 
                 /** Compute full loss */
-                auto dLo_dCi = Tpartial * ( 1 - exp(-alpha));
+                auto dLo_dCi = Tpartial * (alpha);
                 auto color_grad = dLdC * dLo_dCi;
 
 //                vec3 posp1 = (ray.origin + (t+1) * ray.dir);
 //                auto c_k1 = ReadVolume(posp1, volume);  //TEST WITH COLOR_k+1
-                auto dCdAlpha = Tpartial * color * exp(-alpha) - (colorPred - color);
+                auto dCdAlpha = Tpartial * color - (colorPred - color) / (1.0f - alpha);
 
 
-                auto alpha_reg_i = 2.0f * (-alpha * (1.0f - cpred.w)) - 2.0f * alpha_gt * ( -alpha * (1.0f - cpred.w));
-                auto alpha_grad = dot(dLdC, dCdAlpha) + 50.0f * (alpha_reg_i);
+//                auto alpha_reg_i = 2.0f * (-alpha * (1.0f - cpred.w)) - 2.0f * alpha_gt * ( -alpha * (1.0f - cpred.w));
+                auto alpha_reg_i = 2.0f * (Tinf - alpha_gt) * Tinf / (1.0f - alpha);
+
+                auto alpha_grad = 1.0f *  dot(dLdC, dCdAlpha) - 10.0f *  alpha_reg_i;
+
 
                 WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad));
 
-//                Tpartial *= (1.0f - alpha);
-                Tpartial *= exp(-alpha);
+//                Tpartial *= exp(-alpha);
+                Tpartial *= (1.0f - alpha);
 
                 if (Tpartial < 0.001f) {
                     Tpartial = 0.0f;

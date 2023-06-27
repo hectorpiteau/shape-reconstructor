@@ -85,6 +85,19 @@ CUDA_DEV inline glm::vec4 ReadVolume(glm::vec3 &pos, VolumeDescriptor *volume) {
     return glm::mix(c0, c1, wz);
 }
 
+CUDA_DEV inline glm::vec4 ReadVolumeNearest(glm::vec3 &pos, VolumeDescriptor *volume) {
+    /** Manual tri-linear interpolation. */
+    auto local = (pos - volume->bboxMin) / volume->worldSize;
+    glm::vec3 full_coords = local * glm::vec3(volume->res);
+    full_coords -= vec3(0.5, 0.5, 0.5);
+    glm::ivec3 nearest = glm::round(full_coords); // first project [0,1] to [0, resolution], then take the floor index.
+    nearest = glm::clamp(nearest, glm::ivec3(0, 0, 0), volume->res - 1);
+    size_t x_step = volume->res.y * volume->res.z;
+    size_t y_step = volume->res.z;
+    return  cellToVec4(volume->data[nearest.x * x_step + nearest.y * y_step + nearest.z]);
+}
+
+
 CUDA_DEV inline void AtomicWriteVec4(glm::vec4 *addr, const glm::vec4 &data) {
     atomicAdd((float *) (addr), data.x);
     atomicAdd((float *) (addr + 1), data.y);

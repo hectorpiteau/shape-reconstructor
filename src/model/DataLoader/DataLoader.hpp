@@ -53,7 +53,7 @@ public:
     /**
      * Load the current batch descriptors in memory.
      */
-    void LoadBatch();
+    void LoadBatch(RenderMode mode);
 
     /**
      * Go to the next batch indexes.

@@ -63,24 +63,37 @@ __global__ void planeCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor
 
 
     if (all(lessThan(intersection, planeCut->max)) && all(greaterThan(intersection, planeCut->min))) {
-        vec4 res = ReadVolume(intersection, volume) * 255.0f;
-        if(x == cursorPixel->loc.x && y == cursorPixel->loc.y) {
+//        vec4 res = ReadVolume(intersection, volume) * 255.0f;
+        vec4 res = ReadVolumeNearest(intersection, volume) * 255.0f;
+        if(x == cursorPixel->loc.x && (1080 - y) == cursorPixel->loc.y) {
             cursorPixel->value = res;
 
         }
         if(x > cursorPixel->loc.x - 5
            && x < cursorPixel->loc.x + 5
-           && y > cursorPixel->loc.y - 5
-           && y < cursorPixel->loc.y + 5
+           && (1080 - y) > cursorPixel->loc.y - 5
+           && (1080 - y) < cursorPixel->loc.y + 5
                 ) {
             surf2Dwrite<uchar4>(VEC4_TO_UCHAR4(vec4(255,0,0,255)), planeCut->outSurface, x * sizeof(uchar4), y);
-
             return;
         }
 
-        res = abs(res);
-        res = clamp(res, vec4(0.0f), vec4(255.0f));
-        surf2Dwrite<uchar4>(VEC4_TO_UCHAR4(res), planeCut->outSurface, x * sizeof(uchar4), y);
+        if(planeCut->mode == PlaneCutMode::COLOR){
+            res = abs(res);
+            res.w = 255.0f;
+            res = clamp(res, vec4(0.0f), vec4(255.0f));
+            surf2Dwrite<uchar4>(VEC4_TO_UCHAR4(res), planeCut->outSurface, x * sizeof(uchar4), y);
+        }
+        else if(planeCut->mode == PlaneCutMode::ALPHA){
+            res = abs(res);
+            res.x = res.w;
+            res.y = res.w;
+            res.z = res.w;
+            res.w = 255.0f;
+            res = clamp(res, vec4(0.0f), vec4(255.0f));
+            surf2Dwrite<uchar4>(VEC4_TO_UCHAR4(res), planeCut->outSurface, x * sizeof(uchar4), y);
+        }
+
     } else {
         surf2Dwrite<uchar4>(make_uchar4(0, 0, 0, 0), planeCut->outSurface, x * sizeof(uchar4), y);
     }

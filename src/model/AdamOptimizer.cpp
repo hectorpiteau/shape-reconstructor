@@ -111,7 +111,7 @@ void AdamOptimizer::Render() {
 }
 
 void AdamOptimizer::Step(){
-    m_dataLoader->LoadBatch();
+    m_dataLoader->LoadBatch(m_renderMode);
 
     /** Update adam descriptor's data on GPU. */
     UpdateGPUDescriptor();
@@ -197,4 +197,12 @@ unsigned int AdamOptimizer::GetBatchSize() {
 
 std::shared_ptr<Volume3D> AdamOptimizer::GetGradVolume() {
     return m_grads;
+}
+
+void AdamOptimizer::SetRenderMode(RenderMode mode) {
+    m_renderMode = mode;
+}
+
+RenderMode AdamOptimizer::GetRenderMode() {
+    return m_renderMode;
 }

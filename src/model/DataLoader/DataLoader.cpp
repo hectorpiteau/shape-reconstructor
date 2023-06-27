@@ -60,16 +60,9 @@ void DataLoader::Shuffle() {
     std::shuffle(std::begin(m_indexes), std::end(m_indexes), rng);
 }
 
-void DataLoader::LoadBatch() {
+void DataLoader::LoadBatch(RenderMode mode) {
     if (!m_isReady || !m_dataset->GetCameraSet()->AreCamerasGenerated() || !m_dataset->GetImageSet()->AreImagesGenerated()) return;
-    /** Unload current batch. */
-//    if (m_batchLoaded) {
-//        /** Unload previously loaded images in memory. */
-//        for (unsigned int i = 0; i < m_batchSize; ++i) {
-//            auto image = m_dataset->GetImageSet()->GetImage(m_indexes[m_startIndex + i]);
-//            image->FreeGPUDescriptor();
-//        }
-//    }
+
 
     /** Load new batch */
     for (unsigned int i = 0; i < m_batchSize; ++i) {
@@ -83,6 +76,7 @@ void DataLoader::LoadBatch() {
         m_batchItems[i]->Host()->res = ivec2(res.img->width, res.img->height);
         m_batchItems[i]->Host()->range = res.cam->GetIntegrationRangeGPUDescriptor().Device();
         m_batchItems[i]->Host()->debugRender = true;
+        m_batchItems[i]->Host()->mode = mode;
         m_batchItems[i]->Host()->debugSurface = res.cam->GetCudaTexture()->OpenSurface();
         m_batchItems[i]->ToDevice();
     }

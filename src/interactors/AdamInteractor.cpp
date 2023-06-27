@@ -64,3 +64,11 @@ void AdamInteractor::Step() {
     m_adam->Step();
 }
 
+RenderMode AdamInteractor::GetRenderMode(){
+    return m_adam->GetRenderMode();
+}
+
+void AdamInteractor::SetRenderMode(RenderMode mode) {
+    m_adam->SetRenderMode(mode);
+}
+

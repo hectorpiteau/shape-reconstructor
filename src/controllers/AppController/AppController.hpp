@@ -28,7 +28,7 @@ public:
         /** Create the Scene */
         m_scene = new Scene(m_sceneSettings, window);
 
-        ivec3 volumeResolution = {32, 32, 64};
+        ivec3 volumeResolution = {64, 64, 32*3};
 
         /** Fill default Scene. */
         auto cam1 = std::make_shared<Camera>(m_scene, std::string("CameraT"), vec3(-4.0, 3.0, -4.0), vec3(0.0, 0.0, 0.0));
@@ -48,7 +48,7 @@ public:
         auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volumeRenderer1, volumeResolution);
         m_scene->Add(adamOptimizer);
 
-        m_scene->Add(std::make_shared<PlaneCut>(m_scene, volumeRenderer1->GetVolume3D() ));
+        m_scene->Add(std::make_shared<PlaneCut>(m_scene, adamOptimizer->GetGradVolume() ));
 
         /** Create Views and Interactors */
         m_objectListView = std::make_shared<ObjectListView>();

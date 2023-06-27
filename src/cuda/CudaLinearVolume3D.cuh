@@ -105,7 +105,7 @@ public:
 
                     /** OPACITY */
                     HSet(ivec3(x, y, z),
-                         vec4(abs(sin(xf * 10.0f)), yf, zf, 1.0f - glm::clamp(sdf * 10.0f, 0.0f, 1.0f)));
+                         vec4(abs(sin(xf * 10.0f)), yf, zf, 0.01f));
                 }
     }
 

@@ -30,6 +30,7 @@ public:
         auto dir = m_interactor->GetDirection();
         auto pos = m_interactor->GetPosition();
         auto cursorValue = m_interactor->GetCursorValue();
+        auto mode = m_interactor->GetMode();
 
         ImGui::SeparatorText(ICON_FA_INFO " PlaneCut - Information");
         ImGui::Spacing();
@@ -75,5 +76,21 @@ public:
         ImGui::Spacing();
 
         ImGui::InputFloat4("cursor ", &cursorValue[0]);
+        ImGui::Spacing();
+
+        if(mode == PlaneCutMode::COLOR) ImGui::BeginDisabled();
+        if(ImGui::Button("Show color")){
+            m_interactor->SetMode(PlaneCutMode::COLOR);
+        }
+        if(mode == PlaneCutMode::COLOR) ImGui::EndDisabled();
+
+        ImGui::SameLine();
+
+        if(mode == PlaneCutMode::ALPHA) ImGui::BeginDisabled();
+        if(ImGui::Button("Show alpha")){
+            m_interactor->SetMode(PlaneCutMode::ALPHA);
+        }
+        if(mode == PlaneCutMode::ALPHA) ImGui::EndDisabled();
+
     }
 };

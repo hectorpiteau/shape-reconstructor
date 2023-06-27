@@ -72,6 +72,8 @@ private:
 
     std::shared_ptr<VolumeRenderer> m_volumeRenderer;
 
+    RenderMode m_renderMode = RenderMode::PREDICTED_COLOR;
+
 public:
     explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<VolumeRenderer> volumeRenderer,  const ivec3& volumeResolution);
     AdamOptimizer(const AdamOptimizer&) = delete;
@@ -113,6 +115,10 @@ public:
     std::shared_ptr<DataLoader> GetDataLoader();
 
     void Render() override;
+
+    void SetRenderMode(RenderMode mode);
+
+    RenderMode GetRenderMode();
 };
 
 
