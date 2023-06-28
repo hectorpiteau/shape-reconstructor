@@ -25,7 +25,7 @@ SceneObjectInteractor::SceneObjectInteractor(Scene* scene)
     volumeRendererInteractor = new VolumeRendererInteractor(m_scene);
     volume3DInteractor = new Volume3DInteractor();
     simpleRayCasterInteractor = new SimpleRayCasterInteractor();
-    planeCutInteractor = new PlaneCutInteractor();
+    planeCutInteractor = new PlaneCutInteractor(m_scene);
     adamInteractor = new AdamInteractor();
 
     m_inspectorView = new InspectorView(this);

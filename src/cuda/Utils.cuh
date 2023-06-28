@@ -44,13 +44,13 @@ CUDA_DEV inline float4 vec4ToFloat4(const glm::vec4 &a) {
  * @param resolution : The volume resolution in each direction.
  * @return bool :
  */
-CUDA_DEV inline glm::vec4 ReadVolume(glm::vec3 &pos, VolumeDescriptor *volume) {
+CUDA_DEV inline glm::vec4 ReadVolume(glm::vec3 &pos, VolumeDescriptor *volume, size_t* indices) {
     /** Manual tri-linear interpolation. */
     auto local = (pos - volume->bboxMin) / volume->worldSize;
     glm::vec3 full_coords = local * glm::vec3(volume->res);
     full_coords -= vec3(0.5, 0.5, 0.5);
     glm::ivec3 min = glm::floor(full_coords); // first project [0,1] to [0, resolution], then take the floor index.
-    glm::ivec3 max = glm::ceil(full_coords); // idem but to take the ceil index.
+    glm::ivec3 max = min + ivec3(1); //glm::ceil(full_coords); // idem but to take the ceil index.
     min = glm::clamp(min, glm::ivec3(0, 0, 0), volume->res - 1);
     max = glm::clamp(max, glm::ivec3(0, 0, 0), volume->res - 1);
 
@@ -63,16 +63,26 @@ CUDA_DEV inline glm::vec4 ReadVolume(glm::vec3 &pos, VolumeDescriptor *volume) {
     size_t x_step = volume->res.y * volume->res.z;
     size_t y_step = volume->res.z;
 
-    /** Sample all around the pos point in the grid.  (8 voxels) */
-    glm::vec4 c000 = cellToVec4(volume->data[min.x * x_step + min.y * y_step + min.z]); // back face
-    glm::vec4 c001 = cellToVec4(volume->data[min.x * x_step + min.y * y_step + max.z]);
-    glm::vec4 c010 = cellToVec4(volume->data[min.x * x_step + max.y * y_step + min.z]);
-    glm::vec4 c011 = cellToVec4(volume->data[min.x * x_step + max.y * y_step + max.z]);
+    indices[0] = min.x * x_step + min.y * y_step + min.z;
+    indices[1] = min.x * x_step + min.y * y_step + max.z;
+    indices[2] = min.x * x_step + max.y * y_step + min.z;
+    indices[3] = min.x * x_step + max.y * y_step + max.z;
 
-    glm::vec4 c100 = cellToVec4(volume->data[max.x * x_step + min.y * y_step + min.z]); // front face
-    glm::vec4 c101 = cellToVec4(volume->data[max.x * x_step + min.y * y_step + max.z]);
-    glm::vec4 c110 = cellToVec4(volume->data[max.x * x_step + max.y * y_step + min.z]);
-    glm::vec4 c111 = cellToVec4(volume->data[max.x * x_step + max.y * y_step + max.z]);
+    indices[4] = max.x * x_step + min.y * y_step + min.z;
+    indices[5] = max.x * x_step + min.y * y_step + max.z;
+    indices[6] = max.x * x_step + max.y * y_step + min.z;
+    indices[7] = max.x * x_step + max.y * y_step + max.z;
+
+    /** Sample all around the pos point in the grid.  (8 voxels) */
+    glm::vec4 c000 = cellToVec4(volume->data[indices[0]]); // back face
+    glm::vec4 c001 = cellToVec4(volume->data[indices[1]]);
+    glm::vec4 c010 = cellToVec4(volume->data[indices[2]]);
+    glm::vec4 c011 = cellToVec4(volume->data[indices[3]]);
+
+    glm::vec4 c100 = cellToVec4(volume->data[indices[4]]); // front face
+    glm::vec4 c101 = cellToVec4(volume->data[indices[5]]);
+    glm::vec4 c110 = cellToVec4(volume->data[indices[6]]);
+    glm::vec4 c111 = cellToVec4(volume->data[indices[7]]);
 
     glm::vec4 c00 = glm::mix(c000, c100, wx);
     glm::vec4 c01 = glm::mix(c001, c101, wx);
@@ -126,7 +136,7 @@ CUDA_DEV inline void AtomicWriteCell(cell *addr, const glm::vec4 &data) {
  * @param volume : The volume to write into.
  * @return
  */
-CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, VolumeDescriptor *volume, const glm::vec4 &value) {
+CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, VolumeDescriptor *volume, const glm::vec4 &value, size_t* indices) {
     /** Manual tri-linear interpolation. */
     auto local = (pos - volume->bboxMin) / volume->worldSize;
     glm::vec3 full_coords = local * glm::vec3(volume->res);
@@ -156,15 +166,15 @@ CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, VolumeDescriptor *volume, co
     auto c111 = w.x * w.y * w.z * value;
 
 
-    AtomicWriteCell(&volume->data[min.x * x_step + min.y * y_step + min.z], c000); // back face
-    AtomicWriteCell(&volume->data[min.x * x_step + min.y * y_step + max.z], c001);
-    AtomicWriteCell(&volume->data[min.x * x_step + max.y * y_step + min.z], c010);
-    AtomicWriteCell(&volume->data[min.x * x_step + max.y * y_step + max.z], c011);
+    AtomicWriteCell(&volume->data[indices[0]], c000); // back face
+    AtomicWriteCell(&volume->data[indices[1]], c001);
+    AtomicWriteCell(&volume->data[indices[2]], c010);
+    AtomicWriteCell(&volume->data[indices[3]], c011);
 
-    AtomicWriteCell(&volume->data[max.x * x_step + min.y * y_step + min.z], c100); // front face
-    AtomicWriteCell(&volume->data[max.x * x_step + min.y * y_step + max.z], c101);
-    AtomicWriteCell(&volume->data[max.x * x_step + max.y * y_step + min.z], c110);
-    AtomicWriteCell(&volume->data[max.x * x_step + max.y * y_step + max.z], c111);
+    AtomicWriteCell(&volume->data[indices[4]], c100); // front face
+    AtomicWriteCell(&volume->data[indices[5]], c101);
+    AtomicWriteCell(&volume->data[indices[6]], c110);
+    AtomicWriteCell(&volume->data[indices[7]], c111);
 }
 
 

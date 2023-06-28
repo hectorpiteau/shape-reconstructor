@@ -100,6 +100,14 @@ struct AdamOptimizerDescriptor {
     cell* target;
 
     int iteration;
+
+    /** Losses weightings. */
+
+    float color_0_w;
+    float alpha_0_w;
+    float alpha_reg_0_w;
+
+
 };
 
 enum PlaneCutMode {

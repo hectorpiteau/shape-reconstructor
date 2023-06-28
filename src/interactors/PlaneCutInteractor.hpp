@@ -9,10 +9,12 @@ using namespace glm;
 class PlaneCutInteractor
 {
 private:
+    Scene* m_scene;
     std::shared_ptr<PlaneCut> m_planeCut = nullptr;
+    std::vector<std::shared_ptr<Volume3D>> m_availableVolumes;
 
 public:
-    PlaneCutInteractor() = default;
+    explicit PlaneCutInteractor(Scene* scene);
     PlaneCutInteractor(const PlaneCutInteractor &) = delete;
 
     ~PlaneCutInteractor() = default;
@@ -44,4 +46,8 @@ public:
     PlaneCutMode GetMode();
 
     void SetMode(PlaneCutMode mode);
+
+    std::vector<std::shared_ptr<Volume3D>>& GetAvailableVolumes();
+
+    void SetTargetVolume(std::shared_ptr<Volume3D> vol);
 };

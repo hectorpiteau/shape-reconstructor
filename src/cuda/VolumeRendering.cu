@@ -57,6 +57,8 @@ __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, 
 
     float step = (volume->worldSize.x / (float)volume->res.x) * 0.5f;
 
+    size_t indices[8] = {};
+
     /** The ray's min must be strictly smaller than max. */
     if (ray.tmin < ray.tmax) {
 
@@ -65,7 +67,7 @@ __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, 
             vec3 pos = ray.origin + t * ray.dir;
 
             if (IsPointInBBox(pos, volume)) {
-                vec4 data = ReadVolume(pos, volume);
+                vec4 data = ReadVolume(pos, volume, indices);
                 vec3 color = vec3(data.r, data.g, data.b);
                 float alpha = data.a;
                 alpha = clamp(alpha, 0.0f, 0.99f);
@@ -260,7 +262,7 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
     auto dLdC = (2.0f * (colorPred - cgt));
 
 
-    auto dLdalpha = (2.0f * (cpred.w - alpha_gt)) / ((cpred.w + vec3(epsilon)) * (cpred.w + vec3(epsilon)));
+//    auto dLdalpha = (2.0f * (cpred.w - alpha_gt)) / ((cpred.w + epsilon) * (cpred.w + epsilon));
 
     dLdC = clamp(dLdC, -10.0f, 10.0f);
 
@@ -271,7 +273,9 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
     /** Partial color. */
     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
 
-    float step = 0.06f;
+    float step = (volume->worldSize.x / (float)volume->res.x) * 0.5f;
+
+    size_t indices[8] = {};
 
     /** The ray's min must be strictly smaller than max. */
     if (ray.tmin < ray.tmax) {
@@ -281,7 +285,7 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
             vec3 pos = ray.origin + t * ray.dir;
 
             if (IsPointInBBox(pos, volume)) {
-                vec4 data = ReadVolume(pos, volume);
+                vec4 data = ReadVolume(pos, volume, indices);
                 vec3 color = vec3(data.r, data.g, data.b);
                 float alpha = data.a;
                 alpha = clamp(alpha, 0.0f, 0.99f);
@@ -291,7 +295,7 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
 
                 /** Compute full loss */
                 auto dLo_dCi = Tpartial * (alpha);
-                auto color_grad = dLdC * dLo_dCi;
+                auto color_grad = adam->color_0_w * dLdC * dLo_dCi;
 
 //                vec3 posp1 = (ray.origin + (t+1) * ray.dir);
 //                auto c_k1 = ReadVolume(posp1, volume);  //TEST WITH COLOR_k+1
@@ -301,10 +305,10 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
 //                auto alpha_reg_i = 2.0f * (-alpha * (1.0f - cpred.w)) - 2.0f * alpha_gt * ( -alpha * (1.0f - cpred.w));
                 auto alpha_reg_i = 2.0f * (Tinf - alpha_gt) * Tinf / (1.0f - alpha);
 
-                auto alpha_grad = 1.0f *  dot(dLdC, dCdAlpha) - 10.0f *  alpha_reg_i;
+                auto alpha_grad = adam->alpha_0_w *  dot(dLdC, dCdAlpha) + adam->alpha_reg_0_w *  alpha_reg_i;
 
 
-                WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad));
+                WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad), indices);
 
 //                Tpartial *= exp(-alpha);
                 Tpartial *= (1.0f - alpha);

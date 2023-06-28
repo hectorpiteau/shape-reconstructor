@@ -64,7 +64,6 @@ void PlaneCut::Render() {
     /** Camera desc. TODO: Simplify by allocating it in the Camera Object directly and sharing the descriptor.*/
     double x,y;
     glfwGetCursorPos(m_scene->GetWindow(), &x, &y);
-    std::cout << "cursor: " << std::to_string(x) << " " << std::to_string(y) << std::endl;
     m_cursorPixel.Host()->loc = ivec2(x,y);
     m_cursorPixel.ToDevice();
 
@@ -102,4 +101,8 @@ void PlaneCut::Render() {
 
 void PlaneCut::SetMode(PlaneCutMode mode) {
     m_mode = mode;
+}
+
+void PlaneCut::SetTargetVolume(std::shared_ptr<Volume3D> vol) {
+    m_targetVolume = vol;
 }

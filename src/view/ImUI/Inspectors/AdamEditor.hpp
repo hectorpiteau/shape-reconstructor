@@ -44,6 +44,9 @@ public:
         auto isOnGPU = m_interactor->IsOnGPU();
         auto intRangeLoaded = m_interactor->IntegrationRangeLoaded();
         auto mode = m_interactor->GetRenderMode();
+        auto color0w = m_interactor->GetColor0W();
+        auto alpha0w = m_interactor->GetAlpha0W();
+        auto alphareg0w = m_interactor->GetAlphaReg0W();
 
         ImGui::SeparatorText(ICON_FA_INFO " Adam Optimizer - Information");
         ImGui::Spacing();
@@ -125,10 +128,26 @@ public:
         ImGui::SameLine();
         ImGui::TextUnformatted(std::to_string(0).c_str());
 
-        static float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };
+        static float arr[] = { 0.0f };
         ImGui::PlotLines("PSNR", arr, IM_ARRAYSIZE(arr), 0, nullptr, 0.0f, 45.0f,  ImVec2(0, 80.0f));
 
         ImGui::Separator();
+
+        ImGui::SeparatorText( "Loss weighting");
+        ImGui::Spacing();
+
+        if(ImGui::DragFloat("Color L2", &color0w, 0.001f)){
+            m_interactor->SetColor0W(color0w);
+        }
+
+        if(ImGui::DragFloat("Alpha L2", &alpha0w, 0.001f)){
+            m_interactor->SetAlpha0W(alpha0w);
+        }
+
+        if(ImGui::DragFloat("Alpha Reg", &alphareg0w, 0.001f)){
+            m_interactor->SetAlphaReg0W(alphareg0w);
+        }
+
     }
 
 };

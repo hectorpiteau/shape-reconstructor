@@ -35,6 +35,9 @@ AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std
     m_adamG2->ToGPU();
 
     m_grads = std::make_shared<Volume3D>(scene, volumeResolution);
+    m_grads->SetName("Gradients");
+    m_scene->Add(m_grads, true, true);
+    m_children.push_back(m_grads);
 
 //    m_blurredVoxels = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_dataLoader = std::make_shared<DataLoader>(m_dataset);
@@ -156,6 +159,10 @@ void AdamOptimizer::UpdateGPUDescriptor() {
     m_adamDescriptor.Host()->grads = m_gradsDescriptor.Device();
     m_adamDescriptor.Host()->iteration = (int) m_steps;
     m_adamDescriptor.Host()->res = m_target->GetResolution();
+
+    m_adamDescriptor.Host()->color_0_w = GetColor0W();
+    m_adamDescriptor.Host()->alpha_0_w = GetAlpha0W();
+    m_adamDescriptor.Host()->alpha_reg_0_w = GetAlphaReg0W();
     m_adamDescriptor.ToDevice();
 }
 

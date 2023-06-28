@@ -74,6 +74,12 @@ private:
 
     RenderMode m_renderMode = RenderMode::PREDICTED_COLOR;
 
+    /** Losses weightings */
+
+    float m_color0W = 1.0f;
+    float m_alpha0W = -0.5f;
+    float m_alphaReg0W = -2.0f;
+
 public:
     explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<VolumeRenderer> volumeRenderer,  const ivec3& volumeResolution);
     AdamOptimizer(const AdamOptimizer&) = delete;
@@ -96,6 +102,13 @@ public:
     void SetEta(float value);
     [[nodiscard]] float GetEta() const;
     [[nodiscard]] bool IntegrationRangeLoaded() const;
+
+    [[nodiscard]] float GetColor0W() const { return m_color0W;}
+    void SetColor0W(float value) { m_color0W = value;}
+    [[nodiscard]] float GetAlpha0W() const { return m_alpha0W;}
+    void SetAlpha0W(float value) { m_alpha0W = value;}
+    [[nodiscard]] float GetAlphaReg0W() const { return m_alphaReg0W;}
+    void SetAlphaReg0W(float value)  { m_alphaReg0W = value;}
 
     void Optimize();
 

@@ -90,5 +90,7 @@ public:
     PlaneCutMode GetMode();
 
     void SetMode(PlaneCutMode mode);
+
+    void SetTargetVolume(std::shared_ptr<Volume3D> vol);
 };
 

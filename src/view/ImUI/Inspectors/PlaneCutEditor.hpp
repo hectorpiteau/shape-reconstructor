@@ -19,6 +19,8 @@ Modified: 2023-04-26T14:06:53.135Z
 class PlaneCutEditor {
 private:
     PlaneCutInteractor *m_interactor;
+
+    size_t m_comboBoxCurrent = 0;
 public:
     explicit PlaneCutEditor(PlaneCutInteractor *interactor) : m_interactor(interactor) {
 
@@ -31,6 +33,7 @@ public:
         auto pos = m_interactor->GetPosition();
         auto cursorValue = m_interactor->GetCursorValue();
         auto mode = m_interactor->GetMode();
+        auto volumes = m_interactor->GetAvailableVolumes();
 
         ImGui::SeparatorText(ICON_FA_INFO " PlaneCut - Information");
         ImGui::Spacing();
@@ -91,6 +94,35 @@ public:
             m_interactor->SetMode(PlaneCutMode::ALPHA);
         }
         if(mode == PlaneCutMode::ALPHA) ImGui::EndDisabled();
+
+        ImGui::Spacing();
+
+        static ImGuiComboFlags flags = 0;
+
+        if (!volumes.empty()) {
+            auto combo_preview = volumes[m_comboBoxCurrent]->GetName().c_str();
+
+            if (ImGui::BeginCombo("Target Volume", combo_preview, flags)) {
+                for (size_t i = 0; i < volumes.size(); ++i) {
+                    const bool is_selected = (m_comboBoxCurrent == i);
+
+                    if (ImGui::Selectable(volumes[i]->GetName().c_str(), is_selected)) {
+                        if (m_comboBoxCurrent != i) {
+                            m_interactor->SetTargetVolume(volumes[i]);
+                        }
+                        m_comboBoxCurrent = i;
+                    }
+
+                    // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+
+            ImGui::Separator();
+        }
 
     }
 };

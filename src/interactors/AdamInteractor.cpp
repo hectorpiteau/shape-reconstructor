@@ -72,3 +72,27 @@ void AdamInteractor::SetRenderMode(RenderMode mode) {
     m_adam->SetRenderMode(mode);
 }
 
+void AdamInteractor::SetColor0W(float value) {
+    m_adam->SetColor0W(value);
+}
+
+void AdamInteractor::SetAlpha0W(float value) {
+    m_adam->SetAlpha0W(value);
+}
+
+void AdamInteractor::SetAlphaReg0W(float value) {
+    m_adam->SetAlphaReg0W(value);
+}
+
+float AdamInteractor::GetColor0W() {
+    return m_adam->GetColor0W();
+}
+
+float AdamInteractor::GetAlpha0W() {
+    return m_adam->GetAlpha0W();
+}
+
+float AdamInteractor::GetAlphaReg0W() {
+    return m_adam->GetAlphaReg0W();
+}
+
