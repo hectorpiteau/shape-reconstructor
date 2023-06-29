@@ -77,7 +77,7 @@ private:
     /** Losses weightings */
 
     float m_color0W = 1.0f;
-    float m_alpha0W = -0.5f;
+    float m_alpha0W = 0.0f;
     float m_alphaReg0W = -2.0f;
 
 public:

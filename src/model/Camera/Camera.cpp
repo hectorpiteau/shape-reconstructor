@@ -373,7 +373,7 @@ void Camera::SetFar(float far) {
 float Camera::GetFar() const { return m_far; }
 
 void Camera::Render() {
-    glDisable(GL_BLEND);
+//    glDisable(GL_BLEND);
     /** Frustum */
     if (m_showFrustumLines && m_frustumLines != nullptr) m_frustumLines->Render();
     if(m_gizmo!= nullptr) m_gizmo->Render();
@@ -396,7 +396,7 @@ void Camera::Render() {
     }
 
     /** Rays (partial) for each pixel. */
-    glEnable(GL_BLEND);
+//    glEnable(GL_BLEND);
 }
 
 void Camera::InitializeCudaTexture(){

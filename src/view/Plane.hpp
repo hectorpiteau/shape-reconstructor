@@ -29,12 +29,13 @@ public:
 
     void Render() override;
 
+
 private:
     /** out dep. */
     Scene *m_scene;
 
-    GLuint m_customTex;
-    bool m_useCustomTex;
+    GLuint m_customTex{};
+    bool m_useCustomTex{};
 
     mat4 m_model = mat4(1.0);
 
@@ -62,4 +63,11 @@ private:
          1.0f, -1.0f, 0.0f,     1.0f, 1.0f,  //bot_right
         -1.0f, -1.0f, 0.0f,     0.0f, 1.0f   //bot_left
     };
+
+    GLuint cursor_buffer_id;
+    bool m_getMouseData = false;
+    GLint m_mousePosLocation;
+    ivec2 m_mousePosition;
+
+    vec4 m_mouseData{};
 };

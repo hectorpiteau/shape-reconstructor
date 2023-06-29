@@ -22,6 +22,8 @@ Plane::Plane(Scene *scene) : m_scene(scene), m_pipeline("../src/shaders/v_plane.
     m_viewLocation = m_pipeline.AddUniform("view");
     m_projectionLocation = m_pipeline.AddUniform("projection");
 
+
+
     glGenBuffers(1, &m_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertices), m_vertices, GL_STREAM_DRAW);
@@ -33,6 +35,11 @@ Plane::Plane(Scene *scene) : m_scene(scene), m_pipeline("../src/shaders/v_plane.
 
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (GLvoid *) (sizeof(float) * 3));
     glEnableVertexAttribArray(1);
+
+    /** Create buffer for cursor data. */
+    glCreateBuffers(1, &cursor_buffer_id);
+    /** Store data. */
+    glNamedBufferData(cursor_buffer_id, sizeof(vec4), nullptr, GL_STATIC_DRAW);
 }
 
 void Plane::SetVertices(const vec3 &top_left, const vec3 &top_right, const vec3 &bot_left, const vec3 &bot_right) {
@@ -54,6 +61,16 @@ void Plane::Render() {
     glDisable(GL_CULL_FACE);
     m_pipeline.UseShader();
 
+    double x = -1,y = -1;
+    if(m_getMouseData){
+        glfwGetCursorPos(m_scene->GetWindow(), &x, &y);
+    }
+    m_mousePosition.x = (int)x;
+    m_mousePosition.y = (int)y;
+
+    /** cursor pos data */
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, cursor_buffer_id);
+
     glActiveTexture(GL_TEXTURE0);
     if (m_useCustomTex) {
         glBindTexture(GL_TEXTURE_2D, m_customTex);
@@ -64,11 +81,16 @@ void Plane::Render() {
     glUniformMatrix4fv(m_modelLocation, 1, GL_FALSE, value_ptr(m_model));
     glUniformMatrix4fv(m_viewLocation, 1, GL_FALSE, value_ptr(m_scene->GetActiveCam()->GetViewMatrix()));
     glUniformMatrix4fv(m_projectionLocation, 1, GL_FALSE, value_ptr(m_scene->GetActiveCam()->GetProjectionMatrix()));
-
+    glUniform2i(m_mousePosLocation, m_mousePosition[0], m_mousePosition[1]);
     glBindVertexArray(m_VAO);
 
     glDrawArrays(GL_TRIANGLES, 0, (int) m_size/5);
     glEnable(GL_CULL_FACE);
+
+    if(m_getMouseData){
+        m_mouseData = *(glm::vec4*)glMapNamedBuffer(cursor_buffer_id, GL_READ_ONLY);
+        glUnmapNamedBuffer(cursor_buffer_id);
+    }
 }
 
 void Plane::SetTexture2D(Texture2D *texture) {
