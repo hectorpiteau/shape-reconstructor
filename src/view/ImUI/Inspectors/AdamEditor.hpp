@@ -52,15 +52,15 @@ public:
         ImGui::SeparatorText(ICON_FA_INFO " Adam Optimizer - Information");
         ImGui::Spacing();
 
-        if(ImGui::DragFloat2("Beta", &beta[0], 0.001f)){
+        if(ImGui::DragFloat2("Beta", &beta[0], 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetBeta(beta);
         }
 
-        if(ImGui::DragFloat("Epsilon", &eps, 0.001f)){
+        if(ImGui::DragFloat("Epsilon", &eps, 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetEpsilon(eps);
         }
 
-        if(ImGui::DragFloat("Eta", &eta, 0.001f)){
+        if(ImGui::DragFloat("Eta", &eta, 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetEta(eta);
         }
 
@@ -137,19 +137,19 @@ public:
         ImGui::SeparatorText( "Loss weighting");
         ImGui::Spacing();
 
-        if(ImGui::DragFloat("Color L2", &color0w, 0.001f)){
+        if(ImGui::DragFloat("Color L2", &color0w, 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetColor0W(color0w);
         }
 
-        if(ImGui::DragFloat("Alpha L2", &alpha0w, 0.001f)){
+        if(ImGui::DragFloat("Alpha L2", &alpha0w, 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetAlpha0W(alpha0w);
         }
 
-        if(ImGui::DragFloat("Alpha Reg", &alphareg0w, 0.001f)){
+        if(ImGui::DragFloat("Alpha Reg", &alphareg0w, 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetAlphaReg0W(alphareg0w);
         }
 
-        if(ImGui::DragFloat("TVL2 Reg", &tvl20w, 0.001f)){
+        if(ImGui::DragFloat("TVL2 Reg", &tvl20w, 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetTVL20W(tvl20w);
         }
 
