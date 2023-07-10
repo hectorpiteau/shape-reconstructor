@@ -51,6 +51,10 @@ public:
     void SetAlpha0W(float value);
     float GetAlphaReg0W();
     void SetAlphaReg0W(float value);
+
+
+    float GetTVL20W();
+    void SetTVL20W(float value);
 };
 
 

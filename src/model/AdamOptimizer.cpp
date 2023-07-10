@@ -134,6 +134,9 @@ void AdamOptimizer::Step(){
         batched_backward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor);
     }
 
+    /** Volume Backward. Computing gradients on voxels and not on image rays. */
+    volume_backward(m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor);
+
     /** Update target volume weights. */
     update_adam_wrapper(&m_adamDescriptor);
 
@@ -163,6 +166,7 @@ void AdamOptimizer::UpdateGPUDescriptor() {
     m_adamDescriptor.Host()->color_0_w = GetColor0W();
     m_adamDescriptor.Host()->alpha_0_w = GetAlpha0W();
     m_adamDescriptor.Host()->alpha_reg_0_w = GetAlphaReg0W();
+    m_adamDescriptor.Host()->tvl2_0_w = GetTVL20W();
     m_adamDescriptor.ToDevice();
 }
 

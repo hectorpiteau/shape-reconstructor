@@ -27,7 +27,7 @@ using namespace glm;
 #define STBI_IMG_INDEX(X, Y, RESX) ((Y) * RESX * 4 + X * 4)
 #define LINEAR_IMG_INDEX(X, Y, RESY) (X * RESY + Y)
 
-#define VOLUME_INDEX(X, Y, Z, RES) (X * RES.y*RES.z + Y * RES.z + Z)
+#define VOLUME_INDEX(X, Y, Z, RES) ((X) * (RES).y*(RES).z + (Y) * (RES).z + (Z))
 
 #define FLOAT4_NORM_TO_UCHAR4(F) make_uchar4( \
 (unsigned char)__float2uint_rn(F.x * 255.0f), \
@@ -106,7 +106,7 @@ struct AdamOptimizerDescriptor {
     float color_0_w;
     float alpha_0_w;
     float alpha_reg_0_w;
-
+    float tvl2_0_w;
 
 };
 

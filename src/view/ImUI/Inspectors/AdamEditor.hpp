@@ -47,6 +47,7 @@ public:
         auto color0w = m_interactor->GetColor0W();
         auto alpha0w = m_interactor->GetAlpha0W();
         auto alphareg0w = m_interactor->GetAlphaReg0W();
+        auto tvl20w = m_interactor->GetTVL20W();
 
         ImGui::SeparatorText(ICON_FA_INFO " Adam Optimizer - Information");
         ImGui::Spacing();
@@ -146,6 +147,10 @@ public:
 
         if(ImGui::DragFloat("Alpha Reg", &alphareg0w, 0.001f)){
             m_interactor->SetAlphaReg0W(alphareg0w);
+        }
+
+        if(ImGui::DragFloat("TVL2 Reg", &tvl20w, 0.001f)){
+            m_interactor->SetTVL20W(tvl20w);
         }
 
     }

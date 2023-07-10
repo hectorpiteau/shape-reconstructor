@@ -96,3 +96,10 @@ float AdamInteractor::GetAlphaReg0W() {
     return m_adam->GetAlphaReg0W();
 }
 
+float AdamInteractor::GetTVL20W() {
+    return m_adam->GetTVL20W();
+}
+
+void AdamInteractor::SetTVL20W(float value) {
+    m_adam->SetTVL20W(value);
+}

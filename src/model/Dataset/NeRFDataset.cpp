@@ -22,7 +22,7 @@ NeRFDataset::NeRFDataset(Scene *scene)
           m_scene(scene),
           m_mode(NeRFDatasetModes::TRAIN),
           m_trainJSONPath("../data/nerf/transforms_train.json"),
-          m_trainImagesPath("../data/nerf100/train"),
+          m_trainImagesPath("../data/nerf/train"),
           m_validJSONPath("../data/nerf/transforms_val.json"),
           m_validImagesPath("../data/nerf/val"),
           m_images(),

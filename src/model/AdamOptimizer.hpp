@@ -29,7 +29,7 @@ private:
     /** Epsilon */
     float m_epsilon=1.0E-8f;
     /** Step size. */
-    float m_eta=1.0E-2f;
+    float m_eta=0.5E-2f;
     /** Initialize default beta values. */
     vec2 m_beta = {0.9, 0.95};
     /** Gradient grid resolution. */
@@ -79,6 +79,7 @@ private:
     float m_color0W = 1.0f;
     float m_alpha0W = 0.0f;
     float m_alphaReg0W = -2.0f;
+    float m_TVL20W = 1.0f;
 
 public:
     explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<VolumeRenderer> volumeRenderer,  const ivec3& volumeResolution);
@@ -109,6 +110,10 @@ public:
     void SetAlpha0W(float value) { m_alpha0W = value;}
     [[nodiscard]] float GetAlphaReg0W() const { return m_alphaReg0W;}
     void SetAlphaReg0W(float value)  { m_alphaReg0W = value;}
+
+    [[nodiscard]] float GetTVL20W() const { return m_TVL20W;}
+    void SetTVL20W(float value)  { m_TVL20W = value;}
+
 
     void Optimize();
 

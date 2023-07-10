@@ -29,7 +29,7 @@ public:
         m_scene = new Scene(m_sceneSettings, window);
 
         ivec3 volumeResolution = {64, 64, 32*3};
-        volumeResolution *= 1;
+        volumeResolution *= 4;
 
         /** Fill default Scene. */
         auto cam1 = std::make_shared<Camera>(m_scene, std::string("CameraT"), vec3(-4.0, 3.0, -4.0), vec3(0.0, 0.0, 0.0));

@@ -354,3 +354,87 @@ extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor> &item, GPUD
         std::cerr << "(batched_forward_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
     }
 }
+
+
+__global__ void volume_gradients(VolumeDescriptor *volume, AdamOptimizerDescriptor* adam){
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+    unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
+
+    if(x > adam->res.x || y > adam->res.y || z > adam->res.z) return;
+
+    auto index = VOLUME_INDEX(x,y,z, volume->res);
+
+    /** Retrieve voxel's data. */
+    cell d = volume->data[index];
+    vec3 color = vec3(d.data.x, d.data.y, d.data.z);
+    float alpha = d.data.w;
+
+    /** Create loss variables to store partial gradients. */
+    vec3 tvl2_loss = vec3(0.0f);
+    float tvl2_loss_alpha = 0.0f;
+
+    /** Check if not on the min border x. */
+    int tmp_x = x - 1;
+    if(tmp_x > 0){
+        auto d_x_0 = float4ToVec4(volume->data[VOLUME_INDEX(tmp_x, y, z, volume->res)].data);
+        tvl2_loss += 2.0f * (color - vec3(d_x_0));
+        tvl2_loss_alpha += 2.0f * (alpha - d_x_0.w);
+    }
+    tmp_x = x + 1;
+    if(tmp_x < volume->res.x){
+        auto d_x_1 = float4ToVec4(volume->data[VOLUME_INDEX(tmp_x, y, z, volume->res)].data);
+        tvl2_loss += 2.0f * (color - vec3(d_x_1));
+        tvl2_loss_alpha += 2.0f * (alpha - d_x_1.w);
+    }
+    int tmp_y = y - 1;
+    if(tmp_y > 0){
+        auto d_y_0 = float4ToVec4(volume->data[VOLUME_INDEX(x, tmp_y, z, volume->res)].data);
+        tvl2_loss += 2.0f * (color - vec3(d_y_0));
+        tvl2_loss_alpha += 2.0f * (alpha - d_y_0.w);
+    }
+    tmp_y = y + 1;
+    if(tmp_y < volume->res.y){
+        auto d_y_1 = float4ToVec4(volume->data[VOLUME_INDEX(x, tmp_y, z, volume->res)].data);
+        tvl2_loss += 2.0f * (color - vec3(d_y_1));
+        tvl2_loss_alpha += 2.0f * (alpha - d_y_1.w);
+    }
+    int tmp_z = z - 1;
+    if(tmp_z > 0){
+        auto d_z_0 = float4ToVec4(volume->data[VOLUME_INDEX(x, y, tmp_z, volume->res)].data);
+        tvl2_loss += 2.0f * (color - vec3(d_z_0));
+        tvl2_loss_alpha += 2.0f * (alpha - d_z_0.w);
+    }
+    tmp_z = z + 1;
+    if(tmp_z < volume->res.z){
+        auto d_z_1 = float4ToVec4(volume->data[VOLUME_INDEX(x, y, tmp_z, volume->res)].data);
+        tvl2_loss += 2.0f * (color - vec3(d_z_1));
+        tvl2_loss_alpha += 2.0f * (alpha - d_z_1.w);
+    }
+
+    /** Write gradients. */
+    tvl2_loss *= adam->tvl2_0_w;
+    tvl2_loss_alpha *= adam->tvl2_0_w;
+    auto tmp = adam->grads->data[VOLUME_INDEX(x,y,z, adam->res)].data;
+    adam->grads->data[VOLUME_INDEX(x,y,z, adam->res)].data = make_float4(
+            tmp.x + tvl2_loss.x,
+            tmp.y + tvl2_loss.y,
+            tmp.z + tvl2_loss.z,
+            tmp.w + tvl2_loss_alpha);
+}
+
+extern "C" void volume_backward(GPUData<VolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam){
+    dim3 threads(8,8,8);
+    /** This create enough blocks to cover the whole volume, may contain threads that does not have pixel's assigned. */
+    dim3 blocks((adam.Host()->res.x + threads.x - 1) / threads.x,
+                (adam.Host()->res.y + threads.y - 1) / threads.y,
+                (adam.Host()->res.z + threads.z - 1) / threads.z);
+
+    volume_gradients<<<blocks, threads>>>(volume.Device(), adam.Device());
+    cudaDeviceSynchronize();
+
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "(volume_backward) ERROR: " << cudaGetErrorString(err) << std::endl;
+    }
+}
