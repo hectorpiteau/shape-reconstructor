@@ -33,6 +33,24 @@ Volume3D::Volume3D(Scene *scene, ivec3 res) : SceneObject{std::string("VOLUME3D"
 
     UpdateGPUData();
 }
+void Volume3D::Resize(const ivec3& res){
+
+}
+
+void Volume3D::DoubleResolution(){
+    auto previous_res = m_res;
+    m_res *= 2;
+
+    auto new_volume = std::make_shared<CudaLinearVolume3D>(m_res);
+
+    volume_resize_double_wrapper(
+            m_cudaVolume->GetDevicePtr(),
+            new_volume->GetDevicePtr(),
+            previous_res,
+            m_res);
+
+    m_cudaVolume = new_volume;
+}
 
 void Volume3D::UpdateGPUData() {
     m_volumeDescriptor.Host()->bboxMin = m_bboxMin;

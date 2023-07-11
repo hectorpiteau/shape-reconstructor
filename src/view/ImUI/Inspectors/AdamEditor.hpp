@@ -122,6 +122,10 @@ public:
         if(ImGui::Button("Optimize", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
             m_interactor->Optimize();
         }
+        ImGui::Spacing();
+        if(ImGui::Button("Next LOD", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
+            m_interactor->NextLOD();
+        }
 
         ImGui::SeparatorText( "Stats");
         ImGui::Spacing();

@@ -100,6 +100,10 @@ float AdamInteractor::GetTVL20W() {
     return m_adam->GetTVL20W();
 }
 
+void AdamInteractor::NextLOD(){
+    m_adam->NextLOD();
+}
+
 void AdamInteractor::SetTVL20W(float value) {
     m_adam->SetTVL20W(value);
 }

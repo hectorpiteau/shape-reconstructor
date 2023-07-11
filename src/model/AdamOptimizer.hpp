@@ -18,6 +18,38 @@
 
 using namespace glm;
 
+struct LevelOfDetail {
+    short level;
+    ivec3 volume_res;
+    ivec2 image_res;
+    std::string image_train_path;
+    std::string image_valid_path;
+};
+
+#define LOD_AMOUNT 3;
+const LevelOfDetail[LOD_AMOUNT] LODs = {
+        {
+            .level = 1,
+            .volume_res = ivec3(32*2, 32*2, 32*2, 32*3),
+            .image_res = ivec2(200, 200),
+            .image_train_path = std::string("../data/nerf200/train"),
+            .image_valid_path = std::string("../data/nerf200/val")
+        },
+        {
+            .level = 2,
+            .volume_res = 2 * ivec3(32*2, 32*2, 32*2, 32*3),
+            .image_res = ivec2(400, 400),
+            .image_train_path = std::string("../data/nerf400/train"),
+            .image_valid_path = std::string("../data/nerf400/val")
+        },
+        {
+            .level = 3,
+            .volume_res = 4 * ivec3(32*2, 32*2, 32*2, 32*3),
+            .image_res = ivec2(800, 800),
+            .image_train_path = std::string("../data/nerf/train"),
+            .image_valid_path = std::string("../data/nerf/val")
+        }
+};
 
 struct BatchResult {
     float psnr;
@@ -81,6 +113,10 @@ private:
     float m_alphaReg0W = -2.0f;
     float m_TVL20W = 1.0f;
 
+    /** LOD */
+    uint m_currentLODIndex = 0;
+
+
 public:
     explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<VolumeRenderer> volumeRenderer,  const ivec3& volumeResolution);
     AdamOptimizer(const AdamOptimizer&) = delete;
@@ -116,6 +152,8 @@ public:
 
 
     void Optimize();
+
+    void NextLOD();
 
     /**
      * Get the batch size of the DataLoader.

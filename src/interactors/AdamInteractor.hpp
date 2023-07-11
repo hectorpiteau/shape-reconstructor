@@ -41,6 +41,8 @@ public:
 
     void Step();
 
+    void NextLOD();
+
     void SetRenderMode(RenderMode mode);
 
     RenderMode GetRenderMode();

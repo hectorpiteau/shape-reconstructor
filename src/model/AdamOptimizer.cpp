@@ -146,6 +146,16 @@ void AdamOptimizer::Step(){
     m_dataLoader->NextBatch();
 }
 
+void AdamOptimizer::NextLOD(){
+    /** If already the maximum level of detail, nothing appens. */
+    if(m_currentLODIndex == LOD_AMOUNT - 1) return;
+    m_currentLODIndex += 1;
+
+    m_target->Resize(LODs[m_currentLODIndex].volume_res);
+    m_dataset->SetSourcePath();
+
+}
+
 void AdamOptimizer::UpdateGPUDescriptor() {
     m_gradsDescriptor.Host()->data = m_grads->GetCudaVolume()->GetDevicePtr();
     m_gradsDescriptor.Host()->bboxMin = m_grads->GetBboxMin();

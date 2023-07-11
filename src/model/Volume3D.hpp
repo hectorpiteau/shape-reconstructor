@@ -69,6 +69,14 @@ public:
 
     BBoxDescriptor* GetGPUDescriptor();
     GPUData<VolumeDescriptor>& GetGPUData();
+
+    /**
+     * Resize the volume to the desired size.
+     */
+    void Resize(const ivec3& res);
+
+    void DoubleResolution();
+
 private:
     /** ext dep*/
     Scene *m_scene;
