@@ -15,6 +15,7 @@ public:
     ImageSet(const ImageSet &) = delete;
 
     void SetFolderPath(const std::string &path);
+    void UnloadImages();
 
     const std::string &GetFolderPath();
 
@@ -43,12 +44,12 @@ public:
 
     void Render() override;
 
-    bool AreImagesGenerated() const;
+    bool IsLoaded() const;
 
 private:
     std::vector<Image *> m_images;
 
     std::string m_folderPath;
 
-    bool m_areImagesGenerated = false;
+    bool m_isLoaded = false;
 };

@@ -20,7 +20,7 @@ export CUDAHOSTCXX=/usr/bin/g++-8
 - `make -j`
 
 
-Requirements:
+## Requirements:
 - libxrandr
 - libxinerama
 - libxcursor

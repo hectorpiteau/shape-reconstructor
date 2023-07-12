@@ -135,4 +135,6 @@ public:
     std::shared_ptr<ImageSet> GetImageSet() override;
 
     DatasetEntry GetEntry(size_t index) override;
+
+    void SetSourcePath(const std::string &train_path, const std::string &valid_path) override;
 };

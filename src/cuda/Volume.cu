@@ -34,51 +34,53 @@ __global__ void volume_resize_double(cell* source_volume, cell* target_volume, c
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
     unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
 
-    if(x > source_res.x || y > source_res.y || z > source_res.z) return;
+    if(x >= source_res.x || y >= source_res.y || z >= source_res.z) return;
 
     /** For the thread in source, write its value in the target volume. */
-    auto source_cell = source_volume[VOLUME_INDEX(x,y,z, source_res)];
+//    auto source_cell = source_volume[VOLUME_INDEX(x,y,z, source_res)];
 
-    vec3 target_coords = vec3(x,y,z) * 2;
-    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z) return;
+    ivec3 target_coords = ivec3(x,y,z) * 2;
+    if(target_coords.x >= target_res.x || target_coords.y >= target_res.y || target_coords.z >= target_res.z) return;
 
     /** same coord */
-    target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
+    int index = VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res);
+//    target_volume[index].data = make_float4(0.0, 0.0, 0.0, 0.0);
 
-    target_coords.x = vec3(x + 1,y,z) * 2;
-    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
-        /** x+1 */
-        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
-    }
-    target_coords = vec3(x,y,z + 1) * 2;
-    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
-        /** z+1 */
-        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
-    }
 
-    target_coords = vec3(x + 1,y,z + 1) * 2;
-    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
-        /** x+1, z+1 */
-        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
-    }
-
-    target_coords = vec3(x + 1, y + 1, z) * 2;
-    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
-        /** y+1, x+1 */
-        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
-    }
-
-    target_coords = vec3(x, y + 1, z + 1) * 2;
-    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
-        /** y+1, z+1 */
-        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
-    }
-
-    target_coords = vec3(x + 1, y + 1, z + 1) * 2;
-    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
-        /** y+1, x+1, z+1 */
-        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
-    }
+//    target_coords = ivec3(x + 1,y,z) * 2;
+//    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
+//        /** x+1 */
+//        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
+//    }
+//    target_coords = ivec3(x,y,z + 1) * 2;
+//    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
+//        /** z+1 */
+//        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
+//    }
+//
+//    target_coords = ivec3(x + 1,y,z + 1) * 2;
+//    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
+//        /** x+1, z+1 */
+//        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
+//    }
+//
+//    target_coords = ivec3(x + 1, y + 1, z) * 2;
+//    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
+//        /** y+1, x+1 */
+//        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
+//    }
+//
+//    target_coords = ivec3(x, y + 1, z + 1) * 2;
+//    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
+//        /** y+1, z+1 */
+//        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
+//    }
+//
+//    target_coords = ivec3(x + 1, y + 1, z + 1) * 2;
+//    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
+//        /** y+1, x+1, z+1 */
+//        target_volume[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res)] = source_cell;
+//    }
 }
 
 extern "C" void volume_resize_double_wrapper(cell* source_volume, cell* target_volume, const ivec3& source_res, const ivec3& target_res){

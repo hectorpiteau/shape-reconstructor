@@ -26,25 +26,26 @@ struct LevelOfDetail {
     std::string image_valid_path;
 };
 
-#define LOD_AMOUNT 3;
-const LevelOfDetail[LOD_AMOUNT] LODs = {
+#define LOD_AMOUNT 3
+
+const LevelOfDetail LODs[LOD_AMOUNT] = {
         {
             .level = 1,
-            .volume_res = ivec3(32*2, 32*2, 32*2, 32*3),
+            .volume_res = ivec3(32*2, 32*2, 32*2),
             .image_res = ivec2(200, 200),
             .image_train_path = std::string("../data/nerf200/train"),
             .image_valid_path = std::string("../data/nerf200/val")
         },
         {
             .level = 2,
-            .volume_res = 2 * ivec3(32*2, 32*2, 32*2, 32*3),
+            .volume_res = 2 * ivec3(32*2, 32*2, 32*2),
             .image_res = ivec2(400, 400),
             .image_train_path = std::string("../data/nerf400/train"),
             .image_valid_path = std::string("../data/nerf400/val")
         },
         {
             .level = 3,
-            .volume_res = 4 * ivec3(32*2, 32*2, 32*2, 32*3),
+            .volume_res = 4 * ivec3(32*2, 32*2, 32*2),
             .image_res = ivec2(800, 800),
             .image_train_path = std::string("../data/nerf/train"),
             .image_valid_path = std::string("../data/nerf/val")
@@ -66,18 +67,17 @@ private:
     vec2 m_beta = {0.9, 0.95};
     /** Gradient grid resolution. */
     ivec3 m_res;
-    std::shared_ptr<CudaLinearVolume3D> m_adamG1;
-    std::shared_ptr<CudaLinearVolume3D> m_adamG2;
+    std::shared_ptr<Volume3D> m_adamG1;
+    std::shared_ptr<Volume3D> m_adamG2;
     /** 3D Data to optimize. */
     std::shared_ptr<Volume3D> m_target;
-
-    std::shared_ptr<Volume3D> m_grads;
-
-    GPUData<VolumeDescriptor> m_gradsDescriptor;
 
     std::shared_ptr<CudaLinearVolume3D> m_blurredVoxels;
 
     /** Adam gradients. */
+    std::shared_ptr<Volume3D> m_grads;
+    GPUData<VolumeDescriptor> m_gradsDescriptor;
+
 
 
     /** Adam Optimizer GPU Data Descriptor. In order to use Adam values in a CUDA Kernel. */
@@ -150,9 +150,15 @@ public:
     [[nodiscard]] float GetTVL20W() const { return m_TVL20W;}
     void SetTVL20W(float value)  { m_TVL20W = value;}
 
-
+    /**
+     * Start/Stop the optimization procedure.
+     */
     void Optimize();
 
+    /**
+     * Go to the next level of details.
+     * Increase the volume's resolution and image resolution too.
+     */
     void NextLOD();
 
     /**

@@ -31,8 +31,22 @@ size_t ImageSet::size(){
 }
 
 void ImageSet::SetFolderPath(const std::string& path){
+    /** If the paths are different, then the imageset is not loaded anymore. */
+    if(std::strcmp(m_folderPath.c_str(), path.c_str()) != 0){
+        m_isLoaded = false;
+        UnloadImages();
+    }
+
     m_folderPath = path;
+
     std::cout << "SET IMAGESET FOLDER PATH: " << path << std::endl;
+}
+
+void ImageSet::UnloadImages(){
+    for(auto img : m_images){
+        delete img;
+    }
+    m_images = std::vector<Image*>();
 }
 
 const std::string& ImageSet::GetFolderPath(){
@@ -54,7 +68,7 @@ size_t ImageSet::LoadImages() {
     /** sort by filename. */
     std::sort(m_images.begin(), m_images.end(), imageSort);
 
-    m_areImagesGenerated = true;
+    m_isLoaded = true;
     return m_images.size();
 }
 
@@ -76,6 +90,6 @@ void ImageSet::Render(){
     }
 }
 
-bool ImageSet::AreImagesGenerated() const {
-    return m_areImagesGenerated;
+bool ImageSet::IsLoaded() const {
+    return m_isLoaded;
 }

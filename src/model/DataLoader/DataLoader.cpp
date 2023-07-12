@@ -61,7 +61,7 @@ void DataLoader::Shuffle() {
 }
 
 void DataLoader::LoadBatch(RenderMode mode) {
-    if (!m_isReady || !m_dataset->GetCameraSet()->AreCamerasGenerated() || !m_dataset->GetImageSet()->AreImagesGenerated()) return;
+    if (!m_isReady || !m_dataset->GetCameraSet()->AreCamerasGenerated() || !m_dataset->GetImageSet()->IsLoaded()) return;
 
 
     /** Load new batch */

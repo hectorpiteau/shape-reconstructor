@@ -52,7 +52,7 @@ public:
      * @brief 
      * 
      */
-    void InitializeVolume();
+    void InitializeZeros();
 
     void Render() override;
 

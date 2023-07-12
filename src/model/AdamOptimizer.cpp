@@ -26,13 +26,17 @@ AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std
             scene->GetSceneSettings()->GetViewportWidth(),
             scene->GetSceneSettings()->GetViewportHeight());
 
-    m_adamG1 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
-    m_adamG1->InitZeros();
-    m_adamG1->ToGPU();
+    m_adamG1 = std::make_shared<Volume3D>(scene, volumeResolution);
+    m_adamG1->SetName("Adam G1");
+    m_adamG1->InitializeZeros();
+    m_scene->Add(m_adamG1, true, true);
+    m_children.push_back(m_adamG1);
 
-    m_adamG2 = std::make_shared<CudaLinearVolume3D>(volumeResolution);
-    m_adamG2->InitZeros();
-    m_adamG2->ToGPU();
+    m_adamG2 = std::make_shared<Volume3D>(scene, volumeResolution);
+    m_adamG2->SetName("Adam G2");
+    m_adamG2->InitializeZeros();
+    m_scene->Add(m_adamG2, true, true);
+    m_children.push_back(m_adamG2);
 
     m_grads = std::make_shared<Volume3D>(scene, volumeResolution);
     m_grads->SetName("Gradients");
@@ -147,12 +151,17 @@ void AdamOptimizer::Step(){
 }
 
 void AdamOptimizer::NextLOD(){
-    /** If already the maximum level of detail, nothing appens. */
+    /** If already the maximum level of detail, nothing happens. */
     if(m_currentLODIndex == LOD_AMOUNT - 1) return;
     m_currentLODIndex += 1;
 
-    m_target->Resize(LODs[m_currentLODIndex].volume_res);
-    m_dataset->SetSourcePath();
+    /** Augment volume's resolutions. */
+    m_target->DoubleResolution();
+    m_adamG1->DoubleResolution();
+    m_adamG2->DoubleResolution();
+    m_grads->DoubleResolution();
+    /** Augment images resolutions. */
+    m_dataset->SetSourcePath(LODs[m_currentLODIndex].image_train_path, LODs[m_currentLODIndex].image_valid_path);
 
 }
 
@@ -166,8 +175,8 @@ void AdamOptimizer::UpdateGPUDescriptor() {
 
     m_adamDescriptor.Host()->epsilon = m_epsilon;
     m_adamDescriptor.Host()->eta = m_eta;
-    m_adamDescriptor.Host()->adamG1 = m_adamG1->GetDevicePtr();
-    m_adamDescriptor.Host()->adamG2 = m_adamG2->GetDevicePtr();
+    m_adamDescriptor.Host()->adamG1 = m_adamG1->GetCudaVolume()->GetDevicePtr();
+    m_adamDescriptor.Host()->adamG2 = m_adamG2->GetCudaVolume()->GetDevicePtr();
     m_adamDescriptor.Host()->target = m_target->GetCudaVolume()->GetDevicePtr();
     m_adamDescriptor.Host()->grads = m_gradsDescriptor.Device();
     m_adamDescriptor.Host()->iteration = (int) m_steps;

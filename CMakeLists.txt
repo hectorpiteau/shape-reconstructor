@@ -46,6 +46,7 @@ find_package(CUDA REQUIRED)
 enable_language(CUDA)
 
 set(CUDA_SOURCE_FILES
+        src/cuda/Volume.cu
         src/cuda/kernel.cu
         src/cuda/CudaSurface3D.cu
         src/cuda/VolumeRendering.cu

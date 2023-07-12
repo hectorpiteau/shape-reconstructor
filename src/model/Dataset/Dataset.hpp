@@ -39,6 +39,7 @@ virtual std::shared_ptr<ImageSet> GetImageSet() = 0;
 
 virtual DatasetEntry GetEntry(size_t index) = 0;
 
+virtual void SetSourcePath(const std::string &train_path, const std::string &valid_path) = 0;
 
 private:
     std::string m_name;
