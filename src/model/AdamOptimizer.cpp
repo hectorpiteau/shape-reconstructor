@@ -10,11 +10,9 @@
 
 using namespace glm;
 
-AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<VolumeRenderer> volumeRenderer, const ivec3 &volumeResolution) :
-        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_res(volumeResolution),m_gradsDescriptor(), m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_volumeRenderer(std::move(volumeRenderer)) {
+AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target, std::shared_ptr<VolumeRenderer> renderer) :
+        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene),m_gradsDescriptor(), m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_target(target), m_volumeRenderer(renderer) {
     SetName("Adam Optimizer");
-
-    m_target = m_volumeRenderer->GetVolume3D();
 
     /** Create the overlay plane that will be used to display the volume rendering texture on. */
     m_overlay = std::make_shared<OverlayPlane>(
@@ -26,24 +24,23 @@ AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std
             scene->GetSceneSettings()->GetViewportWidth(),
             scene->GetSceneSettings()->GetViewportHeight());
 
-    m_adamG1 = std::make_shared<Volume3D>(scene, volumeResolution);
+    m_adamG1 = std::make_shared<Volume3D>(scene, target->GetResolution());
     m_adamG1->SetName("Adam G1");
     m_adamG1->InitializeZeros();
     m_scene->Add(m_adamG1, true, true);
     m_children.push_back(m_adamG1);
 
-    m_adamG2 = std::make_shared<Volume3D>(scene, volumeResolution);
+    m_adamG2 = std::make_shared<Volume3D>(scene, target->GetResolution());
     m_adamG2->SetName("Adam G2");
     m_adamG2->InitializeZeros();
     m_scene->Add(m_adamG2, true, true);
     m_children.push_back(m_adamG2);
 
-    m_grads = std::make_shared<Volume3D>(scene, volumeResolution);
+    m_grads = std::make_shared<Volume3D>(scene, target->GetResolution());
     m_grads->SetName("Gradients");
     m_scene->Add(m_grads, true, true);
     m_children.push_back(m_grads);
 
-//    m_blurredVoxels = std::make_shared<CudaLinearVolume3D>(volumeResolution);
     m_dataLoader = std::make_shared<DataLoader>(m_dataset);
 
     m_integrationRangeDescriptor.Host()->surface = m_cudaTex->GetTex();
@@ -71,7 +68,6 @@ void AdamOptimizer::Initialize(){
 
         integration_range_bbox_wrapper(cam->GetGPUData(), cam->GetIntegrationRangeGPUDescriptor().Device(), m_target->GetGPUDescriptor());
         cam->GetCudaTexture()->RunKernel(m_volumeRenderer->GetRayCasterGPUData(), cam->GetGPUData(), m_volumeRenderer->GetVolumeGPUData());
-
         cam->GetCudaTexture()->CloseSurface();
     }
 
@@ -160,8 +156,9 @@ void AdamOptimizer::NextLOD(){
     m_adamG1->DoubleResolution();
     m_adamG2->DoubleResolution();
     m_grads->DoubleResolution();
+
     /** Augment images resolutions. */
-    m_dataset->SetSourcePath(LODs[m_currentLODIndex].image_train_path, LODs[m_currentLODIndex].image_valid_path);
+//    m_dataset->SetSourcePath(LODs[m_currentLODIndex].image_train_path, LODs[m_currentLODIndex].image_valid_path);
 
 }
 
@@ -235,4 +232,8 @@ void AdamOptimizer::SetRenderMode(RenderMode mode) {
 
 RenderMode AdamOptimizer::GetRenderMode() {
     return m_renderMode;
+}
+
+std::shared_ptr<Volume3D> AdamOptimizer::GetTargetVolume() {
+    return m_target;
 }

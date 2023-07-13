@@ -35,11 +35,9 @@ Modified: 2023-04-26T13:51:29.197Z
 
 using namespace glm;
 
-VolumeRenderer::VolumeRenderer(Scene *scene, const ivec3& res)
-        : SceneObject{std::string("VolumeRenderer"), SceneObjectTypes::VOLUMERENDERER}, m_scene(scene) {
+VolumeRenderer::VolumeRenderer(Scene *scene, std::shared_ptr<Volume3D> target)
+        : SceneObject{std::string("VolumeRenderer"), SceneObjectTypes::VOLUMERENDERER}, m_scene(scene), m_volume(target) {
     SetName(std::string(ICON_FA_SPINNER " Volume Renderer"));
-
-    m_volume = std::make_shared<Volume3D>(scene, res);
     m_scene->Add(m_volume, true, true);
     m_children.push_back(m_volume);
 
@@ -130,12 +128,6 @@ void VolumeRenderer::Render() {
     /** Render volume using the raycaster. */
     if (m_isRendering) {
         cam->UpdateGPUDescriptor();
-//        m_cameraDesc.Host()->camExt = cam->GetExtrinsic();
-//        m_cameraDesc.Host()->camInt = cam->GetIntrinsic();
-//        m_cameraDesc.Host()->camPos = cam->GetPosition();
-//        m_cameraDesc.Host()->width = cam->GetResolution().x;
-//        m_cameraDesc.Host()->height = cam->GetResolution().y;
-//        m_cameraDesc.ToDevice();
 
         m_raycasterDesc.Host()->minPixelX = m_rayCaster->GetRenderingZoneMinPixel().x;
         m_raycasterDesc.Host()->minPixelY = m_rayCaster->GetRenderingZoneMinPixel().y;
@@ -145,18 +137,11 @@ void VolumeRenderer::Render() {
         m_raycasterDesc.Host()->surface = m_cudaTex->OpenSurface();
         m_raycasterDesc.ToDevice();
 
-//        m_volumeDesc.Host()->bboxMin = m_volume->GetBboxMin();
-//        m_volumeDesc.Host()->bboxMax = m_volume->GetBboxMax();
-//        m_volumeDesc.Host()->worldSize = m_volume->GetBboxMax() - m_volume->GetBboxMin();
-//        m_volumeDesc.Host()->res = m_volume->GetCudaVolume()->GetResolution();
-//        m_volumeDesc.Host()->data = m_volume->GetCudaVolume()->GetDevicePtr();
-//        m_volumeDesc.ToDevice();
-
         volume_rendering_wrapper(m_raycasterDesc, cam->GetGPUData(), m_volume->GetGPUData());
         m_cudaTex->CloseSurface();
     }
 
-    // /** Rendering zone. */
+    /** Rendering zone. */
 
     if (m_showRenderingZone) {
         m_renderZoneLines->Render();
@@ -223,12 +208,4 @@ std::vector<std::shared_ptr<Camera>> VolumeRenderer::GetAvailableCameras() {
 void VolumeRenderer::SetTargetCamera(std::shared_ptr<Camera> cam) {
     m_camera = std::move(cam);
     m_rayCaster->SetCamera(m_camera);
-}
-
-std::shared_ptr<Camera> VolumeRenderer::GetTargetCamera() {
-    return m_camera;
-}
-
-std::shared_ptr<Volume3D> VolumeRenderer::GetVolume3D() {
-    return m_volume;
 }

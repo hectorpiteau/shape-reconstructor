@@ -66,7 +66,6 @@ private:
     /** Initialize default beta values. */
     vec2 m_beta = {0.9, 0.95};
     /** Gradient grid resolution. */
-    ivec3 m_res;
     std::shared_ptr<Volume3D> m_adamG1;
     std::shared_ptr<Volume3D> m_adamG2;
     /** 3D Data to optimize. */
@@ -109,7 +108,7 @@ private:
     /** Losses weightings */
 
     float m_color0W = 1.0f;
-    float m_alpha0W = 0.0f;
+    float m_alpha0W = 0.5f;
     float m_alphaReg0W = -2.0f;
     float m_TVL20W = 1.0f;
 
@@ -118,7 +117,7 @@ private:
 
 
 public:
-    explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<VolumeRenderer> volumeRenderer,  const ivec3& volumeResolution);
+    explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target, std::shared_ptr<VolumeRenderer> renderer);
     AdamOptimizer(const AdamOptimizer&) = delete;
     ~AdamOptimizer() override = default;
 
@@ -128,9 +127,9 @@ public:
 
     void Initialize();
 
-    std::shared_ptr<Volume3D> GetGradVolume();
 
-//    void SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume);
+    std::shared_ptr<Volume3D> GetTargetVolume();
+    std::shared_ptr<Volume3D> GetGradVolume();
 
     void SetBeta(const vec2& value);
     [[nodiscard]] const vec2& GetBeta() const;

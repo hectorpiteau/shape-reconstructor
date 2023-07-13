@@ -71,6 +71,19 @@ __float2uint_rn(VEC.w))
 // host and device.
 //
 /** ************************************************************************** */
+
+struct DebugInfo {
+    float f;
+    float4 f4;
+    vec3 v3;
+    unsigned int x;
+    unsigned int y;
+    unsigned int z;
+    vec4 v4;
+    int i;
+    ivec3 iv3;
+};
+
 struct VolumeDescriptor {
     /** min and max coordinates in world pos. */
     vec3 bboxMin;

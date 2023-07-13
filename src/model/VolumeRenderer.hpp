@@ -30,7 +30,7 @@ using namespace glm;
 
 class VolumeRenderer : public SceneObject {
 public:
-    explicit VolumeRenderer(Scene* scene, const ivec3& res);
+    explicit VolumeRenderer(Scene* scene, std::shared_ptr<Volume3D> target);
     VolumeRenderer(const VolumeRenderer&) = delete;
     ~VolumeRenderer() override = default;
 
@@ -97,25 +97,15 @@ public:
     void SetTargetCamera(std::shared_ptr<Camera> cam);
 
     /**
-     * @brief Get the Target Camera to be used by the renderer.
-     * 
-     * @return std::shared_ptr<Camera> 
-     */
-    std::shared_ptr<Camera> GetTargetCamera();
-
-    /**
      * @brief Render the VolumeRenderer in the Scene.
      * It includes potential visual cues of the renderer, but
      * also the result of the volume renderer itself.
      */
     void Render() override;
 
-    std::shared_ptr<Volume3D> GetVolume3D();
-
     GPUData<RayCasterDescriptor>& GetRayCasterGPUData();
 
     GPUData<VolumeDescriptor>& GetVolumeGPUData();
-//    GPUData<VolumeDescriptor>* GetVolumeGPUDataPtr();
 
     void UpdateGPUDescriptors();
 

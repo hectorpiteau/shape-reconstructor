@@ -39,14 +39,15 @@ public:
         m_scene->Add(std::make_shared<LineGrid>(m_scene));
 
         auto nerfdataset = std::make_shared<NeRFDataset>(m_scene);
-        m_scene->Add(nerfdataset);
         nerfdataset->Load();
+        m_scene->Add(nerfdataset);
 
-        auto volumeRenderer1 = std::make_shared<VolumeRenderer>(m_scene, volumeResolution);
-        m_scene->Add(volumeRenderer1);
+        auto volume3D = std::make_shared<Volume3D>(m_scene, volumeResolution);
+        auto volumeRenderer = std::make_shared<VolumeRenderer>(m_scene, volume3D);
+        m_scene->Add(volumeRenderer);
 
 
-        auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volumeRenderer1, volumeResolution);
+        auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volume3D, volumeRenderer);
         m_scene->Add(adamOptimizer);
 
         m_scene->Add(std::make_shared<PlaneCut>(m_scene, adamOptimizer->GetGradVolume() ));

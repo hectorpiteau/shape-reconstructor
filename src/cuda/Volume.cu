@@ -34,18 +34,31 @@ __global__ void volume_resize_double(cell* source_volume, cell* target_volume, c
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
     unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
 
-    if(x >= source_res.x || y >= source_res.y || z >= source_res.z) return;
+//    if(x >= source_res.x || y >= source_res.y || z >= source_res.z) return;
+    if(x >= target_res.x || y >= target_res.y || z >= target_res.z) return;
+
+    target_volume[VOLUME_INDEX(x, y, z, target_res)].data.x = 1.0f;
+    target_volume[VOLUME_INDEX(x, y, z, target_res)].data.y = 0.0f;
+    target_volume[VOLUME_INDEX(x, y, z, target_res)].data.z = 0.0f;
+    target_volume[VOLUME_INDEX(x, y, z, target_res)].data.w = 1.0f;
 
     /** For the thread in source, write its value in the target volume. */
 //    auto source_cell = source_volume[VOLUME_INDEX(x,y,z, source_res)];
 
-    ivec3 target_coords = ivec3(x,y,z) * 2;
-    if(target_coords.x >= target_res.x || target_coords.y >= target_res.y || target_coords.z >= target_res.z) return;
+//    ivec3 target_coords = ivec3(x,y,z);
+//    if(target_coords.x >= target_res.x || target_coords.y >= target_res.y || target_coords.z >= target_res.z) return;
 
     /** same coord */
-    int index = VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res);
-//    target_volume[index].data = make_float4(0.0, 0.0, 0.0, 0.0);
-
+//    int index = VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target_res);
+//    target_volume[index].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
+//if(x == 2 && y == 2 && z == 2){
+//    debug->i = index;
+//    debug->x = x;
+//    debug->y = y;
+//    debug->z = z;
+//    debug->iv3 = target_coords;
+//
+//}
 
 //    target_coords = ivec3(x + 1,y,z) * 2;
 //    if(target_coords.x > target_res.x || target_coords.y > target_res.y || target_coords.z > target_res.z){
@@ -87,9 +100,9 @@ extern "C" void volume_resize_double_wrapper(cell* source_volume, cell* target_v
     dim3 threads(8,8,8);
 
     /** This create enough blocks to cover the whole volume, may contain threads that does not have pixel's assigned. */
-    dim3 blocks((source_res.x + threads.x - 1) / threads.x,
-                (source_res.y + threads.y - 1) / threads.y,
-                (source_res.z + threads.z - 1) / threads.z);
+    dim3 blocks((target_res.x + threads.x - 1) / threads.x,
+                (target_res.y + threads.y - 1) / threads.y,
+                (target_res.z + threads.z - 1) / threads.z);
 
     volume_resize_double<<<blocks, threads>>>(source_volume, target_volume, source_res, target_res);
     cudaDeviceSynchronize();

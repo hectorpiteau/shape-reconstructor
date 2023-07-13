@@ -30,7 +30,7 @@ class Lines;
 class Volume3D : public SceneObject
 {
 public:
-    Volume3D(Scene *scene, ivec3 res);
+    Volume3D(Scene *scene, const ivec3& res);
 
     void UpdateGPUData();
 

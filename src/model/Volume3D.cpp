@@ -7,7 +7,7 @@
 
 using namespace glm;
 
-Volume3D::Volume3D(Scene *scene, ivec3 res) : SceneObject{std::string("VOLUME3D"), SceneObjectTypes::VOLUME3D},
+Volume3D::Volume3D(Scene *scene, const ivec3& res) : SceneObject{std::string("VOLUME3D"), SceneObjectTypes::VOLUME3D},
                                               m_scene(scene), m_res(res), m_desc(), m_volumeDescriptor() {
     SetName(std::string(ICON_FA_CUBES " Volume 3D"));
 
@@ -30,17 +30,24 @@ void Volume3D::Resize(const ivec3& res){
 
 void Volume3D::DoubleResolution(){
     ivec3 previous_res = m_res;
-    m_res *= 2;
+    m_res = m_res * 2;
+
 
     auto new_volume = std::make_shared<CudaLinearVolume3D>(m_res);
     new_volume->InitZeros();
     new_volume->ToGPU();
+
 
     volume_resize_double_wrapper(
             m_cudaVolume->GetDevicePtr(),
             new_volume->GetDevicePtr(),
             previous_res,
             m_res);
+
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "(volume_resize_double_wrapper 2 ) ERROR: " << cudaGetErrorString(err) << std::endl;
+    }
 
     m_cudaVolume = new_volume;
     UpdateGPUData();
