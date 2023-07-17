@@ -6,7 +6,7 @@ project(DRTMCS VERSION 0.1 LANGUAGES CXX CUDA)
 # Cpp standards
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "-Wall -O0 -lstdc++fs")
+set(CMAKE_CXX_FLAGS "-Wall -O0 -g -lstdc++fs")
 
 # GLFW Settings 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)

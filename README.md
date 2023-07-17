@@ -28,3 +28,5 @@ export CUDAHOSTCXX=/usr/bin/g++-8
 - CUDA
 - GCC / G++
 - Zlib
+
+/usr/local/cuda/bin/compute-sanitizer

@@ -20,6 +20,6 @@ Modified: 2023-04-25T12:53:31.894Z
 #include "GPUData.cuh"
 
 
-extern "C" void volume_resize_double_wrapper(cell* source_volume, cell* target_volume, const ivec3& source_res, const ivec3& target_res);
+extern "C" void volume_resize_double_wrapper(GPUData<VolumeDescriptor>& source, GPUData<VolumeDescriptor>& target);
 
 #endif // VOLUME_H

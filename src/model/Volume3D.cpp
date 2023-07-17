@@ -29,20 +29,20 @@ void Volume3D::Resize(const ivec3& res){
 }
 
 void Volume3D::DoubleResolution(){
-    ivec3 previous_res = m_res;
-    m_res = m_res * 2;
 
-
-    auto new_volume = std::make_shared<CudaLinearVolume3D>(m_res);
+    auto new_volume = std::make_shared<CudaLinearVolume3D>(m_res * 2);
     new_volume->InitZeros();
     new_volume->ToGPU();
 
+    GPUData<VolumeDescriptor> new_volume_desc;
+    new_volume_desc.Host()->bboxMin = m_bboxMin;
+    new_volume_desc.Host()->bboxMax = m_bboxMax;
+    new_volume_desc.Host()->worldSize = m_bboxMax - m_bboxMin;
+    new_volume_desc.Host()->res =  new_volume->GetResolution();
+    new_volume_desc.Host()->data = new_volume->GetDevicePtr();
+    new_volume_desc.ToDevice();
 
-    volume_resize_double_wrapper(
-            m_cudaVolume->GetDevicePtr(),
-            new_volume->GetDevicePtr(),
-            previous_res,
-            m_res);
+    volume_resize_double_wrapper(GetGPUData(), new_volume_desc);
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
@@ -50,6 +50,7 @@ void Volume3D::DoubleResolution(){
     }
 
     m_cudaVolume = new_volume;
+    m_res = new_volume->GetResolution();
     UpdateGPUData();
 }
 
