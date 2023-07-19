@@ -28,7 +28,7 @@ struct LevelOfDetail {
     std::string json_valid_path;
 };
 
-#define LOD_AMOUNT 3
+#define LOD_AMOUNT 4
 
 const LevelOfDetail LODs[LOD_AMOUNT] = {
         {
@@ -52,6 +52,15 @@ const LevelOfDetail LODs[LOD_AMOUNT] = {
         {
                 .level = 3,
                 .volume_res = 4 * ivec3(32 * 2, 32 * 2, 32 * 3),
+                .image_res = ivec2(800, 800),
+                .image_train_path = std::string("../data/nerf/train"),
+                .json_train_path = std::string("../data/nerf/transforms_train.json"),
+                .image_valid_path = std::string("../data/nerf/val"),
+                .json_valid_path = std::string("../data/nerf/transforms_valid.json")
+        },
+        {
+                .level = 4,
+                .volume_res = 8 * ivec3(32 * 2, 32 * 2, 32 * 3),
                 .image_res = ivec2(800, 800),
                 .image_train_path = std::string("../data/nerf/train"),
                 .json_train_path = std::string("../data/nerf/transforms_train.json"),

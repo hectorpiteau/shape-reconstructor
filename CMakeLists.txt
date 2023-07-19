@@ -6,7 +6,7 @@ project(DRTMCS VERSION 0.1 LANGUAGES CXX CUDA)
 # Cpp standards
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "-Wall -O0 -g -lstdc++fs")
+set(CMAKE_CXX_FLAGS "-Wall -Ofast -lstdc++fs")
 
 # GLFW Settings 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -110,9 +110,9 @@ cuda_add_executable(DRTMCS
         ${CUDA_SOURCE_FILES})
 
 target_compile_options(DRTMCS PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
-        --generate-line-info
-        -g
-        -G
+#        --generate-line-info
+#        -g
+#        -G
         --relocatable-device-code=true
         >)
 
