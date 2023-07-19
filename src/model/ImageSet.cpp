@@ -39,7 +39,7 @@ void ImageSet::SetFolderPath(const std::string& path){
 
     m_folderPath = path;
 
-    std::cout << "SET IMAGESET FOLDER PATH: " << path << std::endl;
+    std::cout << "ImageSet::SetFolderPath : Set Imageset Folder Path: " << path << std::endl;
 }
 
 void ImageSet::UnloadImages(){
@@ -58,13 +58,17 @@ bool imageSort(Image* a, Image* b){
 }
 
 size_t ImageSet::LoadImages() {
+    /** Error in folder path. */
     if(m_folderPath.length() <= 0) return 0;
-    
+
+    /** For each entry load the png and store it. */
     for (const auto & entry : std::filesystem::directory_iterator(m_folderPath)){
         auto* img = new Image(entry.path().filename());
         img->LoadPng(entry.path(), false, false);
+        img->LoadGPUData();
         m_images.push_back(img);
     }
+
     /** sort by filename. */
     std::sort(m_images.begin(), m_images.end(), imageSort);
 

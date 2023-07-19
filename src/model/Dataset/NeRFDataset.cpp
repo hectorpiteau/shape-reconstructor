@@ -11,19 +11,22 @@
 using json = nlohmann::json;
 using namespace glm;
 
-NeRFDataset::NeRFDataset(Scene *scene)
+NeRFDataset::NeRFDataset(Scene *scene,
+                         const std::string trainJson,
+                         const std::string trainImages,
+                         const std::string validJson,
+                         const std::string validImages)
         : Dataset{std::string("NeRFDataset")}, SceneObject{std::string("NeRFDataset"), SceneObjectTypes::NERFDATASET},
           m_scene(scene),
           m_mode(NeRFDatasetModes::TRAIN),
-          m_trainJSONPath("../data/nerf/transforms_train.json"),
-          m_trainImagesPath("../data/nerf200/train"),
-          m_validJSONPath("../data/nerf/transforms_val.json"),
-          m_validImagesPath("../data/nerf/val"),
+          m_trainJSONPath(trainJson),
+          m_trainImagesPath(trainImages),
+          m_validJSONPath(validJson),
+          m_validImagesPath(validImages),
           m_images(),
           m_imagesCalibration(),
           m_entries(),
-          m_isCalibrationLoaded(false),
-          m_camerasGenerated(false){
+          m_isCalibrationLoaded(false){
     SetName(std::string(ICON_FA_DATABASE " Nerf Dataset"));
     m_children = std::vector<std::shared_ptr<SceneObject>>();
 
@@ -52,6 +55,7 @@ bool NeRFDataset::LoadCalibrations() {
     if (data["frames"] == nullptr || data["frames"].is_array() == false) {
         f.close();
         m_isCalibrationLoaded = false;
+        return m_isCalibrationLoaded;
     }
 
     /** Parse FOV x : */
@@ -104,6 +108,7 @@ bool NeRFDataset::LoadCalibrations() {
                 tmp.transformMatrix[i][j] = value;
             }
         }
+
         tmp.transformMatrix = glm::transpose(tmp.transformMatrix);
         tmp.transformMatrix = glm::inverse(tmp.transformMatrix);
         /** negate row 1 */
@@ -133,23 +138,24 @@ bool NeRFDataset::LoadCalibrations() {
         K[2][1] = m_imageSize.y / 2.0;
         K[2][2] =  1.0f;
         K[3][3] =  1.0f;
+
         tmp.intrinsic = K;
-
         tmp.extrinsic = tmp.transformMatrix;
-
         // mat3x3 R = mat3x3(tmp.extrinsic);
         // vec4 T = vec4(tmp.extrinsic[3]);
 
         tmp.extrinsic = glm::rotate(tmp.extrinsic, glm::half_pi<float>(), glm::vec3(1.0, 0.0, 0.0));
 
         m_images.push_back(tmp);
+
         CameraCalibrationInformations calib = {.intrinsic = tmp.intrinsic, .extrinsic = tmp.extrinsic, .fov = tmp.fov};
         m_imagesCalibration.push_back(calib);
 
         image_counter += 1;
     }
+
     m_isCalibrationLoaded = true;
-    return true;
+    return m_isCalibrationLoaded;
 }
 
 size_t NeRFDataset::Size() {
@@ -173,7 +179,8 @@ enum NeRFDatasetModes NeRFDataset::GetMode() {
 
 void NeRFDataset::SetMode(enum NeRFDatasetModes mode) {
     m_mode = mode;
-    m_camerasGenerated = false;
+    m_cameraSet->Reset();
+
     m_isCalibrationLoaded = false;
 
     switch (mode) {
@@ -182,6 +189,9 @@ void NeRFDataset::SetMode(enum NeRFDatasetModes mode) {
             break;
         case NeRFDatasetModes::VALID:
             GetImageSet()->SetFolderPath(m_validImagesPath);
+            break;
+        default:
+            GetImageSet()->SetFolderPath(m_trainImagesPath);
             break;
     }
 }
@@ -219,14 +229,15 @@ bool NeRFDataset::IsCalibrationLoaded() const {
 }
 
 bool NeRFDataset::Load() {
+    /** Load images in the ImageSet with the path. */
     m_imageSet->LoadImages();
     LoadCalibrations();
     GenerateCameras();
-    return m_camerasGenerated && m_isCalibrationLoaded;
+    return m_cameraSet->AreCamerasGenerated() && m_isCalibrationLoaded;
 }
 
 void NeRFDataset::GenerateCameras() {
-    if (m_camerasGenerated) {
+    if (m_cameraSet->AreCamerasGenerated()) {
         std::cout << "NeRFDataset::GenerateCameras : Cameras already generate." << std::endl;
         return;
     }
@@ -234,6 +245,8 @@ void NeRFDataset::GenerateCameras() {
         std::cout << "NeRFDataset::GenerateCameras : Calibration not done yet, can't generate cameras." << std::endl;
         return;
     }
+
+    std::cout << "NeRFDataset::GenerateCameras : Generate Cameras. " << std::endl;
 
     int cpt = 0;
 
@@ -260,15 +273,14 @@ void NeRFDataset::GenerateCameras() {
         m_cameraSet->AddCamera(cam);
     }
 
-    m_cameraSet->m_isLocked = true;
-    m_cameraSet->m_areCameraGenerated = true;
-    m_cameraSet->m_areCalibrated = true;
+    m_cameraSet->SetCameraGenerated(true);
+    m_cameraSet->SetIsLocked(true);
 
-    m_camerasGenerated = true;
+
 }
 
 bool NeRFDataset::AreCamerasGenerated() const {
-    return m_camerasGenerated;
+    return m_cameraSet->AreCamerasGenerated();
 }
 
 std::shared_ptr<CameraSet> NeRFDataset::GetCameraSet() {
@@ -288,5 +300,11 @@ void NeRFDataset::SetSourcePath(const std::string &train_path, const std::string
     m_trainImagesPath = train_path;
     m_validImagesPath = valid_path;
     m_imageSet->SetFolderPath(GetCurrentImageFolderPath());
-    m_imageSet->LoadImages();
+
+    m_cameraSet->Reset();
+    m_images = std::vector<NeRFImage>();
+    m_entries = std::vector<DatasetEntry>();
+    m_imagesCalibration = std::vector<CameraCalibrationInformations>();
+
+    Load();
 }

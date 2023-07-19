@@ -111,46 +111,52 @@ __global__ void volume_resize_double(VolumeDescriptor *source,VolumeDescriptor *
     auto source_index = VOLUME_INDEX(x,y,z, source->res);
     auto source_cell = source->data[source_index];
 
-    ivec3 target_coords = ivec3(x,y,z) * 2;
-    if(target_coords.x >= target->res.x || target_coords.y >= target->res.y || target_coords.z >= target->res.z) return;
+    ivec3 target_coords_src = ivec3(x,y,z) * 2;
+    ivec3 target_coords = target_coords_src;
+    if(target_coords.x > target->res.x || target_coords.y > target->res.y || target_coords.z > target->res.z) return;
 
     /** same coord */
-    int index = VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res);
-    target->data[index].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
+    target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
 
-    target_coords = ivec3(x + 1,y,z) * 2;
-    if(target_coords.x > target->res.x || target_coords.y > target->res.y || target_coords.z > target->res.z){
+    target_coords = target_coords_src + ivec3(1,0,0);
+    if(target_coords.x < target->res.x && target_coords.y < target->res.y && target_coords.z < target->res.z){
         /** x+1 */
-        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)] = source_cell;
+        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
     }
-    target_coords = ivec3(x,y,z + 1) * 2;
-    if(target_coords.x > target->res.x || target_coords.y > target->res.y || target_coords.z > target->res.z){
+    target_coords = target_coords_src + ivec3(0,0,1);;
+    if(target_coords.x < target->res.x && target_coords.y < target->res.y && target_coords.z < target->res.z){
         /** z+1 */
-        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)] = source_cell;
+        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
     }
 
-    target_coords = ivec3(x + 1,y,z + 1) * 2;
-    if(target_coords.x > target->res.x || target_coords.y > target->res.y || target_coords.z > target->res.z){
+    target_coords = target_coords_src + ivec3(1,0,1);;
+    if(target_coords.x < target->res.x && target_coords.y < target->res.y && target_coords.z < target->res.z){
         /** x+1, z+1 */
-        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)] = source_cell;
+        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
     }
 
-    target_coords = ivec3(x + 1, y + 1, z) * 2;
-    if(target_coords.x > target->res.x || target_coords.y > target->res.y || target_coords.z > target->res.z){
+    target_coords = target_coords_src + ivec3(0,1,0);;
+    if(target_coords.x < target->res.x && target_coords.y < target->res.y && target_coords.z < target->res.z){
+        /** y+1 */
+        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
+    }
+
+    target_coords = target_coords_src + ivec3(1,1,0);;
+    if(target_coords.x < target->res.x && target_coords.y < target->res.y && target_coords.z < target->res.z){
         /** y+1, x+1 */
-        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)] = source_cell;
+        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
     }
 
-    target_coords = ivec3(x, y + 1, z + 1) * 2;
-    if(target_coords.x > target->res.x || target_coords.y > target->res.y || target_coords.z > target->res.z){
+    target_coords = target_coords_src + ivec3(0,1,1);;
+    if(target_coords.x < target->res.x && target_coords.y < target->res.y && target_coords.z < target->res.z){
         /** y+1, z+1 */
-        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)] = source_cell;
+        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
     }
 
-    target_coords = ivec3(x + 1, y + 1, z + 1) * 2;
-    if(target_coords.x > target->res.x || target_coords.y > target->res.y || target_coords.z > target->res.z){
+    target_coords = target_coords_src + ivec3(1,1,1);;
+    if(target_coords.x < target->res.x && target_coords.y < target->res.y && target_coords.z < target->res.z){
         /** y+1, x+1, z+1 */
-        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)] = source_cell;
+        target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
     }
 
 }

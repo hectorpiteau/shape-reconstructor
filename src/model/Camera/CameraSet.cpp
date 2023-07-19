@@ -150,3 +150,19 @@ void CameraSet::SetFrustumSize(float value){
     for (auto &cam : m_cameras)
         cam->SetFrustumSize(value);
 }
+
+void CameraSet::Reset() {
+    m_cameras = std::vector<std::shared_ptr<Camera>>();
+    m_children = std::vector<std::shared_ptr<SceneObject>>();
+
+    m_areCameraGenerated = false;
+    m_areCalibrated = false;
+}
+
+void CameraSet::SetCameraGenerated(bool value) {
+    m_areCameraGenerated = value;
+}
+
+void CameraSet::SetIsLocked(bool value) {
+    m_isLocked = value;
+}

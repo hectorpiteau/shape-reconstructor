@@ -7,11 +7,14 @@
 #include "AdamOptimizer.hpp"
 #include "Volume3D.hpp"
 #include "Adam.cuh"
+#include "Dataset/NeRFDataset.hpp"
 
 using namespace glm;
 
-AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target, std::shared_ptr<VolumeRenderer> renderer) :
-        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene),m_gradsDescriptor(), m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_target(target), m_volumeRenderer(renderer) {
+AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target,
+                             std::shared_ptr<VolumeRenderer> renderer) :
+        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_gradsDescriptor(),
+        m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_target(target), m_volumeRenderer(renderer) {
     SetName("Adam Optimizer");
 
     /** Create the overlay plane that will be used to display the volume rendering texture on. */
@@ -51,14 +54,15 @@ AdamOptimizer::AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std
 //    m_target = std::move(targetVolume);
 //}
 
-void AdamOptimizer::Initialize(){
+void AdamOptimizer::Initialize() {
     UpdateGPUDescriptor();
 
     /** Initialize integration ranges. */
     auto cameraSet = m_dataset->GetCameraSet();
-    for(const auto& cam : cameraSet->GetCameras()){
+    for (const auto &cam: cameraSet->GetCameras()) {
         cam->UpdateGPUDescriptor();
-        cam->GetIntegrationRangeGPUDescriptor().Host()->data = (float2*)GPUData<IntegrationRangeDescriptor>::AllocateOnDevice(cam->GetResolution().x * cam->GetResolution().y * sizeof(float2));
+        cam->GetIntegrationRangeGPUDescriptor().Host()->data = (float2 *) GPUData<IntegrationRangeDescriptor>::AllocateOnDevice(
+                cam->GetResolution().x * cam->GetResolution().y * sizeof(float2));
         cam->GetIntegrationRangeGPUDescriptor().Host()->dim.x = cam->GetResolution().x;
         cam->GetIntegrationRangeGPUDescriptor().Host()->dim.y = cam->GetResolution().y;
         cam->GetIntegrationRangeGPUDescriptor().Host()->renderInTexture = false;
@@ -66,26 +70,27 @@ void AdamOptimizer::Initialize(){
         cam->GetIntegrationRangeGPUDescriptor().Host()->surface = cam->GetCudaTexture()->OpenSurface();
         cam->GetIntegrationRangeGPUDescriptor().ToDevice();
 
-        integration_range_bbox_wrapper(cam->GetGPUData(), cam->GetIntegrationRangeGPUDescriptor().Device(), m_target->GetGPUDescriptor());
-        cam->GetCudaTexture()->RunKernel(m_volumeRenderer->GetRayCasterGPUData(), cam->GetGPUData(), m_volumeRenderer->GetVolumeGPUData());
+        integration_range_bbox_wrapper(cam->GetGPUData(), cam->GetIntegrationRangeGPUDescriptor().Device(),
+                                       m_target->GetGPUDescriptor());
+        cam->GetCudaTexture()->RunKernel(m_volumeRenderer->GetRayCasterGPUData(), cam->GetGPUData(),
+                                         m_volumeRenderer->GetVolumeGPUData());
         cam->GetCudaTexture()->CloseSurface();
     }
 
-    m_integrationRangeLoaded = true;
+        m_integrationRangeLoaded = true;
 
     /** Initialize dataset. */
     m_dataLoader->Initialize();
 
     zero_adam_wrapper(&m_adamDescriptor);
-
 }
 
-bool AdamOptimizer::IntegrationRangeLoaded() const{
+bool AdamOptimizer::IntegrationRangeLoaded() const {
     return m_integrationRangeLoaded;
 }
 
-void AdamOptimizer::Optimize(){
-    if(!m_integrationRangeLoaded) {
+void AdamOptimizer::Optimize() {
+    if (!m_integrationRangeLoaded) {
         std::cerr << "Adam Optimizer:  Cannot optimize, integration ranges are not computed." << std::endl;
         return;
     }
@@ -96,7 +101,7 @@ void AdamOptimizer::Optimize(){
 }
 
 void AdamOptimizer::Render() {
-    if(m_optimize){
+    if (m_optimize) {
         Step();
     }
 //    m_integrationRangeDescriptor.Host()->dim = ivec2(m_scene->GetSceneSettings()->GetViewportWidth(),
@@ -113,7 +118,7 @@ void AdamOptimizer::Render() {
 //    m_testPlane->Render();
 }
 
-void AdamOptimizer::Step(){
+void AdamOptimizer::Step() {
     m_dataLoader->LoadBatch(m_renderMode);
 
     /** Update adam descriptor's data on GPU. */
@@ -125,12 +130,12 @@ void AdamOptimizer::Step(){
 
     /** Forward Pass.  */
     auto items = m_dataLoader->GetGPUDatas();
-    for(size_t i=0; i < m_dataLoader->GetBatchSize(); ++i){
+    for (size_t i = 0; i < m_dataLoader->GetBatchSize(); ++i) {
         batched_forward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData());
     }
 
     /** Backward Pass.  */
-    for(size_t i=0; i < m_dataLoader->GetBatchSize(); ++i){
+    for (size_t i = 0; i < m_dataLoader->GetBatchSize(); ++i) {
         batched_backward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor);
     }
 
@@ -146,9 +151,9 @@ void AdamOptimizer::Step(){
     m_dataLoader->NextBatch();
 }
 
-void AdamOptimizer::NextLOD(){
+void AdamOptimizer::NextLOD() {
     /** If already the maximum level of detail, nothing happens. */
-    if(m_currentLODIndex == LOD_AMOUNT - 1) return;
+    if (m_currentLODIndex == LOD_AMOUNT - 1) return;
     m_currentLODIndex += 1;
 
     /** Augment volume's resolutions. */
@@ -159,7 +164,14 @@ void AdamOptimizer::NextLOD(){
 
     /** Augment images resolutions. */
 //    m_dataset->SetSourcePath(LODs[m_currentLODIndex].image_train_path, LODs[m_currentLODIndex].image_valid_path);
-
+    m_dataset = std::make_shared<NeRFDataset>(m_scene,
+                                              LODs[m_currentLODIndex].json_train_path,
+                                              LODs[m_currentLODIndex].image_train_path,
+                                              LODs[m_currentLODIndex].json_valid_path,
+                                              LODs[m_currentLODIndex].image_valid_path);
+    m_dataset->Load();
+    m_dataLoader = std::make_shared<DataLoader>(m_dataset);
+    m_dataLoader->Initialize();
 }
 
 void AdamOptimizer::UpdateGPUDescriptor() {
@@ -186,11 +198,11 @@ void AdamOptimizer::UpdateGPUDescriptor() {
     m_adamDescriptor.ToDevice();
 }
 
-void AdamOptimizer::SetBeta(const vec2& value) {
+void AdamOptimizer::SetBeta(const vec2 &value) {
     m_beta = value;
 }
 
-const vec2& AdamOptimizer::GetBeta() const {
+const vec2 &AdamOptimizer::GetBeta() const {
     return m_beta;
 }
 

@@ -51,6 +51,11 @@ public:
     size_t Size();
 
     /**
+     * Reset the CameraSet with no cameras.
+     */
+    void Reset();
+
+    /**
      * @brief Operator [] in order to easily index cameras by the index 
      * in the vector.
      * 
@@ -92,6 +97,9 @@ public:
 
     [[nodiscard]] float GetFrustumSize() const;
     void SetFrustumSize(float value);
+
+    void SetCameraGenerated(bool value);
+    void SetIsLocked(bool value);
 
     bool m_areCameraGenerated;
     bool m_areCalibrated;

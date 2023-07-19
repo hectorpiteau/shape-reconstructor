@@ -4,7 +4,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-#include "Dataset.hpp" 
+#include "Dataset.hpp"
 #include "../ImageSet.hpp"
 #include "../../view/SceneObject/SceneObject.hpp"
 #include "../../controllers/Scene/Scene.hpp"
@@ -18,9 +18,9 @@ enum NeRFDatasetModes {
     VALID
 };
 
-static const std::vector<const char*> NeRFDatasetModesNames = {
-    "Train",
-    "Valid"
+static const std::vector<const char *> NeRFDatasetModesNames = {
+        "Train",
+        "Valid"
 };
 
 struct NeRFImage : public CameraCalibrationInformations {
@@ -39,12 +39,12 @@ struct NeRFImage : public CameraCalibrationInformations {
  * It can be used to load the dataset images descriptors. 
  * Real images can then be loaded by 
  */
-class NeRFDataset : public Dataset, public SceneObject{
+class NeRFDataset : public Dataset, public SceneObject {
 private:
 
     vec2 m_imageSize = vec2(800, 800);
 
-    Scene* m_scene;
+    Scene *m_scene;
 
     enum NeRFDatasetModes m_mode;
 
@@ -60,14 +60,18 @@ private:
     std::vector<DatasetEntry> m_entries;
 
     bool m_isCalibrationLoaded;
-    bool m_camerasGenerated;
 
     /** in dep */
     std::shared_ptr<CameraSet> m_cameraSet = nullptr;
     std::shared_ptr<ImageSet> m_imageSet = nullptr;
 
 public:
-    explicit NeRFDataset(Scene* scene);
+    explicit NeRFDataset(Scene *scene,
+                         const std::string trainJson = "../data/nerf/transforms_train.json",
+                         const std::string trainImages = "../data/nerf200/train",
+                         const std::string validJson = "../data/nerf/transforms_val.json",
+                         const std::string validImages = "../data/nerf/val");
+
     ~NeRFDataset() override;
 
     /**
@@ -108,7 +112,7 @@ public:
      * 
      * @return const char* : The mode's name.
      */
-    const char* GetModeName();
+    const char *GetModeName();
 
     /**
      * @brief Set the Mode of the Dataset, 
@@ -120,18 +124,19 @@ public:
 
     void Render() override;
 
-    const std::string& GetCurrentJsonPath();
-    const std::string& GetCurrentImageFolderPath();
+    const std::string &GetCurrentJsonPath();
 
+    const std::string &GetCurrentImageFolderPath();
 
 
     [[nodiscard]] bool IsCalibrationLoaded() const;
-    
+
     void GenerateCameras();
 
     [[nodiscard]] bool AreCamerasGenerated() const;
 
     std::shared_ptr<CameraSet> GetCameraSet() override;
+
     std::shared_ptr<ImageSet> GetImageSet() override;
 
     DatasetEntry GetEntry(size_t index) override;

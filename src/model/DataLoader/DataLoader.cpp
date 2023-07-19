@@ -31,6 +31,7 @@ DataLoader::DataLoader(std::shared_ptr<Dataset> dataset)
 void DataLoader::Initialize() {
     /** Initialize and shuffle indexes. */
     m_startIndex = 0;
+    m_indexes = std::vector<unsigned  int>();
     for (unsigned int i = 0; i < m_dataset->Size(); i++) m_indexes.push_back(i);
     Shuffle();
     m_isReady = true;
@@ -39,11 +40,6 @@ void DataLoader::Initialize() {
         m_losses[i]->Allocate(m_dataset->GetImageSet()->GetImage(0)->width * m_dataset->GetImageSet()->GetImage(0)->height);
         m_cpreds[i]->Allocate(m_dataset->GetImageSet()->GetImage(0)->width * m_dataset->GetImageSet()->GetImage(0)->height);
     }
-
-    for (unsigned int i = 0; i < m_dataset->Size(); i++) {
-        m_dataset->GetImageSet()->GetImage(i)->LoadGPUData();
-    }
-
 }
 
 bool DataLoader::IsReady() const {

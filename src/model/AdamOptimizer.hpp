@@ -23,32 +23,40 @@ struct LevelOfDetail {
     ivec3 volume_res;
     ivec2 image_res;
     std::string image_train_path;
+    std::string json_train_path;
     std::string image_valid_path;
+    std::string json_valid_path;
 };
 
 #define LOD_AMOUNT 3
 
 const LevelOfDetail LODs[LOD_AMOUNT] = {
         {
-            .level = 1,
-            .volume_res = ivec3(32*2, 32*2, 32*2),
-            .image_res = ivec2(200, 200),
-            .image_train_path = std::string("../data/nerf200/train"),
-            .image_valid_path = std::string("../data/nerf200/val")
+                .level = 1,
+                .volume_res = ivec3(32 * 2, 32 * 2, 32 * 3),
+                .image_res = ivec2(200, 200),
+                .image_train_path = std::string("../data/nerf200/train"),
+                .json_train_path = std::string("../data/nerf/transforms_train.json"),
+                .image_valid_path = std::string("../data/nerf200/val"),
+                .json_valid_path = std::string("../data/nerf/transforms_valid.json")
         },
         {
-            .level = 2,
-            .volume_res = 2 * ivec3(32*2, 32*2, 32*2),
-            .image_res = ivec2(400, 400),
-            .image_train_path = std::string("../data/nerf400/train"),
-            .image_valid_path = std::string("../data/nerf400/val")
+                .level = 2,
+                .volume_res = 2 * ivec3(32 * 2, 32 * 2, 32 * 3),
+                .image_res = ivec2(400, 400),
+                .image_train_path = std::string("../data/nerf400/train"),
+                .json_train_path = std::string("../data/nerf/transforms_train.json"),
+                .image_valid_path = std::string("../data/nerf400/val"),
+                .json_valid_path = std::string("../data/nerf/transforms_valid.json")
         },
         {
-            .level = 3,
-            .volume_res = 4 * ivec3(32*2, 32*2, 32*2),
-            .image_res = ivec2(800, 800),
-            .image_train_path = std::string("../data/nerf/train"),
-            .image_valid_path = std::string("../data/nerf/val")
+                .level = 3,
+                .volume_res = 4 * ivec3(32 * 2, 32 * 2, 32 * 3),
+                .image_res = ivec2(800, 800),
+                .image_train_path = std::string("../data/nerf/train"),
+                .json_train_path = std::string("../data/nerf/transforms_train.json"),
+                .image_valid_path = std::string("../data/nerf/val"),
+                .json_valid_path = std::string("../data/nerf/transforms_valid.json")
         }
 };
 
@@ -58,11 +66,11 @@ struct BatchResult {
 
 class AdamOptimizer : public SceneObject {
 private:
-    Scene* m_scene;
+    Scene *m_scene;
     /** Epsilon */
-    float m_epsilon=1.0E-8f;
+    float m_epsilon = 1.0E-8f;
     /** Step size. */
-    float m_eta=0.5E-2f;
+    float m_eta = 0.1E-2f;
     /** Initialize default beta values. */
     vec2 m_beta = {0.9, 0.95};
     /** Gradient grid resolution. */
@@ -76,7 +84,6 @@ private:
     /** Adam gradients. */
     std::shared_ptr<Volume3D> m_grads;
     GPUData<VolumeDescriptor> m_gradsDescriptor;
-
 
 
     /** Adam Optimizer GPU Data Descriptor. In order to use Adam values in a CUDA Kernel. */
@@ -115,10 +122,12 @@ private:
     /** LOD */
     uint m_currentLODIndex = 0;
 
-
 public:
-    explicit AdamOptimizer(Scene* scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target, std::shared_ptr<VolumeRenderer> renderer);
-    AdamOptimizer(const AdamOptimizer&) = delete;
+    explicit AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target,
+                           std::shared_ptr<VolumeRenderer> renderer);
+
+    AdamOptimizer(const AdamOptimizer &) = delete;
+
     ~AdamOptimizer() override = default;
 
     void UpdateGPUDescriptor();
@@ -129,25 +138,38 @@ public:
 
 
     std::shared_ptr<Volume3D> GetTargetVolume();
+
     std::shared_ptr<Volume3D> GetGradVolume();
 
-    void SetBeta(const vec2& value);
-    [[nodiscard]] const vec2& GetBeta() const;
+    void SetBeta(const vec2 &value);
+
+    [[nodiscard]] const vec2 &GetBeta() const;
+
     void SetEpsilon(float value);
+
     [[nodiscard]] float GetEpsilon() const;
+
     void SetEta(float value);
+
     [[nodiscard]] float GetEta() const;
+
     [[nodiscard]] bool IntegrationRangeLoaded() const;
 
-    [[nodiscard]] float GetColor0W() const { return m_color0W;}
-    void SetColor0W(float value) { m_color0W = value;}
-    [[nodiscard]] float GetAlpha0W() const { return m_alpha0W;}
-    void SetAlpha0W(float value) { m_alpha0W = value;}
-    [[nodiscard]] float GetAlphaReg0W() const { return m_alphaReg0W;}
-    void SetAlphaReg0W(float value)  { m_alphaReg0W = value;}
+    [[nodiscard]] float GetColor0W() const { return m_color0W; }
 
-    [[nodiscard]] float GetTVL20W() const { return m_TVL20W;}
-    void SetTVL20W(float value)  { m_TVL20W = value;}
+    void SetColor0W(float value) { m_color0W = value; }
+
+    [[nodiscard]] float GetAlpha0W() const { return m_alpha0W; }
+
+    void SetAlpha0W(float value) { m_alpha0W = value; }
+
+    [[nodiscard]] float GetAlphaReg0W() const { return m_alphaReg0W; }
+
+    void SetAlphaReg0W(float value) { m_alphaReg0W = value; }
+
+    [[nodiscard]] float GetTVL20W() const { return m_TVL20W; }
+
+    void SetTVL20W(float value) { m_TVL20W = value; }
 
     /**
      * Start/Stop the optimization procedure.
@@ -166,6 +188,7 @@ public:
      * @return : The amount of images in the batch.
      */
     unsigned int GetBatchSize();
+
     /**
      * Set the batch-size of the DataLoader.
      *

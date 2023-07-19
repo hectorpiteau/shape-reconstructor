@@ -35,9 +35,9 @@ private:
     GPUData<LinearImageDescriptor> m_desc;
 
 public:
-    explicit Image(std::string filename) :
-            width(100),
-            height(100),
+    explicit Image(std::string filename, int width = 100, int height = 100) :
+            width(width),
+            height(height),
             channels(4),
             bits(8 * sizeof(float)),
             filename(std::move(filename)),
@@ -130,6 +130,8 @@ public:
             m_isLoaded = false;
             return;
         }
+        std::cout << "[Image] image loaded: (" << std::to_string(width) << ", " << std::to_string(height) << ")" << std::endl;
+
         m_isLoaded = true;
     }
 
