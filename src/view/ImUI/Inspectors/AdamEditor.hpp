@@ -48,6 +48,7 @@ public:
         auto alpha0w = m_interactor->GetAlpha0W();
         auto alphareg0w = m_interactor->GetAlphaReg0W();
         auto tvl20w = m_interactor->GetTVL20W();
+        auto useSuperRes = m_interactor->UseSuperResolution();
 
         ImGui::SeparatorText(ICON_FA_INFO " Adam Optimizer - Information");
         ImGui::Spacing();
@@ -125,6 +126,9 @@ public:
         ImGui::Spacing();
         if(ImGui::Button("Next LOD", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
             m_interactor->NextLOD();
+        }
+        if(ImGui::Checkbox("Use SuperResolution", &useSuperRes)){
+            m_interactor->SetUseSuperResolution(useSuperRes);
         }
 
         ImGui::SeparatorText( "Stats");

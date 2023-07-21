@@ -308,7 +308,7 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
                 auto alpha_grad = adam->alpha_0_w *  dot(dLdC, dCdAlpha) + adam->alpha_reg_0_w *  alpha_reg_i;
 
 
-                WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad), indices);
+                WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad), indices, adam);
 
 //                Tpartial *= exp(-alpha);
                 Tpartial *= (1.0f - alpha);
@@ -341,7 +341,7 @@ extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor>& item, GPU
 }
 
 extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor> &item, GPUData<VolumeDescriptor> &volume) {
-    dim3 threads(16, 16);
+    dim3 threads(8, 8);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
     dim3 blocks((item.Host()->res.x + threads.x - 1) / threads.x,
                 (item.Host()->res.y + threads.y - 1) / threads.y);
@@ -424,7 +424,7 @@ __global__ void volume_gradients(VolumeDescriptor *volume, AdamOptimizerDescript
 }
 
 extern "C" void volume_backward(GPUData<VolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam){
-    dim3 threads(8,8,8);
+    dim3 threads(4,4,4);
     /** This create enough blocks to cover the whole volume, may contain threads that does not have pixel's assigned. */
     dim3 blocks((adam.Host()->res.x + threads.x - 1) / threads.x,
                 (adam.Host()->res.y + threads.y - 1) / threads.y,

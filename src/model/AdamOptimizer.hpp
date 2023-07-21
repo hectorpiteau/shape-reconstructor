@@ -15,6 +15,8 @@
 #include "DataLoader/DataLoader.hpp"
 #include "VolumeRenderer.hpp"
 #include "Dataset/Dataset.hpp"
+#include "SuperResolution/SuperResolutionModule.h"
+#include "Distribution/UniformDistribution.hpp"
 
 using namespace glm;
 
@@ -131,6 +133,12 @@ private:
     /** LOD */
     uint m_currentLODIndex = 0;
 
+    /** Super Resolution */
+    bool m_useSuperResolution = false;
+    SuperResolutionModule m_superResModule;
+
+    UniformDistribution<short> m_uniformDistribution;
+
 public:
     explicit AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target,
                            std::shared_ptr<VolumeRenderer> renderer);
@@ -144,7 +152,6 @@ public:
     void Step();
 
     void Initialize();
-
 
     std::shared_ptr<Volume3D> GetTargetVolume();
 
@@ -212,6 +219,9 @@ public:
     void SetRenderMode(RenderMode mode);
 
     RenderMode GetRenderMode();
+
+    void SetUseSuperResolution(bool value);
+    bool UseSuperResolution();
 };
 
 

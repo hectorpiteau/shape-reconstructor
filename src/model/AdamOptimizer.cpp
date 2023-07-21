@@ -14,7 +14,7 @@ using namespace glm;
 AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target,
                              std::shared_ptr<VolumeRenderer> renderer) :
         SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_gradsDescriptor(),
-        m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_target(target), m_volumeRenderer(renderer) {
+        m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_target(target), m_volumeRenderer(renderer), m_superResModule(4), m_uniformDistribution(0, 8) {
     SetName("Adam Optimizer");
 
     /** Create the overlay plane that will be used to display the volume rendering texture on. */
@@ -163,13 +163,13 @@ void AdamOptimizer::NextLOD() {
     m_grads->DoubleResolution();
 
     /** Augment images resolutions. */
-//    m_dataset->SetSourcePath(LODs[m_currentLODIndex].image_train_path, LODs[m_currentLODIndex].image_valid_path);
     m_dataset = std::make_shared<NeRFDataset>(m_scene,
                                               LODs[m_currentLODIndex].json_train_path,
                                               LODs[m_currentLODIndex].image_train_path,
                                               LODs[m_currentLODIndex].json_valid_path,
                                               LODs[m_currentLODIndex].image_valid_path);
     m_dataset->Load();
+
     m_dataLoader = std::make_shared<DataLoader>(m_dataset);
     m_dataLoader->Initialize();
 }
@@ -190,6 +190,11 @@ void AdamOptimizer::UpdateGPUDescriptor() {
     m_adamDescriptor.Host()->grads = m_gradsDescriptor.Device();
     m_adamDescriptor.Host()->iteration = (int) m_steps;
     m_adamDescriptor.Host()->res = m_target->GetResolution();
+    m_adamDescriptor.Host()->amountOfGradientsToWrite = 2;
+
+    for(int i=0; i < m_adamDescriptor.Host()->amountOfGradientsToWrite; i++) {
+        m_adamDescriptor.Host()->writeGradientIndexes[i] = m_uniformDistribution.Get();
+    }
 
     m_adamDescriptor.Host()->color_0_w = GetColor0W();
     m_adamDescriptor.Host()->alpha_0_w = GetAlpha0W();
@@ -248,4 +253,12 @@ RenderMode AdamOptimizer::GetRenderMode() {
 
 std::shared_ptr<Volume3D> AdamOptimizer::GetTargetVolume() {
     return m_target;
+}
+
+void AdamOptimizer::SetUseSuperResolution(bool value) {
+    m_useSuperResolution = value;
+}
+
+bool AdamOptimizer::UseSuperResolution() {
+    return m_useSuperResolution;
 }

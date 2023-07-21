@@ -136,7 +136,7 @@ CUDA_DEV inline void AtomicWriteCell(cell *addr, const glm::vec4 &data) {
  * @param volume : The volume to write into.
  * @return
  */
-CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, VolumeDescriptor *volume, const glm::vec4 &value, size_t* indices) {
+CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, VolumeDescriptor *volume, const glm::vec4 &value, size_t* indices, AdamOptimizerDescriptor *adam) {
     /** Manual tri-linear interpolation. */
     auto local = (pos - volume->bboxMin) / volume->worldSize;
     glm::vec3 full_coords = local * glm::vec3(volume->res);
@@ -155,26 +155,45 @@ CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, VolumeDescriptor *volume, co
     size_t y_step = volume->res.z;
 
     /** Sample all around the pos point in the grid.  (8 voxels) */
-    auto c000 = omw.x * omw.y * omw.z * value;
-    auto c001 = omw.x * w.y * omw.z * value;
-    auto c010 = omw.x * omw.y * w.z * value;
-    auto c011 = omw.x * w.y * w.z * value;
 
-    auto c100 = w.x * omw.y * omw.z * value;
-    auto c101 = w.x * w.y * omw.z * value;
-    auto c110 = w.x * omw.y * w.z * value;
-    auto c111 = w.x * w.y * w.z * value;
+    for(int i=0; i<adam->amountOfGradientsToWrite; ++i){
+        auto index = adam->writeGradientIndexes[i];
 
-
-    AtomicWriteCell(&volume->data[indices[0]], c000); // back face
-    AtomicWriteCell(&volume->data[indices[1]], c001);
-    AtomicWriteCell(&volume->data[indices[2]], c010);
-    AtomicWriteCell(&volume->data[indices[3]], c011);
-
-    AtomicWriteCell(&volume->data[indices[4]], c100); // front face
-    AtomicWriteCell(&volume->data[indices[5]], c101);
-    AtomicWriteCell(&volume->data[indices[6]], c110);
-    AtomicWriteCell(&volume->data[indices[7]], c111);
+        switch (index) {
+            case 0:
+                // c000
+                AtomicWriteCell(&volume->data[indices[0]],  omw.x * omw.y * omw.z * value); // back face
+                break;
+            case 1:
+                //c001
+                AtomicWriteCell(&volume->data[indices[1]], omw.x * w.y * omw.z * value);
+                break;
+            case 2:
+                //c010
+                AtomicWriteCell(&volume->data[indices[2]],  omw.x * omw.y * w.z * value);
+                break;
+            case 3:
+                //c011
+                AtomicWriteCell(&volume->data[indices[3]], omw.x * w.y * w.z * value);
+                break;
+            case 4:
+                //c100
+                AtomicWriteCell(&volume->data[indices[4]], w.x * omw.y * omw.z * value); // front face
+                break;
+            case 5:
+                //c101
+                AtomicWriteCell(&volume->data[indices[5]], w.x * w.y * omw.z * value);
+                break;
+            case 6:
+                //c110
+                AtomicWriteCell(&volume->data[indices[6]], w.x * omw.y * w.z * value);
+                break;
+            case 7:
+                //c111
+                AtomicWriteCell(&volume->data[indices[7]], w.x * w.y * w.z * value);
+                break;
+        }
+    }
 }
 
 

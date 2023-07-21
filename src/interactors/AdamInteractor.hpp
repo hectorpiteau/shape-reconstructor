@@ -57,6 +57,10 @@ public:
 
     float GetTVL20W();
     void SetTVL20W(float value);
+
+    void SetUseSuperResolution(bool value);
+    bool UseSuperResolution();
+
 };
 
 

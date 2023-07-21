@@ -84,6 +84,13 @@ struct DebugInfo {
     ivec3 iv3;
 };
 
+struct SuperResolutionDescriptor {
+    /** Number of rays per pixel. */
+    unsigned int raysAmount;
+    /** The list of shifts to apply to each rays. */
+    vec2 * shifts;
+};
+
 struct VolumeDescriptor {
     /** min and max coordinates in world pos. */
     vec3 bboxMin;
@@ -120,6 +127,9 @@ struct AdamOptimizerDescriptor {
     float alpha_0_w;
     float alpha_reg_0_w;
     float tvl2_0_w;
+
+    short amountOfGradientsToWrite;
+    short writeGradientIndexes[8];
 
 };
 

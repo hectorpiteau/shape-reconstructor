@@ -107,3 +107,11 @@ void AdamInteractor::NextLOD(){
 void AdamInteractor::SetTVL20W(float value) {
     m_adam->SetTVL20W(value);
 }
+
+void AdamInteractor::SetUseSuperResolution(bool value) {
+    m_adam->SetUseSuperResolution(value);
+}
+
+bool AdamInteractor::UseSuperResolution() {
+    return m_adam->UseSuperResolution();
+}

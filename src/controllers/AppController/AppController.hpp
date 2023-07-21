@@ -46,7 +46,6 @@ public:
         auto volumeRenderer = std::make_shared<VolumeRenderer>(m_scene, volume3D);
         m_scene->Add(volumeRenderer);
 
-
         auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volume3D, volumeRenderer);
         m_scene->Add(adamOptimizer);
 
@@ -58,8 +57,7 @@ public:
         m_sceneObjectInteractor = std::make_shared<SceneObjectInteractor>(m_scene);
         m_objectListInteractor = std::make_shared<ObjectListInteractor>(m_scene, m_objectListView, m_sceneObjectInteractor);
 
-        m_calibrator = new OpenCVCalibrator();
-
+        //m_calibrator = new OpenCVCalibrator();
     }
 
     ~AppController(){
