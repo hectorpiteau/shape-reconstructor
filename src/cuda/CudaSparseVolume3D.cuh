@@ -14,7 +14,11 @@ Modified: 2023-04-24T13:03:22.194Z
 #include <glm/glm.hpp>
 #include <cuda_fp16.h>
 #include <iostream>
+#include <stdlib.h>
+#include <memory>
+#include <cstring>
 #include "../utils/helper_cuda.h"
+#include "Common.cuh"
 
 #ifdef __CUDACC__
 #define CUDA_HOSTDEV __host__ __device__
@@ -26,68 +30,85 @@ Modified: 2023-04-24T13:03:22.194Z
 #define CUDA_DEV
 #endif
 
-using namespace glm;
+
+#define STAGE0_INDEX(X, Y, Z, RES) ((X) * (RES).y*(RES).z + (Y) * (RES).z + (Z))
+#define SHIFT_INDEX_2x2x2(shifts) 4 * (shifts).y + 2 * (shifts).z + (shifts).x
+#define SHIFT_INDEX_4x4x4(shifts) 16 * (shifts).y + 4 * (shifts).z + (shifts).x
 
 
-struct SparseCell {
+struct stage0_cell
+{
+    unsigned int index;
+    bool active;
+};
+
+struct stage_cell
+{
+    unsigned int indexes[4 * 4 * 4];
+    bool is_leaf;
+    unsigned long long leaf; //64bits
 
 };
 
-class CudaSparseVolume3D {
-private:
-    cell *m_hostData = nullptr;
-    cell *m_gpuData = nullptr;
-    ivec3 m_res = ivec3(128, 128, 128);
+//struct stage_cell_222
+//{
+//    unsigned int indexes[2 * 2 * 2];
+//    bool is_leaf;
+//};
 
-    size_t m_size = 0;
-    size_t m_size_gpu = 0;
+//CUDA_DEV void SparseVolumeGetDataIndex(ivec3 coords, SparseVolumeDescriptor *volume) {
+//
+//        /** Locate the coarser cell in the stage0. */
+//        auto s0_tmp = vec3(coords) / vec3(volume->initialResolution);
+//        auto s0_coords = ivec3(floor(s0_tmp));
+//        auto s0_cell = volume->stage0[STAGE0_INDEX(s0_coords, volume->initialResolution)];
+//
+//        /** If the cell is not active then nothing is inside. return. */
+//        if(!s0_cell.active) return INF;
+//
+//        /** If the voxel is not empty, locate the cell in the stage1. */
+//        auto s1_cell = stage1[s0_cell.index];
+//
+//        auto previous_res = volume->initialResolution;
+//
+//        /** While its not a leaf, traverse the tree. */
+//        while(!s1_cell.is_leaf) {
+//            auto current_coords = vec3(coords) / vec3(previous_res);
+//            auto s1_tmp = floor((round(current_coords) - floor(current_coords)) * 4.0f);
+//            auto index = s1_cell.indexes[SHIFT_INDEX_4x4x4(ivec3(s1_tmp))];
+//            s1_cell = stage1[index];
+//            previous_res = previous_res * 4;
+//        }
+//
+//        /** The cell is a leaf so the indexes correspond to the data buffer now. */
+//        /** Let find the last voxel in the last block of 4x4x4. */
+//        auto current_coords = vec3(coords) / vec3(previous_res);
+//        auto s1_tmp = floor((round(current_coords) - floor(current_coords)) * 4.0f);
+//        auto index = s1_cell.indexes[SHIFT_INDEX_4x4x4(ivec3(s1_tmp))];
+//
+//        return index;
+//}
 
-    int* m_indirection_0; /** Base resolution: 64x64x96 - max approx : 1625^3 */
-    int* m_indirection_1; /** max approx : 1625^3 */
-
-    SparseCell* m_data;
-
-public:
-    explicit CudaSparseVolume3D(const ivec3 &res) {
-        m_res = res;
-
-        m_size = m_res.x * m_res.y * m_res.z * sizeof(cell);
-        m_size_gpu = m_res.x * m_res.y * m_res.z * sizeof(cell);
-
-        /** Declare Host buffer. */
-        m_hostData = (cell *) malloc(m_size);
-
-        /** Declare Device buffer. */
-        checkCudaErrors(
-                cudaMalloc((void **) &m_gpuData, m_size_gpu)
-        );
-    }
-
-    ~CudaSparseVolume3D() {
-        if (m_hostData != nullptr) free(m_hostData);
-        if (m_gpuData != nullptr) cudaFree(m_gpuData);
-    }
-
-    /**
-     * @brief Copy Host Buffer into Device's buffer.
-     */
-    CUDA_HOST void ToGPU() {
-        checkCudaErrors(
-                cudaMemcpy(m_gpuData, m_hostData, m_size, cudaMemcpyHostToDevice));
-    }
-
-    /**
-     * @brief Get the Device data pointer. 
-     * 
-     * @return float* : A pointer on the buffer allocated on the device. 
-     */
-    CUDA_HOSTDEV cell *GetDevicePtr() {
-        return m_gpuData;
-    }
-
-    CUDA_HOSTDEV ivec3 GetResolution() {
-        return m_res;
-    }
-};
+//CUDA_DEV inline void SparseVolumeSet(vec3 coords, vec4 value, SparseVolumeDescriptor *volume)
+//{
+//    auto index = SparseVolumeGetDataIndex(coords);
+//    if(index == INF) return;
+//    volume->data[index].data = make_float4(value.x, value.y, value.z, value.w);
+//}
+//
+//CUDA_DEV inline void SparseVolumeAtomicSet(vec3 coords, vec4 value, SparseVolumeDescriptor *volume)
+//{
+//    auto index = SparseVolumeGetDataIndex(coords);
+//    if(index == INF) return;
+//    volume->data[index].data = make_float4(value.x, value.y, value.z, value.w);
+//}
+//
+//CUDA_DEV inline cell SparseVolumeGet(ivec3 coords, SparseVolumeDescriptor *volume)
+//{
+//    auto index = SparseVolumeGetDataIndex(coords);
+//    /** Check if it points to infinity, then there is no data. */
+//    if(index == INF) return {.data = make_float4(0.0, 0.0, 0.0, 0.0)};
+//    return volume->data[index];
+//}
 
 #endif //CUDA_SPARSE_VOLUME3D_H

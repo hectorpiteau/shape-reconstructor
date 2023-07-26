@@ -17,6 +17,7 @@
 #include "Dataset/Dataset.hpp"
 #include "SuperResolution/SuperResolutionModule.h"
 #include "Distribution/UniformDistribution.hpp"
+#include "SparseVolume3D.hpp"
 
 using namespace glm;
 
@@ -89,6 +90,7 @@ private:
     std::shared_ptr<Volume3D> m_adamG2;
     /** 3D Data to optimize. */
     std::shared_ptr<Volume3D> m_target;
+    std::shared_ptr<SparseVolume3D> m_sparseVolume3D;
 
     std::shared_ptr<CudaLinearVolume3D> m_blurredVoxels;
 
@@ -134,14 +136,13 @@ private:
     uint m_currentLODIndex = 0;
 
     /** Super Resolution */
-    bool m_useSuperResolution = false;
     SuperResolutionModule m_superResModule;
 
     UniformDistribution<short> m_uniformDistribution;
 
 public:
     explicit AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target,
-                           std::shared_ptr<VolumeRenderer> renderer);
+                           std::shared_ptr<VolumeRenderer> renderer, std::shared_ptr<SparseVolume3D> sparseVolume);
 
     AdamOptimizer(const AdamOptimizer &) = delete;
 
@@ -221,6 +222,7 @@ public:
     RenderMode GetRenderMode();
 
     void SetUseSuperResolution(bool value);
+
     bool UseSuperResolution();
 };
 

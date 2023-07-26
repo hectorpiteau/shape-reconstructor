@@ -14,6 +14,7 @@ Modified: 2023-04-24T13:03:22.194Z
 #include <glm/glm.hpp>
 #include <cuda_fp16.h>
 #include <iostream>
+#include <random>
 #include "../utils/helper_cuda.h"
 
 #ifdef __CUDACC__
@@ -90,6 +91,8 @@ public:
     }
 
     CUDA_HOST void InitStub() {
+        std::default_random_engine generator;
+        std::uniform_real_distribution<float> distribution(0.0f,1.0f);
         for (int x = 0; x < m_res.x; ++x)
             for (int y = 0; y < m_res.y; ++y)
                 for (int z = 0; z < m_res.z; ++z) {
@@ -101,11 +104,11 @@ public:
 
                     /** SDF */
 //                    float sdf = glm::max(tmp.x, glm::max(tmp.y, tmp.z)) - 0.40f;
-                    float sdf = glm::length(tmp) - 0.40f;
+//                    float sdf = glm::length(tmp) - 0.40f;
 
                     /** OPACITY */
-                    HSet(ivec3(x, y, z),
-                         vec4(abs(sin(xf * 10.0f)), yf, zf, 0.01f));
+//                    HSet(ivec3(x, y, z),vec4(abs(sin(xf * 10.0f)), yf, zf, 0.01f));
+                    HSet(ivec3(x, y, z),vec4(distribution(generator),distribution(generator),distribution(generator), 0.01f));
                 }
     }
 

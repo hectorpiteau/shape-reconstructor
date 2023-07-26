@@ -25,8 +25,11 @@ Modified: 2023-04-25T12:53:31.894Z
  
  */
 extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor>& raycaster, GPUData<CameraDescriptor>& camera, GPUData<VolumeDescriptor>& volume);
-extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<VolumeDescriptor>& volume);
-extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<VolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam);
+extern "C" void sparse_volume_rendering_wrapper(GPUData<RayCasterDescriptor>& raycaster, GPUData<CameraDescriptor>& camera, GPUData<SparseVolumeDescriptor>& volume);
+
+
+extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<VolumeDescriptor>& volume, GPUData<SuperResolutionDescriptor>& superRes);
+extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<VolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam, GPUData<SuperResolutionDescriptor>& superRes);
 
 extern "C" void volume_backward( GPUData<VolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam);
 

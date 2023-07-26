@@ -6,7 +6,7 @@ project(DRTMCS VERSION 0.1 LANGUAGES CXX CUDA)
 # Cpp standards
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "-Wall -Ofast -lstdc++fs")
+set(CMAKE_CXX_FLAGS "-Wall -O0 -g -lstdc++fs")
 
 # GLFW Settings 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -50,7 +50,7 @@ set(CUDA_SOURCE_FILES
         src/cuda/kernel.cu
         src/cuda/CudaSurface3D.cu
         src/cuda/VolumeRendering.cu
-        src/cuda/PlaneCutRendering.cu src/utils/filesystem.h src/model/AdamOptimizer.cpp src/model/AdamOptimizer.hpp src/view/ImUI/Inspectors/AdamEditor.hpp src/interactors/AdamInteractor.cpp src/interactors/AdamInteractor.hpp src/cuda/Losses.cuh src/cuda/Convolutions.cuh src/model/Gaussian/GPUGaussianKernelData.cpp src/model/Gaussian/GPUGaussianKernelData.hpp src/cuda/Convolutions.cu src/model/DataLoader/DataLoader.cpp src/model/DataLoader/DataLoader.hpp src/cuda/IntegrationRange.cu src/cuda/IntegrationRange.cuh src/cuda/Adam.cu src/cuda/Adam.cuh src/model/Distribution/NormalDistributionClamped.hpp src/model/SuperResolution/SuperResolutionModule.cpp src/model/SuperResolution/SuperResolutionModule.h src/model/Distribution/UniformDistribution.hpp src/cuda/CudaSparseVolume3D.cuh)
+        src/cuda/PlaneCutRendering.cu src/utils/filesystem.h src/model/AdamOptimizer.cpp src/model/AdamOptimizer.hpp src/view/ImUI/Inspectors/AdamEditor.hpp src/interactors/AdamInteractor.cpp src/interactors/AdamInteractor.hpp src/cuda/Losses.cuh src/cuda/Convolutions.cuh src/model/Gaussian/GPUGaussianKernelData.cpp src/model/Gaussian/GPUGaussianKernelData.hpp src/cuda/Convolutions.cu src/model/DataLoader/DataLoader.cpp src/model/DataLoader/DataLoader.hpp src/cuda/IntegrationRange.cu src/cuda/IntegrationRange.cuh src/cuda/Adam.cu src/cuda/Adam.cuh src/model/Distribution/NormalDistributionClamped.hpp src/model/SuperResolution/SuperResolutionModule.cpp src/model/SuperResolution/SuperResolutionModule.h src/model/Distribution/UniformDistribution.hpp src/cuda/SparseVolumeUtils.cu src/cuda/SparseVolumeUtils.cuh src/model/SparseVolume3D.cpp src/model/SparseVolume3D.hpp src/cuda/BitUtils.cuh)
 set(CUDA_ARCH "-arch=sm_75")
 set(CMAKE_CUDA_ARCHITECTURES "75")
 
@@ -110,9 +110,9 @@ cuda_add_executable(DRTMCS
         ${CUDA_SOURCE_FILES})
 
 target_compile_options(DRTMCS PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
-#        --generate-line-info
-#        -g
-#        -G
+        --generate-line-info
+        -g
+        -G
         --relocatable-device-code=true
         >)
 

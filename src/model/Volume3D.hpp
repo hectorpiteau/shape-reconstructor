@@ -95,7 +95,6 @@ private:
     GPUData<BBoxDescriptor> m_desc;
     GPUData<VolumeDescriptor> m_volumeDescriptor;
 
-
     /** wireframe coordinates. */
     float m_wireframeVertices[12 * 2 * 3] = {
         -0.5f,

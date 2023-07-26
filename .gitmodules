@@ -26,3 +26,6 @@
 [submodule "include/lcms2"]
 	path = include/lcms2
 	url = https://github.com/mm2/Little-CMS.git
+[submodule "include/implot"]
+	path = include/implot
+	url = https://github.com/epezent/implot.git

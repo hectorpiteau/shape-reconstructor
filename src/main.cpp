@@ -15,42 +15,22 @@
 #include <tgmath.h>
 
 #include <sstream>
-#include "model/Camera/Camera.hpp"
 #include "model/ShaderPipeline.hpp"
-#include "model/CudaTexture.hpp"
-#include "model/Volume3D.hpp"
-#include "maths/MMath.hpp"
-#include "utils/FileUtils.hpp"
 #include "utils/Utils.hpp"
-#include "view/Model.hpp"
 #include "view/UnitCube.hpp"
-#include "view/Grid.hpp"
-#include "view/SkyBox.hpp"
 #include "view/OverlayPlane.hpp"
-#include "view/Plane.hpp"
 #include "view/Lines.hpp"
-#include "view/Gizmo.hpp"
-#include "view/LineGrid.hpp"
 #include "utils/SceneSettings.hpp"
 #include "utils/Projection.h"
 
 #include "controllers/Scene/Scene.hpp"
-
 #include "controllers/AppController/AppController.hpp"
-
-#include "../include/imgui/imgui.h"
-#include "../include/imgui/backends/imgui_impl_glfw.h"
-#include "../include/imgui/backends/imgui_impl_opengl3.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
 #include "../../include/stb_image.h"
 #include "../../include/stb_image_write.h"
-
-#include "../../include/icons/IconsFontAwesome6.h"
-
-#include "cuda/CudaSurface3D.cuh"
 #include "utils/filesystem.h"
 
 using namespace cv;

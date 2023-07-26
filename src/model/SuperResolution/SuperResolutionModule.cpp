@@ -6,15 +6,17 @@
 
 
 SuperResolutionModule::SuperResolutionModule(unsigned int raysAmount): m_normalDistribution(0.0f, 0.4f, -1.0f, 1.0f),  m_raysAmount(raysAmount), m_shifts(), m_desc() {
-    Step();
+
     m_desc.Host()->shifts = static_cast<vec2 *>(GPUData<SuperResolutionDescriptor>::AllocateOnDevice(
             m_raysAmount * sizeof(glm::vec2)
     ));
     m_desc.Host()->raysAmount = m_raysAmount;
-    m_desc.ToDevice();
+    Step();
 }
 
 void SuperResolutionModule::Step() {
+    if(!m_active) return;
+
     m_shifts = std::vector<glm::vec2>();
 
     for (unsigned int i = 0; i < m_raysAmount; ++i) {
@@ -22,9 +24,22 @@ void SuperResolutionModule::Step() {
                 m_normalDistribution.Get(),
                 m_normalDistribution.Get()));
     }
+
+//    checkCudaErrors(
+//        cudaMemcpy(m_desc.Host()->shifts, &m_shifts[0], m_raysAmount * sizeof(vec2), cudaMemcpyHostToDevice)
+//    );
+
     m_desc.ToDevice();
 }
 
 GPUData<SuperResolutionDescriptor> &SuperResolutionModule::GetDescriptor() {
     return m_desc;
+}
+
+bool SuperResolutionModule::IsActive() {
+    return m_active;
+}
+
+void SuperResolutionModule::SetActive(bool active) {
+    m_active = active;
 }

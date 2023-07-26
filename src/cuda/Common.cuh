@@ -4,6 +4,7 @@
 #include <surface_types.h>
 #include <cuda_surface_types.h>
 #include "CudaLinearVolume3D.cuh"
+#include "CudaSparseVolume3D.cuh"
 
 #ifdef __CUDACC__
 #define CUDA_HOSTDEV __host__ __device__
@@ -25,9 +26,16 @@ using namespace glm;
 /** ************************************************************************** */
 
 #define STBI_IMG_INDEX(X, Y, RESX) ((Y) * RESX * 4 + X * 4)
-#define LINEAR_IMG_INDEX(X, Y, RESY) (X * RESY + Y)
+#define LINEAR_IMG_INDEX(X, Y, RES, SR_INDEX) (\
+                                                (X) * (RES).y \
+                                                + (Y) \
+                                                + (SR_INDEX) * (RES).x * (RES).y\
+                                                )
 
 #define VOLUME_INDEX(X, Y, Z, RES) ((X) * (RES).y*(RES).z + (Y) * (RES).z + (Z))
+
+#define INF 0b11111111111111111111111111111111
+
 
 #define FLOAT4_NORM_TO_UCHAR4(F) make_uchar4( \
 (unsigned char)__float2uint_rn(F.x * 255.0f), \
@@ -87,8 +95,10 @@ struct DebugInfo {
 struct SuperResolutionDescriptor {
     /** Number of rays per pixel. */
     unsigned int raysAmount;
-    /** The list of shifts to apply to each rays. */
+    /** The list of shifts to apply to each rays. Array's length is equals to ray amount. */
     vec2 * shifts;
+    /** True if the super-resolution is activated, false otherwise. */
+    bool active;
 };
 
 struct VolumeDescriptor {
@@ -131,6 +141,29 @@ struct AdamOptimizerDescriptor {
     short amountOfGradientsToWrite;
     short writeGradientIndexes[8];
 
+};
+
+struct SparseVolumeDescriptor {
+    vec3 bboxMin;
+    vec3 bboxMax;
+    vec3 worldSize;
+    ivec3 res;
+
+    ivec3 initialResolution;
+
+    stage0_cell* stage0;
+    size_t stage0Size;
+
+
+    stage_cell* stage1;
+    size_t stage1Size;
+    bool* stage1_oc;
+
+    cell* data;
+    size_t dataSize;
+    bool* data_oc;
+
+    unsigned short maxDepth;
 };
 
 enum PlaneCutMode {

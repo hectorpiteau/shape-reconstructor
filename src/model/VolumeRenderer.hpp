@@ -25,12 +25,36 @@ Modified: 2023-04-26T11:14:57.290Z
 
 #include "RayCaster/RayCaster.hpp"
 #include "../cuda/GPUData.cuh"
+#include "SparseVolume3D.hpp"
 
 using namespace glm;
 
 class VolumeRenderer : public SceneObject {
+private:
+    bool m_isRendering = true;
+    bool m_useDefaultCamera = true;
+    bool m_showRenderingZone = true;
+
+    /** out dep. */
+    Scene* m_scene;
+    std::shared_ptr<Volume3D> m_volume;
+    std::shared_ptr<SparseVolume3D> m_sparseVolume;
+    std::shared_ptr<Camera> m_camera;
+
+    /** in dep. */
+    std::shared_ptr<OverlayPlane> m_outPlane;
+    std::shared_ptr<RayCaster> m_rayCaster;
+    std::shared_ptr<CudaTexture> m_cudaTex;
+
+    /* Descriptors. */
+    GPUData<CameraDescriptor> m_cameraDesc;
+    GPUData<VolumeDescriptor> m_volumeDesc;
+    GPUData<RayCasterDescriptor> m_raycasterDesc;
+
+    RayCasterParams m_params{};
+    // void RunKernel(cudaArray *image_array, uint width, uint height);
 public:
-    explicit VolumeRenderer(Scene* scene, std::shared_ptr<Volume3D> target);
+    explicit VolumeRenderer(Scene* scene, std::shared_ptr<Volume3D> target, std::shared_ptr<SparseVolume3D> sparseVolume);
     VolumeRenderer(const VolumeRenderer&) = delete;
     ~VolumeRenderer() override = default;
 
@@ -113,26 +137,5 @@ public:
     vec2 m_renderZoneMinNDC{};
     vec2 m_renderZoneMaxNDC{};
 
-private:
-    bool m_isRendering = true;
-    bool m_useDefaultCamera = true;
-    bool m_showRenderingZone = true;
 
-    /** out dep. */
-    Scene* m_scene;
-    std::shared_ptr<Volume3D> m_volume;
-    std::shared_ptr<Camera> m_camera;
-
-    /** in dep. */
-    std::shared_ptr<OverlayPlane> m_outPlane;
-    std::shared_ptr<RayCaster> m_rayCaster;
-    std::shared_ptr<CudaTexture> m_cudaTex;
-
-    /* Descriptors. */
-    GPUData<CameraDescriptor> m_cameraDesc;
-    GPUData<VolumeDescriptor> m_volumeDesc;
-    GPUData<RayCasterDescriptor> m_raycasterDesc;
-    
-    RayCasterParams m_params{};
-    // void RunKernel(cudaArray *image_array, uint width, uint height);
 };

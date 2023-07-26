@@ -43,10 +43,14 @@ public:
         m_scene->Add(nerfdataset);
 
         auto volume3D = std::make_shared<Volume3D>(m_scene, volumeResolution);
-        auto volumeRenderer = std::make_shared<VolumeRenderer>(m_scene, volume3D);
+
+        auto sparseVolume = std::make_shared<SparseVolume3D>();
+        sparseVolume->InitStub();
+
+        auto volumeRenderer = std::make_shared<VolumeRenderer>(m_scene, volume3D, sparseVolume);
         m_scene->Add(volumeRenderer);
 
-        auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volume3D, volumeRenderer);
+        auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volume3D, volumeRenderer, sparseVolume);
         m_scene->Add(adamOptimizer);
 
         m_scene->Add(std::make_shared<PlaneCut>(m_scene, adamOptimizer->GetGradVolume() ));

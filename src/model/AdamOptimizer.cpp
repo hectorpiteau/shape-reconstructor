@@ -12,9 +12,8 @@
 using namespace glm;
 
 AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target,
-                             std::shared_ptr<VolumeRenderer> renderer) :
-        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_gradsDescriptor(),
-        m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_target(target), m_volumeRenderer(renderer), m_superResModule(4), m_uniformDistribution(0, 8) {
+                             std::shared_ptr<VolumeRenderer> renderer, std::shared_ptr<SparseVolume3D> sparseVolume) :
+        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_target(target), m_gradsDescriptor(), m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_volumeRenderer(renderer), m_superResModule(4), m_uniformDistribution(0, 8) {
     SetName("Adam Optimizer");
 
     /** Create the overlay plane that will be used to display the volume rendering texture on. */
@@ -48,6 +47,8 @@ AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std
 
     m_integrationRangeDescriptor.Host()->surface = m_cudaTex->GetTex();
     m_integrationRangeDescriptor.ToDevice();
+
+    m_sparseVolume3D = sparseVolume;
 }
 
 //void AdamOptimizer::SetTargetDataVolume(std::shared_ptr<Volume3D> targetVolume){
@@ -77,7 +78,7 @@ void AdamOptimizer::Initialize() {
         cam->GetCudaTexture()->CloseSurface();
     }
 
-        m_integrationRangeLoaded = true;
+    m_integrationRangeLoaded = true;
 
     /** Initialize dataset. */
     m_dataLoader->Initialize();
@@ -131,12 +132,12 @@ void AdamOptimizer::Step() {
     /** Forward Pass.  */
     auto items = m_dataLoader->GetGPUDatas();
     for (size_t i = 0; i < m_dataLoader->GetBatchSize(); ++i) {
-        batched_forward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData());
+        batched_forward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_superResModule.GetDescriptor());
     }
 
     /** Backward Pass.  */
     for (size_t i = 0; i < m_dataLoader->GetBatchSize(); ++i) {
-        batched_backward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor);
+        batched_backward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor, m_superResModule.GetDescriptor());
     }
 
     /** Volume Backward. Computing gradients on voxels and not on image rays. */
@@ -256,9 +257,9 @@ std::shared_ptr<Volume3D> AdamOptimizer::GetTargetVolume() {
 }
 
 void AdamOptimizer::SetUseSuperResolution(bool value) {
-    m_useSuperResolution = value;
+    m_superResModule.SetActive(value);
 }
 
 bool AdamOptimizer::UseSuperResolution() {
-    return m_useSuperResolution;
+    return m_superResModule.IsActive();
 }
