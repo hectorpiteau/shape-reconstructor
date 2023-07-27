@@ -81,7 +81,7 @@ void AdamOptimizer::Initialize() {
     m_integrationRangeLoaded = true;
 
     /** Initialize dataset. */
-    m_dataLoader->Initialize();
+    m_dataLoader->Initialize(m_superResModule.GetRaysAmount());
 
     zero_adam_wrapper(&m_adamDescriptor);
 }
@@ -124,6 +124,7 @@ void AdamOptimizer::Step() {
 
     /** Update adam descriptor's data on GPU. */
     UpdateGPUDescriptor();
+    m_superResModule.Step();
     m_volumeRenderer->UpdateGPUDescriptors();
 
     /** Zero gradients. */
@@ -172,7 +173,7 @@ void AdamOptimizer::NextLOD() {
     m_dataset->Load();
 
     m_dataLoader = std::make_shared<DataLoader>(m_dataset);
-    m_dataLoader->Initialize();
+    m_dataLoader->Initialize(m_superResModule.GetRaysAmount());
 }
 
 void AdamOptimizer::UpdateGPUDescriptor() {
@@ -262,4 +263,8 @@ void AdamOptimizer::SetUseSuperResolution(bool value) {
 
 bool AdamOptimizer::UseSuperResolution() {
     return m_superResModule.IsActive();
+}
+
+SuperResolutionModule* AdamOptimizer::GetSuperResolutionModule(){
+    return &m_superResModule;
 }

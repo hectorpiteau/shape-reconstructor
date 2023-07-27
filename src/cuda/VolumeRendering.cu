@@ -334,7 +334,7 @@ __global__ void batched_forward_sparse(SparseVolumeDescriptor *volume, BatchItem
     }
 }
 
-__device__ void forward_one_ray(unsigned int x, unsigned int y, Ray& ray, VolumeDescriptor* volume,  BatchItemDescriptor *item, uchar4 ground_truth, SuperResolutionDescriptor* superRes){
+__device__ void forward_one_ray(unsigned int x, unsigned int y, Ray& ray, VolumeDescriptor* volume,  BatchItemDescriptor *item, uchar4 ground_truth, SuperResolutionDescriptor* superRes, int superResIndex = 0){
 
     vec3 gt_color = UCHAR4_TO_VEC3(ground_truth) / 255.0f;
     auto alpha_gt = __uint2float_rn(ground_truth.w);
@@ -346,7 +346,7 @@ __device__ void forward_one_ray(unsigned int x, unsigned int y, Ray& ray, Volume
 
     /** Run forward function. */
     vec4 res = forward(ray, volume);
-    item->cpred[LINEAR_IMG_INDEX(x, y, item->res, 0)] = res;
+    item->cpred[LINEAR_IMG_INDEX(x, y, item->res, superResIndex)] = res;
 
     /** Store loss. */
     float epsilon = 0.001f;
@@ -354,7 +354,7 @@ __device__ void forward_one_ray(unsigned int x, unsigned int y, Ray& ray, Volume
     vec3 loss = (gt_color - pred_color) / ((pred_color + epsilon) * (pred_color + epsilon));
     auto alpha_loss = (alpha_gt - res.w) / ((res.w + epsilon) * (res.w + epsilon));
 
-    item->loss[LINEAR_IMG_INDEX(x, y, item->res, 0)] = vec4(loss, alpha_loss);
+    item->loss[LINEAR_IMG_INDEX(x, y, item->res, superResIndex)] = vec4(loss, alpha_loss);
 
     if (item->debugRender) {
         uchar4 element;
@@ -377,7 +377,6 @@ __device__ void forward_one_ray(unsigned int x, unsigned int y, Ray& ray, Volume
             default:
                 element = ground_truth;
                 break;
-
         }
         surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
     }
@@ -390,7 +389,6 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
 
     if (x >= item->cam->width || y >= item->cam->height) return;
 
-
     uchar4 ground_truth = make_uchar4(
             item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x)],
             item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 1],
@@ -398,10 +396,22 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
             item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 3]
     );
 
-
-    Ray ray = SingleRayCaster::GetRay(ivec2(x, y), item->cam);
-
-    forward_one_ray(x,y,ray,volume, item, ground_truth, superRes);
+    if(superRes->active){
+        for(int i=0; i < superRes->raysAmount; ++i){
+            Ray ray = SingleRayCaster::GetRay(vec2(x, y), item->cam);
+            forward_one_ray(
+                    x + superRes->shifts[i].x,
+                    y + superRes->shifts[i].y,
+                    ray,volume,
+                    item,
+                    ground_truth,
+                    superRes,
+                    i);
+        }
+    }else{
+        Ray ray = SingleRayCaster::GetRay(ivec2(x, y), item->cam);
+        forward_one_ray(x,y,ray,volume, item, ground_truth, superRes);
+    }
 }
 
 
@@ -495,26 +505,20 @@ __global__ void batched_backward_sparse(SparseVolumeDescriptor *volume, BatchIte
     }
 }
 
-__device__ void backward_one_ray(unsigned int x, unsigned int y, Ray& ray, VolumeDescriptor* volume, BatchItemDescriptor* item, AdamOptimizerDescriptor* adam){
+__device__ void backward_one_ray(unsigned int x, unsigned int y, uchar4 ground_truth, Ray& ray, VolumeDescriptor* volume, BatchItemDescriptor* item, AdamOptimizerDescriptor* adam, SuperResolutionDescriptor* superRes, unsigned int srIndex = 0){
     bool bboxres = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
     if(!bboxres) return;
 
     ray.tmin = clamp(ray.tmin, 0.0f, INFINITY);
     ray.tmax = clamp(ray.tmax, 0.0f, INFINITY);
 
-    uchar4 ground_truth = make_uchar4(
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x)],
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 1],
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 2],
-            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 3]
-    );
     vec3 cgt = UCHAR4_TO_VEC3(ground_truth) / 255.0f;
     auto alpha_gt = 1.0f - (__uint2float_rn(ground_truth.w) / 255.0f);
 
     float epsilon = 0.001f;
 
 //    auto loss = item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)];
-    auto cpred = item->cpred[LINEAR_IMG_INDEX(x, y, item->res, 0)];
+    auto cpred = item->cpred[LINEAR_IMG_INDEX(x, y, item->res, srIndex)];
     auto colorPred = vec3(cpred);
 //    auto dLdC = (2.0f * (colorPred - cgt)) / ((colorPred + vec3(epsilon)) * (colorPred + vec3(epsilon)));
     auto dLdC = (2.0f * (colorPred - cgt));
@@ -565,6 +569,11 @@ __device__ void backward_one_ray(unsigned int x, unsigned int y, Ray& ray, Volum
 
                 auto alpha_grad = adam->alpha_0_w *  dot(dLdC, dCdAlpha) + adam->alpha_reg_0_w *  alpha_reg_i;
 
+                if(superRes->active){
+                    auto gaussian_weight = GeneralGaussian2D(superRes->shifts[srIndex].x, superRes->shifts[srIndex].y);
+                    alpha_grad = alpha_grad * gaussian_weight;
+                    color_grad = color_grad * gaussian_weight;
+                }
 
                 WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad), indices, adam);
 
@@ -586,14 +595,21 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
 
     if (x >= item->cam->width || y >= item->cam->height) return;
 
+    uchar4 gt = make_uchar4(
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x)],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 1],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 2],
+            item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 3]
+    );
+
     if(superRes->active){
         for(int i=0; i< superRes->raysAmount; ++i){
-            auto shift = superRes->shifts[i];
-            Ray ray = SingleRayCaster::GetRay(vec2(x + shift.x, y + shift.y), item->cam);
+            Ray ray = SingleRayCaster::GetRay(vec2(x + superRes->shifts[i].x, y + superRes->shifts[i].y), item->cam);
+            backward_one_ray(x, y, gt, ray, volume, item, adam, superRes, i);
         }
     }else{
         Ray ray = SingleRayCaster::GetRay(ivec2(x, y), item->cam);
-        backward_one_ray(x, y, ray, volume, item, adam);
+        backward_one_ray(x, y, gt, ray, volume, item, adam, superRes);
     }
 }
 

@@ -28,7 +28,7 @@ DataLoader::DataLoader(std::shared_ptr<Dataset> dataset)
     }
 }
 
-void DataLoader::Initialize() {
+void DataLoader::Initialize(unsigned int srRaysAmount) {
     /** Initialize and shuffle indexes. */
     m_startIndex = 0;
     m_indexes = std::vector<unsigned  int>();
@@ -37,10 +37,12 @@ void DataLoader::Initialize() {
     m_isReady = true;
 
     for (size_t i = 0; i < m_batchSize; ++i) {
-        m_losses[i]->Allocate(m_dataset->GetImageSet()->GetImage(0)->width * m_dataset->GetImageSet()->GetImage(0)->height);
-        m_cpreds[i]->Allocate(m_dataset->GetImageSet()->GetImage(0)->width * m_dataset->GetImageSet()->GetImage(0)->height);
+        m_losses[i]->Allocate(m_dataset->GetImageSet()->GetImage(0)->width * m_dataset->GetImageSet()->GetImage(0)->height * srRaysAmount);
+        m_cpreds[i]->Allocate(m_dataset->GetImageSet()->GetImage(0)->width * m_dataset->GetImageSet()->GetImage(0)->height * srRaysAmount);
     }
 }
+
+
 
 bool DataLoader::IsReady() const {
     return m_isReady;

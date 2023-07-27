@@ -28,7 +28,6 @@ private:
     std::vector<CudaBuffer<vec4>*> m_losses;
     std::vector<CudaBuffer<vec4>*> m_cpreds;
 
-
     /** A list of indexes that are used to select which cameras and images to
      * put in the batch. */
     std::vector<unsigned int> m_indexes;
@@ -44,7 +43,7 @@ public:
     DataLoader(const DataLoader&) = delete;
     ~DataLoader() = default;
 
-    void Initialize();
+    void Initialize(unsigned int srRaysAmount);
 
     void SetBatchSize(unsigned int size);
     [[nodiscard]] unsigned int GetBatchSize() const;

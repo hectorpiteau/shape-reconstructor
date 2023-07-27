@@ -12,6 +12,7 @@
 #include "../../../include/icons/IconsFontAwesome6.h"
 
 #include "../../../interactors/AdamInteractor.hpp"
+#include <implot.h>
 
 
 #define RADIO_BUTTON(RDMODE, BTN_NAME) if(mode == RDMODE) ImGui::BeginDisabled();\
@@ -49,6 +50,7 @@ public:
         auto alphareg0w = m_interactor->GetAlphaReg0W();
         auto tvl20w = m_interactor->GetTVL20W();
         auto useSuperRes = m_interactor->UseSuperResolution();
+        auto superResModule = m_interactor->GetSuperResolutionModule();
 
         ImGui::SeparatorText(ICON_FA_INFO " Adam Optimizer - Information");
         ImGui::Spacing();
@@ -127,8 +129,32 @@ public:
         if(ImGui::Button("Next LOD", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
             m_interactor->NextLOD();
         }
+
+        ImGui::SeparatorText( "SuperResolution");
+        ImGui::Spacing();
+
         if(ImGui::Checkbox("Use SuperResolution", &useSuperRes)){
             m_interactor->SetUseSuperResolution(useSuperRes);
+        }
+
+        if (ImPlot::BeginPlot("Rays distribution in pixel")) {
+            ImPlot::SetupAxesLimits(-1.1, 1.1, -1.1, 1.1);
+            static float rect_x[5] = {-1, -1, 1, 1, -1};
+            static float rect_y[5] = {-1, 1, 1, -1, -1};
+            ImPlot::PlotLine("Pixel", rect_x, rect_y, 5);
+
+            auto shifts = superResModule->GetShifts();
+            float scatter_data_x[4] = {(*shifts)[0].x, (*shifts)[1].x, (*shifts)[2].x, (*shifts)[3].x};
+            float scatter_data_y[4] = {(*shifts)[0].y, (*shifts)[1].y, (*shifts)[2].y, (*shifts)[3].y};
+
+            ImPlot::PlotScatter("Rays", scatter_data_x, scatter_data_y, 4);
+            ImPlot::EndPlot();
+        }
+
+        ImGui::Spacing();
+        float std = 1.0f;
+        if(ImGui::DragFloat("Standard deviation", &std)){
+            /** update std. */
         }
 
         ImGui::SeparatorText( "Stats");

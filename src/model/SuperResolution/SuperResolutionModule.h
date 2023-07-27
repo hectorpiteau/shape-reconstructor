@@ -50,6 +50,16 @@ public:
      * @return A reference to the GPUData object.
      */
     GPUData<SuperResolutionDescriptor>& GetDescriptor();
+
+    std::vector<vec2>* GetShifts();
+
+    /**
+     * Get the amount of rays to send in the super-resolution module.
+     * @return An unsigned int that correspond to the amount of rays sent in a pixel.
+     */
+    unsigned int GetRaysAmount();
+
+
 };
 
 

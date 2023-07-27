@@ -32,6 +32,7 @@
 #include "../../include/stb_image.h"
 #include "../../include/stb_image_write.h"
 #include "utils/filesystem.h"
+#include <implot.h>
 
 using namespace cv;
 using namespace glm;
@@ -276,6 +277,7 @@ void ImGUIInitialization(GLFWwindow *window)
     /** Setup Dear ImGui context */
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     /** Setup Platform/Renderer bindings */
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -560,6 +562,8 @@ int main(void)
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);

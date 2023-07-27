@@ -6,6 +6,7 @@
     <mapping directory="$PROJECT_DIR$/include/glfw" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/include/glm" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/include/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/implot" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/include/lcms2" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/include/libraw" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/include/librawcmake" vcs="Git" />

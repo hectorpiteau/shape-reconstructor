@@ -57,6 +57,7 @@ set(CMAKE_CUDA_ARCHITECTURES "75")
 
 # add the executable
 cuda_add_executable(DRTMCS
+
         src/main.cpp
 
         include/imgui/imgui.cpp
@@ -66,6 +67,10 @@ cuda_add_executable(DRTMCS
         include/imgui/imgui_tables.cpp
         include/imgui/backends/imgui_impl_glfw.cpp
         include/imgui/backends/imgui_impl_opengl3.cpp
+
+        include/implot/implot.cpp
+        include/implot/implot_items.cpp
+        include/implot/implot_demo.cpp
 
         src/view/ImUI/ObjectListItem.cpp
         src/view/ImUI/ObjectListView.cpp
@@ -120,6 +125,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories("include/")
 include_directories("include/tomlpp")
 include_directories("include/imgui")
+include_directories("include/implot")
 include_directories("include/imgui/backends")
 include_directories("include/glfw/include")
 include_directories("src/cuda/")

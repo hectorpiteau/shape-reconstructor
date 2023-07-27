@@ -224,6 +224,8 @@ public:
     void SetUseSuperResolution(bool value);
 
     bool UseSuperResolution();
+
+    SuperResolutionModule* GetSuperResolutionModule();
 };
 
 

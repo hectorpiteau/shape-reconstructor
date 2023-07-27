@@ -115,3 +115,7 @@ void AdamInteractor::SetUseSuperResolution(bool value) {
 bool AdamInteractor::UseSuperResolution() {
     return m_adam->UseSuperResolution();
 }
+
+SuperResolutionModule* AdamInteractor::GetSuperResolutionModule() {
+    return m_adam->GetSuperResolutionModule();
+}
