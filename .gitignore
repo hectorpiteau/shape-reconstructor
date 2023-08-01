@@ -27,7 +27,17 @@ include/imgui/
 include/glfw/
 include/glm/
 include/assimp/
+include/implot/
+include/lcms2/
+include/libraw/
+include/librawcmake/
 
 
 # vscode
 .vscode/
+
+.idea/
+
+cmake-build-debug/
+cmake-build-release/
+docs/
