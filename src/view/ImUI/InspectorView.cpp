@@ -53,6 +53,9 @@ void InspectorView::SetSelected(enum SceneObjectTypes type){
         case SceneObjectTypes::NERFDATASET:
             // m_nerfDatasetInspectorView->SetNeRFDataset();
             break;
+        case SceneObjectTypes::NERFDATASET:
+            // m_nerfDatasetInspectorView->SetNeRFDataset();
+            break;
         case SceneObjectTypes::NONE:
         default:
             ImGui::TextWrapped("Select an object in the object's list to edit its properties here.");
@@ -95,6 +98,9 @@ void InspectorView::Render(){
             break;
         case SceneObjectTypes::ADAMOPTIMIZER:
             m_adamEditorView->Render();
+            break;
+        case SceneObjectTypes::NERFDATASET:
+            m_nerfDatasetInspectorView->Render();
             break;
         case SceneObjectTypes::NONE:
         default:

@@ -3,7 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRendering.cuh (c) 2023
 Desc: Volume rendering algorithms.
 Created:  2023-04-13T12:33:22.433Z
-Modified: 2023-04-25T12:53:31.894Z
+Modified: 2023-04-26T12:26:19.942Z
 */
 
 #ifndef VOLUME_RENDERING_H

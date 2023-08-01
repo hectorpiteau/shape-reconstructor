@@ -15,6 +15,7 @@ public:
     ImageSet(const ImageSet &) = delete;
 
     void SetFolderPath(const std::string &path);
+
     void UnloadImages();
 
     const std::string &GetFolderPath();

@@ -3,7 +3,11 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRendering.cu (c) 2023
 Desc: Volume rendering algorithms.
 Created:  2023-04-13T12:33:22.433Z
+<<<<<<< HEAD
 Modified: 2023-05-11T22:28:51.324Z
+=======
+Modified: 2023-04-26T12:25:44.190Z
+>>>>>>> main
 */
 
 #include <glm/glm.hpp>
@@ -29,9 +33,9 @@ Modified: 2023-05-11T22:28:51.324Z
 
 using namespace glm;
 
-
 __device__ float tsdfToAlpha(float tsdf, float previousTsdf, float density) {
     if (previousTsdf > tsdf) {
+
         return (
                        1.0f + exp(-density * previousTsdf)) /
                (1.0f + exp(-density * tsdf));

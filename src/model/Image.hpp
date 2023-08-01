@@ -27,7 +27,27 @@ using namespace glm;
 //    bool isComplete;
 //};
 
-class Image {
+//class Image {
+//private:
+//    bool m_isLoaded = false;
+//    bool m_isOnGpu = false;
+//
+//    GPUData<LinearImageDescriptor> m_desc;
+//
+//struct Patch {
+//    /** The patch origin on the original image.
+//     * Unit is in pixel. Origin is the top-left
+//     * corner of the image.
+//     * Total: 16+16=32bits
+//     * */
+//    unsigned short x, y;
+//
+//    /** Pointer to data. */
+//    unsigned char* data;
+//};
+
+class Image
+{
 private:
     bool m_isLoaded = false;
     bool m_isOnGpu = false;
