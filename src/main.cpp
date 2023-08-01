@@ -429,7 +429,7 @@ int main(void)
     // Plane m_imagePlane = Plane(scene);
     // m_imagePlane.SetTexture2D(&testImageTex);
 
-    // Volume3D volume;
+    // DenseVolume3D volume;
 
     // LineGrid lineGrid;
 

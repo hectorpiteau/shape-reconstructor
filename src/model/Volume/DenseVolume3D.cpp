@@ -1,16 +1,16 @@
 #include <memory>
 #include <iostream>
-#include <glm/glm.hpp>
-#include "../../include/icons/IconsFontAwesome6.h"
-#include "Volume3D.hpp"
-#include "../cuda/Volume.cuh"
+#include "glm/glm/glm.hpp"
+#include "icons/IconsFontAwesome6.h"
+#include "DenseVolume3D.hpp"
+#include "Volume.cuh"
 
 using namespace glm;
 
-Volume3D::Volume3D(Scene *scene, const ivec3& res) : SceneObject{std::string("VOLUME3D"), SceneObjectTypes::VOLUME3D},
-                                              m_scene(scene), m_res(res), m_desc(), m_volumeDescriptor() {
+DenseVolume3D::DenseVolume3D(Scene *scene, const ivec3& res) : m_scene(scene), m_res(res), m_desc(), m_volumeDescriptor() {
     SetName(std::string(ICON_FA_CUBES " Volume 3D"));
-
+    SetType(SceneObjectTypes::DENSEVOLUME3D);
+    SetTypeName("DENSEVOLUME3D");
     m_lines = std::make_shared<Lines>(scene, m_wireframeVertices, 12 * 2 * 3);
     m_lines->SetActive(true);
     ComputeBBoxPoints();
@@ -24,17 +24,17 @@ Volume3D::Volume3D(Scene *scene, const ivec3& res) : SceneObject{std::string("VO
     UpdateGPUData();
 }
 
-void Volume3D::Resize(const ivec3& res){
+void DenseVolume3D::Resize(const ivec3& res){
 
 }
 
-void Volume3D::DoubleResolution(){
+void DenseVolume3D::DoubleResolution(){
 
     auto new_volume = std::make_shared<CudaLinearVolume3D>(m_res * 2);
     new_volume->InitZeros();
     new_volume->ToGPU();
 
-    GPUData<VolumeDescriptor> new_volume_desc;
+    GPUData<DenseVolumeDescriptor> new_volume_desc;
     new_volume_desc.Host()->bboxMin = m_bboxMin;
     new_volume_desc.Host()->bboxMax = m_bboxMax;
     new_volume_desc.Host()->worldSize = m_bboxMax - m_bboxMin;
@@ -42,7 +42,7 @@ void Volume3D::DoubleResolution(){
     new_volume_desc.Host()->data = new_volume->GetDevicePtr();
     new_volume_desc.ToDevice();
 
-    volume_resize_double_wrapper(GetGPUData(), new_volume_desc);
+    volume_resize_double_wrapper((GPUData<DenseVolumeDescriptor>*)GetGPUData(), &new_volume_desc);
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
@@ -54,7 +54,7 @@ void Volume3D::DoubleResolution(){
     UpdateGPUData();
 }
 
-void Volume3D::UpdateGPUData() {
+void DenseVolume3D::UpdateGPUData() {
     m_volumeDescriptor.Host()->bboxMin = m_bboxMin;
     m_volumeDescriptor.Host()->bboxMax = m_bboxMax;
     m_volumeDescriptor.Host()->worldSize = m_bboxMax - m_bboxMin;
@@ -67,7 +67,7 @@ void Volume3D::UpdateGPUData() {
     m_desc.ToDevice();
 }
 
-void Volume3D::SetBBoxMin(const vec3 &bboxMin) {
+void DenseVolume3D::SetBBoxMin(const vec3 &bboxMin) {
     m_bboxMin = bboxMin;
     ComputeBBoxPoints();
     m_lines->UpdateVertices(m_wireframeVertices);
@@ -76,7 +76,7 @@ void Volume3D::SetBBoxMin(const vec3 &bboxMin) {
     m_desc.ToDevice();
 }
 
-void Volume3D::SetBBoxMax(const vec3 &bboxMax) {
+void DenseVolume3D::SetBBoxMax(const vec3 &bboxMax) {
     m_bboxMax = bboxMax;
     ComputeBBoxPoints();
     m_lines->UpdateVertices(m_wireframeVertices);
@@ -84,17 +84,17 @@ void Volume3D::SetBBoxMax(const vec3 &bboxMax) {
     m_desc.ToDevice();
 }
 
-void Volume3D::InitializeZeros() {
+void DenseVolume3D::InitializeZeros() {
     m_cudaVolume->InitZeros();
     m_cudaVolume->ToGPU();
     UpdateGPUData();
 }
 
-const ivec3 &Volume3D::GetResolution() {
+const ivec3 &DenseVolume3D::GetResolution() {
     return m_res;
 }
 
-void Volume3D::ComputeBBoxPoints() {
+void DenseVolume3D::ComputeBBoxPoints() {
     m_bboxPoints[0] = m_bboxMin;
 
     m_bboxPoints[1] = m_bboxMin;
@@ -151,27 +151,27 @@ void Volume3D::ComputeBBoxPoints() {
     WRITE_VEC3(m_wireframeVertices, 69, m_bboxPoints[7]);
 }
 
-const vec3 &Volume3D::GetBboxMin() {
+const vec3 &DenseVolume3D::GetBboxMin() {
     return m_bboxMin;
 }
 
-const vec3 &Volume3D::GetBboxMax() {
+const vec3 &DenseVolume3D::GetBboxMax() {
     return m_bboxMax;
 }
 
-void Volume3D::Render() {
+void DenseVolume3D::Render() {
     /** nothing special here for now */
     m_lines->Render();
 }
 
-std::shared_ptr<CudaLinearVolume3D> Volume3D::GetCudaVolume() {
+std::shared_ptr<CudaLinearVolume3D> DenseVolume3D::GetCudaVolume() {
     return m_cudaVolume;
 }
 
-BBoxDescriptor *Volume3D::GetGPUDescriptor() {
+BBoxDescriptor *DenseVolume3D::GetBBoxGPUDescriptor() {
     return m_desc.Device();
 }
 
-GPUData<VolumeDescriptor> &Volume3D::GetGPUData() {
-    return m_volumeDescriptor;
+GPUData<VolumeDescriptor>* DenseVolume3D::GetGPUData() {
+    return (GPUData<VolumeDescriptor>*) &m_volumeDescriptor;
 }

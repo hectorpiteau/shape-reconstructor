@@ -31,6 +31,13 @@ using namespace glm;
                                                 + (Y) \
                                                 + (SR_INDEX) * (RES).x * (RES).y\
                                                 )
+/**
+#define LINEAR_IMG_INDEX(X, Y, RES, SR_INDEX) (\
+                                                (X) * (SR_INDEX) \
+                                               + (Y) * (RES).x * (SR_INDEX) \
+                                               + (SR_INDEX)\
+                                               )
+*/
 
 #define VOLUME_INDEX(X, Y, Z, RES) ((X) * (RES).y*(RES).z + (Y) * (RES).z + (Z))
 
@@ -109,8 +116,56 @@ struct VolumeDescriptor {
     vec3 worldSize;
     /** volume resolution. */
     ivec3 res;
+};
+
+struct DenseVolumeDescriptor : public VolumeDescriptor {
     /** volume's data pointer. Indexed: [ x * (res.y*res.z) + y * (res.z) + z] */
     cell* data;
+};
+
+struct SparseVolumeDescriptor : public VolumeDescriptor {
+    ivec3 initialResolution;
+
+    stage0_cell* stage0;
+    size_t stage0Size;
+
+    stage_cell* stage1;
+    size_t stage1Size;
+    bool* stage1_oc;
+
+    cell* data;
+    size_t dataSize;
+    bool* data_oc;
+    unsigned int maxDepth;
+};
+
+struct SparseAdamOptimizerDescriptor {
+    float epsilon;
+    /** Step size. */
+    float eta;
+    /** Initialize default beta values. */
+    vec2 beta;
+    /** Gradient grid resolution. */
+    ivec3 res;
+    /** Gradients */
+    SparseVolumeDescriptor* grads;
+    /** Adam gradients. */
+    SparseVolumeDescriptor* adamG1;
+    SparseVolumeDescriptor* adamG2;
+    /** 3D Data to optimize. */
+    SparseVolumeDescriptor* target;
+
+    int iteration;
+
+    /** Losses weightings. */
+
+    float color_0_w;
+    float alpha_0_w;
+    float alpha_reg_0_w;
+    float tvl2_0_w;
+
+    short amountOfGradientsToWrite;
+    short writeGradientIndexes[8];
 };
 
 struct AdamOptimizerDescriptor {
@@ -122,7 +177,7 @@ struct AdamOptimizerDescriptor {
     /** Gradient grid resolution. */
     ivec3 res;
     /** Gradients */
-    VolumeDescriptor* grads;
+    DenseVolumeDescriptor* grads;
     /** Adam gradients. */
     cell* adamG1;
     cell* adamG2;
@@ -143,28 +198,7 @@ struct AdamOptimizerDescriptor {
 
 };
 
-struct SparseVolumeDescriptor {
-    vec3 bboxMin;
-    vec3 bboxMax;
-    vec3 worldSize;
-    ivec3 res;
 
-    ivec3 initialResolution;
-
-    stage0_cell* stage0;
-    size_t stage0Size;
-
-
-    stage_cell* stage1;
-    size_t stage1Size;
-    bool* stage1_oc;
-
-    cell* data;
-    size_t dataSize;
-    bool* data_oc;
-
-    unsigned short maxDepth;
-};
 
 enum PlaneCutMode {
     COLOR,
@@ -286,6 +320,9 @@ struct BatchItemDescriptor{
     cudaSurfaceObject_t debugSurface;
 
     RenderMode mode;
+
+    /** PSNR */
+    vec3 psnr;
 };
 
 

@@ -59,7 +59,7 @@ void SceneObjectInteractor::SetSelectedSceneObject(std::shared_ptr<SceneObject> 
             nerfInteractor->SetNeRFDataset(std::dynamic_pointer_cast<NeRFDataset>(object));
             break;
         case SceneObjectTypes::VOLUME3D:
-            volume3DInteractor->SetActiveVolume3D(std::dynamic_pointer_cast<Volume3D>(object));
+            volume3DInteractor->SetActiveVolume3D(std::dynamic_pointer_cast<DenseVolume3D>(object));
             break;
         case SceneObjectTypes::VOLUMERENDERER:
             volumeRendererInteractor->SetCurrentVolumeRenderer(std::dynamic_pointer_cast<VolumeRenderer>(object));

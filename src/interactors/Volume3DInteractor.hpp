@@ -4,7 +4,7 @@
 #include <memory>
 #include <glm/glm.hpp>
 
-#include "../model/Volume3D.hpp"
+#include "../model/Volume/DenseVolume3D.hpp"
 
 using namespace glm;
 
@@ -15,9 +15,9 @@ public:
     Volume3DInteractor(const Volume3DInteractor &) = delete ;
     ~Volume3DInteractor();
 
-    void SetActiveVolume3D(std::shared_ptr<Volume3D> volume);
+    void SetActiveVolume3D(std::shared_ptr<DenseVolume3D> volume);
 
-    std::shared_ptr<Volume3D> &GetVolume3D();
+    std::shared_ptr<DenseVolume3D> &GetVolume3D();
 
     const ivec3 &GetResolution();
     void SetResolution(const ivec3 &resolution);
@@ -34,7 +34,7 @@ public:
     const vec3* GetBBox();
 
 private:
-    std::shared_ptr<Volume3D> m_volume;
+    std::shared_ptr<DenseVolume3D> m_volume;
 
     bool m_isRenderingZoneVisible = false;
 };

@@ -193,7 +193,7 @@ void Camera::ComputeMatricesFromInputs(GLFWwindow *window) {
             float yDisplacement = (float) (m_previousCursorPos.y - ypos) * deltaY;
 
             vec3 right = transpose(m_viewMatrix)[0];
-            vec3 up = m_realUp;
+            vec3 up = m_up;
 
             m_pos = m_pos + xDisplacement * right - up * yDisplacement;
             m_target = m_target + xDisplacement * right - up * yDisplacement;

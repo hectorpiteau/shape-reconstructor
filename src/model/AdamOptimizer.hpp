@@ -9,7 +9,7 @@
 #include <memory>
 #include "../view/SceneObject/SceneObject.hpp"
 #include "../cuda/CudaLinearVolume3D.cuh"
-#include "Volume3D.hpp"
+#include "Volume/DenseVolume3D.hpp"
 #include "../cuda/GPUData.cuh"
 #include "../cuda/Common.cuh"
 #include "DataLoader/DataLoader.hpp"
@@ -17,7 +17,7 @@
 #include "Dataset/Dataset.hpp"
 #include "SuperResolution/SuperResolutionModule.h"
 #include "Distribution/UniformDistribution.hpp"
-#include "SparseVolume3D.hpp"
+#include "Volume/SparseVolume3D.hpp"
 
 using namespace glm;
 
@@ -47,27 +47,27 @@ const LevelOfDetail LODs[LOD_AMOUNT] = {
                 .level = 2,
                 .volume_res = 2 * ivec3(32 * 2, 32 * 2, 32 * 3),
                 .image_res = ivec2(400, 400),
-                .image_train_path = std::string("../data/nerf400/train"),
+                .image_train_path = std::string("../data/nerf200/train"),
                 .json_train_path = std::string("../data/nerf/transforms_train.json"),
-                .image_valid_path = std::string("../data/nerf400/val"),
+                .image_valid_path = std::string("../data/nerf200/val"),
                 .json_valid_path = std::string("../data/nerf/transforms_valid.json")
         },
         {
                 .level = 3,
                 .volume_res = 4 * ivec3(32 * 2, 32 * 2, 32 * 3),
                 .image_res = ivec2(800, 800),
-                .image_train_path = std::string("../data/nerf/train"),
+                .image_train_path = std::string("../data/nerf200/train"),
                 .json_train_path = std::string("../data/nerf/transforms_train.json"),
-                .image_valid_path = std::string("../data/nerf/val"),
+                .image_valid_path = std::string("../data/nerf200/val"),
                 .json_valid_path = std::string("../data/nerf/transforms_valid.json")
         },
         {
                 .level = 4,
                 .volume_res = 8 * ivec3(32 * 2, 32 * 2, 32 * 3),
                 .image_res = ivec2(800, 800),
-                .image_train_path = std::string("../data/nerf/train"),
+                .image_train_path = std::string("../data/nerf200/train"),
                 .json_train_path = std::string("../data/nerf/transforms_train.json"),
-                .image_valid_path = std::string("../data/nerf/val"),
+                .image_valid_path = std::string("../data/nerf200/val"),
                 .json_valid_path = std::string("../data/nerf/transforms_valid.json")
         }
 };
@@ -85,22 +85,28 @@ private:
     float m_eta = 0.1E-2f;
     /** Initialize default beta values. */
     vec2 m_beta = {0.9, 0.95};
-    /** Gradient grid resolution. */
-    std::shared_ptr<Volume3D> m_adamG1;
-    std::shared_ptr<Volume3D> m_adamG2;
-    /** 3D Data to optimize. */
-    std::shared_ptr<Volume3D> m_target;
-    std::shared_ptr<SparseVolume3D> m_sparseVolume3D;
 
-    std::shared_ptr<CudaLinearVolume3D> m_blurredVoxels;
+    /** Gradient grid resolution. */
+    std::shared_ptr<DenseVolume3D> m_adamG1;
+    std::shared_ptr<SparseVolume3D> m_s_adamG1;
+
+    std::shared_ptr<DenseVolume3D> m_adamG2;
+    std::shared_ptr<SparseVolume3D> m_s_adamG2;
+
+    /** 3D Data to optimize. */
+    std::shared_ptr<DenseVolume3D> m_target;
+    std::shared_ptr<SparseVolume3D> m_s_target;
 
     /** Adam gradients. */
-    std::shared_ptr<Volume3D> m_grads;
-    GPUData<VolumeDescriptor> m_gradsDescriptor;
+    std::shared_ptr<DenseVolume3D> m_grads;
+    std::shared_ptr<SparseVolume3D> m_s_grads;
+
+    GPUData<DenseVolumeDescriptor> m_gradsDescriptor;
 
 
     /** Adam Optimizer GPU Data Descriptor. In order to use Adam values in a CUDA Kernel. */
     GPUData<AdamOptimizerDescriptor> m_adamDescriptor;
+    GPUData<SparseAdamOptimizerDescriptor> m_s_adamDescriptor;
 
     /** True if the optimizer is currently working. False if not running. */
     bool m_optimize = false;
@@ -141,7 +147,7 @@ private:
     UniformDistribution<short> m_uniformDistribution;
 
 public:
-    explicit AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<Volume3D> target,
+    explicit AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<DenseVolume3D> target,
                            std::shared_ptr<VolumeRenderer> renderer, std::shared_ptr<SparseVolume3D> sparseVolume);
 
     AdamOptimizer(const AdamOptimizer &) = delete;
@@ -154,9 +160,9 @@ public:
 
     void Initialize();
 
-    std::shared_ptr<Volume3D> GetTargetVolume();
+    std::shared_ptr<DenseVolume3D> GetTargetVolume();
 
-    std::shared_ptr<Volume3D> GetGradVolume();
+    std::shared_ptr<DenseVolume3D> GetGradVolume();
 
     void SetBeta(const vec2 &value);
 

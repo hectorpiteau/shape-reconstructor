@@ -5,12 +5,32 @@
 #ifndef DRTMCS_SPARSE_VOLUME3D_HPP
 #define DRTMCS_SPARSE_VOLUME3D_HPP
 
-#include <glm/glm.hpp>
+#include "glm/glm/glm.hpp"
 #include "Common.cuh"
 #include "GPUData.cuh"
+#include "../../view/SceneObject/SceneObject.hpp"
+#include "Volume3D.h"
 
-class SparseVolume3D {
+struct stageCell {
+
+};
+
+struct SparseVolumeStage {
+    unsigned short multiplicationFactor;
+    ivec3 resolution;
+
+};
+
+struct SparseVolumeConfiguration {
+    ivec3 initialResolution;
+    unsigned short stagesAmount;
+    std::vector<SparseVolumeStage> stages;
+};
+
+class SparseVolume3D : public Volume3D {
 private:
+    SparseVolumeConfiguration m_configuration;
+
     ivec3 m_initialResolution = 2 * ivec3(16, 16, 24);
 
     unsigned int m_maxDepth = 1; /** Includes: 0, 1*/
@@ -37,11 +57,16 @@ private:
     void Initialize();
 
 public:
-    SparseVolume3D();
+//    SparseVolume3D(const SparseVolumeConfiguration& configuration);
+    SparseVolume3D(const ivec3& res);
     SparseVolume3D(const SparseVolume3D&) = delete;
     ~SparseVolume3D() = default;
 
     void InitStub();
+
+    void InitializeZeros();
+
+    void Render() override;
 
     /**
      * Get the Sparse Volume GPU Descriptor for interacting with the data.
@@ -85,6 +110,16 @@ public:
             return INF;
         }
     }
+
+    /** ********** Volume3D ********** */
+    const glm::ivec3 &GetResolution() override;
+    const glm::vec3 &GetBboxMax() override;
+    const glm::vec3 &GetBboxMin() override;
+    void SetBBoxMin(const vec3 &bboxMin) override;
+    void SetBBoxMax(const vec3 &bboxMax) override;
+    BBoxDescriptor* GetBBoxGPUDescriptor() override;
+    GPUData<VolumeDescriptor>* GetGPUData() override;
+    /** ********** ********** ********** */
 };
 
 

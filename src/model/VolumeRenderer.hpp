@@ -13,7 +13,7 @@ Modified: 2023-04-26T11:14:57.290Z
 #include <glm/glm.hpp>
 
 #include "Texture2D.hpp"
-#include "Volume3D.hpp"
+#include "Volume/DenseVolume3D.hpp"
 #include "Camera/Camera.hpp"
 #include "../view/SceneObject/SceneObject.hpp"
 #include "../view/OverlayPlane.hpp"
@@ -25,7 +25,7 @@ Modified: 2023-04-26T11:14:57.290Z
 
 #include "RayCaster/RayCaster.hpp"
 #include "../cuda/GPUData.cuh"
-#include "SparseVolume3D.hpp"
+#include "Volume/SparseVolume3D.hpp"
 
 using namespace glm;
 
@@ -37,7 +37,7 @@ private:
 
     /** out dep. */
     Scene* m_scene;
-    std::shared_ptr<Volume3D> m_volume;
+    std::shared_ptr<DenseVolume3D> m_volume;
     std::shared_ptr<SparseVolume3D> m_sparseVolume;
     std::shared_ptr<Camera> m_camera;
 
@@ -48,13 +48,13 @@ private:
 
     /* Descriptors. */
     GPUData<CameraDescriptor> m_cameraDesc;
-    GPUData<VolumeDescriptor> m_volumeDesc;
+    GPUData<DenseVolumeDescriptor> m_volumeDesc;
     GPUData<RayCasterDescriptor> m_raycasterDesc;
 
     RayCasterParams m_params{};
     // void RunKernel(cudaArray *image_array, uint width, uint height);
 public:
-    explicit VolumeRenderer(Scene* scene, std::shared_ptr<Volume3D> target, std::shared_ptr<SparseVolume3D> sparseVolume);
+    explicit VolumeRenderer(Scene* scene, std::shared_ptr<DenseVolume3D> target, std::shared_ptr<SparseVolume3D> sparseVolume);
     VolumeRenderer(const VolumeRenderer&) = delete;
     ~VolumeRenderer() override = default;
 
@@ -129,7 +129,7 @@ public:
 
     GPUData<RayCasterDescriptor>& GetRayCasterGPUData();
 
-    GPUData<VolumeDescriptor>& GetVolumeGPUData();
+    GPUData<VolumeDescriptor>* GetVolumeGPUData();
 
     void UpdateGPUDescriptors();
 

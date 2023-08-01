@@ -50,7 +50,11 @@ set(CUDA_SOURCE_FILES
         src/cuda/kernel.cu
         src/cuda/CudaSurface3D.cu
         src/cuda/VolumeRendering.cu
-        src/cuda/PlaneCutRendering.cu src/utils/filesystem.h src/model/AdamOptimizer.cpp src/model/AdamOptimizer.hpp src/view/ImUI/Inspectors/AdamEditor.hpp src/interactors/AdamInteractor.cpp src/interactors/AdamInteractor.hpp src/cuda/Losses.cuh src/cuda/Convolutions.cuh src/model/Gaussian/GPUGaussianKernelData.cpp src/model/Gaussian/GPUGaussianKernelData.hpp src/cuda/Convolutions.cu src/model/DataLoader/DataLoader.cpp src/model/DataLoader/DataLoader.hpp src/cuda/IntegrationRange.cu src/cuda/IntegrationRange.cuh src/cuda/Adam.cu src/cuda/Adam.cuh src/model/Distribution/NormalDistributionClamped.hpp src/model/SuperResolution/SuperResolutionModule.cpp src/model/SuperResolution/SuperResolutionModule.h src/model/Distribution/UniformDistribution.hpp src/cuda/SparseVolumeUtils.cu src/cuda/SparseVolumeUtils.cuh src/model/SparseVolume3D.cpp src/model/SparseVolume3D.hpp src/cuda/BitUtils.cuh)
+        src/cuda/PlaneCutRendering.cu src/utils/filesystem.h src/model/AdamOptimizer.cpp src/model/AdamOptimizer.hpp src/view/ImUI/Inspectors/AdamEditor.hpp src/interactors/AdamInteractor.cpp src/interactors/AdamInteractor.hpp src/cuda/Losses.cuh src/cuda/Convolutions.cuh src/model/Gaussian/GPUGaussianKernelData.cpp src/model/Gaussian/GPUGaussianKernelData.hpp src/cuda/Convolutions.cu src/model/DataLoader/DataLoader.cpp src/model/DataLoader/DataLoader.hpp src/cuda/IntegrationRange.cu src/cuda/IntegrationRange.cuh src/cuda/Adam.cu src/cuda/Adam.cuh src/model/Distribution/NormalDistributionClamped.hpp src/model/SuperResolution/SuperResolutionModule.cpp src/model/SuperResolution/SuperResolutionModule.h src/model/Distribution/UniformDistribution.hpp src/cuda/SparseVolumeUtils.cu src/cuda/SparseVolumeUtils.cuh src/model/Volume/SparseVolume3D.cpp src/model/Volume/SparseVolume3D.hpp src/cuda/BitUtils.cuh
+        src/model/Statistics/Statistics.cpp
+        src/model/Statistics/Statistics.h
+        src/model/Statistics/StatsType.h
+        src/model/Volume/Volume3D.h)
 set(CUDA_ARCH "-arch=sm_75")
 set(CMAKE_CUDA_ARCHITECTURES "75")
 
@@ -96,7 +100,7 @@ cuda_add_executable(DRTMCS
         src/model/DenseFloat32Volume.cpp
         src/model/Dataset/NeRFDataset.cpp
         src/model/ImageSet.cpp
-        src/model/Volume3D.cpp
+        src/model/Volume/DenseVolume3D.cpp
         src/model/Mesh.cpp
         src/model/VolumeRenderer.cpp
         src/model/PlaneCut.cpp

@@ -11,7 +11,8 @@ Modified: 2023-06-05T23:47:35.584Z
 #include "../view/SceneObject/SceneObject.hpp"
 #include "../controllers/Scene/Scene.hpp"
 #include "CudaTexture.hpp"
-#include "Volume3D.hpp"
+#include "Volume/DenseVolume3D.hpp"
+#include "Volume/SparseVolume3D.hpp"
 #include <glm/glm.hpp>
 #include <memory>
 
@@ -35,12 +36,16 @@ private:
     /** Ths position of the cut on the axis.*/
     vec3 m_pos;
     /** The target volume to cut and render on the planeCut. */
-    std::shared_ptr<Volume3D> m_targetVolume;
+    std::shared_ptr<DenseVolume3D> m_targetVolume;
+    std::shared_ptr<SparseVolume3D> m_s_targetVolume;
 
     /* Descriptors. */
     GPUData<CameraDescriptor> m_cameraDesc;
     GPUData<PlaneCutDescriptor> m_planeCutDesc;
-    GPUData<VolumeDescriptor> m_volumeDesc;
+
+    GPUData<DenseVolumeDescriptor> m_volumeDesc;
+    GPUData<SparseVolumeDescriptor> m_s_volumeDesc;
+
     GPUData<CursorPixel> m_cursorPixel;
 
     PlaneCutMode m_mode = PlaneCutMode::COLOR;
@@ -53,7 +58,7 @@ public:
      * @param scene : The scene where the cut-plane is assigned to.
      * @param targetVolume : The volume where it will read from.
      */
-    explicit PlaneCut(Scene* scene, std::shared_ptr<Volume3D> targetVolume);
+    explicit PlaneCut(Scene* scene, std::shared_ptr<DenseVolume3D> targetVolume);
 
     PlaneCut(const PlaneCut&) = delete;
     ~PlaneCut() override = default;

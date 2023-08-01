@@ -32,8 +32,8 @@ Modified: 2023-04-24T13:03:22.194Z
 
 
 #define STAGE0_INDEX(X, Y, Z, RES) ((X) * (RES).y*(RES).z + (Y) * (RES).z + (Z))
-#define SHIFT_INDEX_2x2x2(shifts) 4 * (shifts).y + 2 * (shifts).z + (shifts).x
-#define SHIFT_INDEX_4x4x4(shifts) 16 * (shifts).y + 4 * (shifts).z + (shifts).x
+#define SHIFT_INDEX_2x2x2(shifts) (4 * (shifts).y + 2 * (shifts).z + (shifts).x)
+#define SHIFT_INDEX_4x4x4(shifts) (16 * (shifts).x + 4 * (shifts).y + (shifts).z)
 
 
 struct stage0_cell

@@ -18,7 +18,7 @@ Modified: 2023-04-26T13:51:29.197Z
 #include "../view/Lines.hpp"
 // #include "RayCaster/RayCaster.hpp"
 // #include "RayCaster/SingleRayCaster.hpp"
-#include "Volume3D.hpp"
+#include "Volume/DenseVolume3D.hpp"
 #include "Texture2D.hpp"
 #include "CudaTexture.hpp"
 
@@ -32,11 +32,11 @@ Modified: 2023-04-26T13:51:29.197Z
 #include "../cuda/GPUData.cuh"
 #include "../../include/icons/IconsFontAwesome6.h"
 #include "../utils/SceneGlobalVariables.hpp"
-#include "SparseVolume3D.hpp"
+#include "Volume/SparseVolume3D.hpp"
 
 using namespace glm;
 
-VolumeRenderer::VolumeRenderer(Scene *scene, std::shared_ptr<Volume3D> target, std::shared_ptr<SparseVolume3D> sparseVolume)
+VolumeRenderer::VolumeRenderer(Scene *scene, std::shared_ptr<DenseVolume3D> target, std::shared_ptr<SparseVolume3D> sparseVolume)
         : SceneObject{std::string("VolumeRenderer"), SceneObjectTypes::VOLUMERENDERER}, m_scene(scene), m_volume(target), m_sparseVolume(sparseVolume) {
     SetName(std::string(ICON_FA_SPINNER " Volume Renderer"));
     m_scene->Add(m_volume, true, true);
@@ -136,8 +136,8 @@ void VolumeRenderer::Render() {
         m_raycasterDesc.Host()->surface = m_cudaTex->OpenSurface();
         m_raycasterDesc.ToDevice();
 
-        volume_rendering_wrapper(m_raycasterDesc, cam->GetGPUData(), m_volume->GetGPUData());
-//        sparse_volume_rendering_wrapper(m_raycasterDesc, cam->GetGPUData(), m_sparseVolume->GetDescriptor());
+//        volume_rendering_wrapper(m_raycasterDesc, cam->GetGPUData(), m_volume->GetGPUData());
+        sparse_volume_rendering_wrapper(m_raycasterDesc, cam->GetGPUData(), m_sparseVolume->GetDescriptor());
         m_cudaTex->CloseSurface();
     }
 
@@ -176,8 +176,8 @@ void VolumeRenderer::UpdateGPUDescriptors(){
     m_volumeDesc.ToDevice();
 }
 
-GPUData<VolumeDescriptor>& VolumeRenderer::GetVolumeGPUData() {
-    return m_volumeDesc;
+GPUData<VolumeDescriptor>* VolumeRenderer::GetVolumeGPUData() {
+    return (GPUData<VolumeDescriptor>*) &m_volumeDesc;
 }
 
 const vec2 &VolumeRenderer::GetRenderingZoneMinNDC() const {

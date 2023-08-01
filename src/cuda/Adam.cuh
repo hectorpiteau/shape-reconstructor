@@ -9,6 +9,7 @@
 #include "GPUData.cuh"
 
 extern "C" void update_adam_wrapper(GPUData<AdamOptimizerDescriptor>* adam);
+extern "C" void sparse_update_adam_wrapper(GPUData<SparseAdamOptimizerDescriptor>* adam);
 extern "C" void zero_adam_wrapper(GPUData<AdamOptimizerDescriptor>* adam);
 
 #endif //DRTMCS_ADAM_CUH

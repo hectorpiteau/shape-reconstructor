@@ -100,7 +100,7 @@ using namespace glm;
 //}
 
 
-__global__ void volume_resize_double(VolumeDescriptor *source,VolumeDescriptor *target){
+__global__ void volume_resize_double(DenseVolumeDescriptor *source, DenseVolumeDescriptor *target){
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
     unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
@@ -161,15 +161,15 @@ __global__ void volume_resize_double(VolumeDescriptor *source,VolumeDescriptor *
 
 }
 
-extern "C" void volume_resize_double_wrapper(GPUData<VolumeDescriptor>& source, GPUData<VolumeDescriptor>& target){
+extern "C" void volume_resize_double_wrapper(GPUData<DenseVolumeDescriptor>* source, GPUData<DenseVolumeDescriptor>* target){
     dim3 threads(8,8,8);
     /** This create enough blocks to cover the whole volume,
      * may contain threads that does not have pixel's assigned. */
-    dim3 blocks((source.Host()->res.x + threads.x - 1) / threads.x,
-                (source.Host()->res.y + threads.y - 1) / threads.y,
-                (source.Host()->res.z + threads.z - 1) / threads.z);
+    dim3 blocks((source->Host()->res.x + threads.x - 1) / threads.x,
+                (source->Host()->res.y + threads.y - 1) / threads.y,
+                (source->Host()->res.z + threads.z - 1) / threads.z);
 
-    volume_resize_double<<<blocks, threads>>>(source.Device(), target.Device());
+    volume_resize_double<<<blocks, threads>>>(source->Device(), target->Device());
     cudaDeviceSynchronize();
 
     std::cout << "Resize volume done. " << std::endl;

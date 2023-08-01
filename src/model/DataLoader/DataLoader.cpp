@@ -10,7 +10,7 @@
 #include <random>
 
 DataLoader::DataLoader(std::shared_ptr<Dataset> dataset)
-        : m_dataset(std::move(dataset)), m_batchSize(20) {
+        : m_dataset(std::move(dataset)), m_batchSize(5) {
     /** Allocate */
     m_batchItems = std::vector<GPUData<BatchItemDescriptor> *>(m_batchSize);
     m_losses = std::vector<CudaBuffer<vec4>*>(m_batchSize);
@@ -76,6 +76,7 @@ void DataLoader::LoadBatch(RenderMode mode) {
         m_batchItems[i]->Host()->debugRender = true;
         m_batchItems[i]->Host()->mode = mode;
         m_batchItems[i]->Host()->debugSurface = res.cam->GetCudaTexture()->OpenSurface();
+        m_batchItems[i]->Host()->psnr = vec3(0.0f);
         m_batchItems[i]->ToDevice();
     }
 

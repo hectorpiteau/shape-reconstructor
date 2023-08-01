@@ -15,7 +15,7 @@
 #include "../../model/ImageSet.hpp"
 #include "../../model/Calibration/OpenCVCalibrator.hpp"
 #include "../../model/Dataset/NeRFDataset.hpp"
-#include "../../model/Volume3D.hpp"
+#include "../../model/Volume/DenseVolume3D.hpp"
 #include "../../model/VolumeRenderer.hpp"
 #include "../../model/PlaneCut.hpp"
 #include "../../model/AdamOptimizer.hpp"
@@ -28,8 +28,8 @@ public:
         /** Create the Scene */
         m_scene = new Scene(m_sceneSettings, window);
 
-        ivec3 volumeResolution = {64, 64, 32*3};
-        volumeResolution *= 1;
+        ivec3 volumeResolution = {32, 32, 16*3};
+        volumeResolution *= 2;
 
         /** Fill default Scene. */
         auto cam1 = std::make_shared<Camera>(m_scene, std::string("CameraT"), vec3(-4.0, 3.0, -4.0), vec3(0.0, 0.0, 0.0));
@@ -42,9 +42,15 @@ public:
         nerfdataset->Load();
         m_scene->Add(nerfdataset);
 
-        auto volume3D = std::make_shared<Volume3D>(m_scene, volumeResolution);
+        auto volume3D = std::make_shared<DenseVolume3D>(m_scene, volumeResolution);
 
-        auto sparseVolume = std::make_shared<SparseVolume3D>();
+        SparseVolumeConfiguration sparseVolumeConfig = {
+                .initialResolution = ivec3 (32, 32, 32+16),
+                .stagesAmount = 2,
+                .stages = { {.multiplicationFactor = 2, .resolution=ivec3(32, 32, 32+16)}}
+        };
+
+        auto sparseVolume = std::make_shared<SparseVolume3D>(ivec3(32, 32, 32+16));
         sparseVolume->InitStub();
 
         auto volumeRenderer = std::make_shared<VolumeRenderer>(m_scene, volume3D, sparseVolume);

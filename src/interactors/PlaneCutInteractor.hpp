@@ -26,13 +26,6 @@ public:
      */
     void SetActivePlaneCut(std::shared_ptr<PlaneCut> planeCut);
 
-    /**
-     * @brief Get the Active PlaneCut instance.
-     *
-     * @return std::shared_ptr<PlaneCut> : The currently active PlaneCut.
-     */
-//    std::shared_ptr<PlaneCut> GetActivePlaneCut();
-
     PlaneCutDirection GetDirection();
 
     void SetDirection(PlaneCutDirection dir);

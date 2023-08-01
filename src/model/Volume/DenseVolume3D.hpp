@@ -3,18 +3,19 @@
 
 #include <memory>
 #include <iostream>
-#include <glm/glm.hpp>
+#include "glm/glm/glm.hpp"
 
-#include "../view/Renderable/Renderable.hpp"
-#include "../view/Wireframe/Wireframe.hpp"
-#include "../view/Lines.hpp"
-#include "../view/SceneObject/SceneObject.hpp"
+#include "../../view/Renderable/Renderable.hpp"
+#include "../../view/Wireframe/Wireframe.hpp"
+#include "../../view/Lines.hpp"
+#include "../../view/SceneObject/SceneObject.hpp"
 
-#include "../controllers/Scene/Scene.hpp"
+#include "../../controllers/Scene/Scene.hpp"
 
-#include "../cuda/CudaLinearVolume3D.cuh"
+#include "CudaLinearVolume3D.cuh"
 
-#include "CudaBuffer.hpp"
+#include "../CudaBuffer.hpp"
+#include "Volume3D.h"
 
 using namespace glm;
 class Lines;
@@ -27,54 +28,57 @@ class Lines;
  *
  * This class performs the rendering of the result of the CUDA kernel in a plane that overlay the view.
  */
-class Volume3D : public SceneObject
+class DenseVolume3D : public Volume3D
 {
 public:
-    Volume3D(Scene *scene, const ivec3& res);
+    DenseVolume3D(Scene *scene, const ivec3& res);
 
+    /** ********** SceneObject ********** */
     void UpdateGPUData();
+    /** ********** ********** ********** */
+
+    /** ********** Volume 3D ********** */
+    void Render() override;
+    void SetBBoxMin(const vec3 &bboxMin) override;
+    void SetBBoxMax(const vec3 &bboxMin) override;
+    const ivec3 &GetResolution() override;
+    const vec3 &GetBboxMin() override;
+    const vec3 &GetBboxMax() override;
+    GPUData<VolumeDescriptor>* GetGPUData() override;
+    /** ********** ********** ********** */
 
     /**
-     * @brief Set the Volume Min Bounding-Box coordinates.
-     * 
-     * @param bboxMin : The min vec3 corner of the bbox.
-     */
-    void SetBBoxMin(const vec3 &bboxMin);
-    
-    /**
-     * @brief Set the Volume Max Bounding-Box coordinates.
-     * 
-     * @param bboxMin : The max vec3 corner of the bbox.
-     */
-    void SetBBoxMax(const vec3 &bboxMax);
-
-    /**
-     * @brief 
+     * @brief Initialize the volume with zeros everywhere. Copy is done on GPU memory.
      * 
      */
     void InitializeZeros();
 
-    void Render() override;
-
+    /**
+     * //TODO
+     */
     void ComputeBBoxPoints();
-
-    const ivec3 &GetResolution();
-
-    const vec3 &GetBboxMin();
-    const vec3 &GetBboxMax();
-
+    /**
+     * //TODO
+     * @return
+     */
     std::shared_ptr<CudaLinearVolume3D> GetCudaVolume();
 
     vec3 m_bboxPoints[8] = {};
 
-    BBoxDescriptor* GetGPUDescriptor();
-    GPUData<VolumeDescriptor>& GetGPUData();
+    /**
+     * //TODO
+     * @return
+     */
+    BBoxDescriptor* GetBBoxGPUDescriptor() override;
 
     /**
      * Resize the volume to the desired size.
      */
     void Resize(const ivec3& res);
 
+    /**
+     * //TODO
+     */
     void DoubleResolution();
 
 private:
@@ -90,10 +94,9 @@ private:
     vec3 m_bboxMax = vec3(1.0, 1.2, 1.5);
 
     ivec3 m_res;
-    float m_voxelSize = 0.01f;
 
     GPUData<BBoxDescriptor> m_desc;
-    GPUData<VolumeDescriptor> m_volumeDescriptor;
+    GPUData<DenseVolumeDescriptor> m_volumeDescriptor;
 
     /** wireframe coordinates. */
     float m_wireframeVertices[12 * 2 * 3] = {

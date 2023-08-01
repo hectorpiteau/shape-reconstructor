@@ -2,6 +2,8 @@
 #include <utility>
 #include "PlaneCutInteractor.hpp"
 #include "../model/PlaneCut.hpp"
+#include "../model/Volume/SparseVolume3D.hpp"
+#include "../model/Volume/Volume3D.h"
 
 void PlaneCutInteractor::SetActivePlaneCut(std::shared_ptr<PlaneCut> planeCut)
 {
@@ -47,9 +49,13 @@ void PlaneCutInteractor::SetMode(PlaneCutMode mode){
 
 PlaneCutInteractor::PlaneCutInteractor(Scene *scene) : m_scene(scene), m_availableVolumes() {
     auto res = m_scene->GetAll(SceneObjectTypes::VOLUME3D);
+    auto res_sparse = m_scene->GetAll(SceneObjectTypes::SPARSEVOLUME3D);
 
     for(const auto& volume : res)
-        m_availableVolumes.push_back(std::dynamic_pointer_cast<Volume3D>(volume));
+        m_availableVolumes.push_back(std::dynamic_pointer_cast<DenseVolume3D>(volume));
+
+    for(const auto& volume : res_sparse)
+        m_availableVolumes.push_back(std::dynamic_pointer_cast<SparseVolume3D>(volume));
 }
 
 std::vector<std::shared_ptr<Volume3D>> &PlaneCutInteractor::GetAvailableVolumes() {

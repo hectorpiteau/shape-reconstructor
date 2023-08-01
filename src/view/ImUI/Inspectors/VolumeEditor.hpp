@@ -1,7 +1,7 @@
 /*
 Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeEditor.hpp (c) 2023
-Desc: Editor panel of the Volume3D scene object.
+Desc: Editor panel of the DenseVolume3D scene object.
 Created:  2023-04-21T12:12:19.078Z
 Modified: 2023-04-26T12:50:09.798Z
 */
@@ -47,16 +47,20 @@ public:
             bbox[0],bbox[1],bbox[2],bbox[3],bbox[4],bbox[5],bbox[6],bbox[7],
         };
         
-        ImGui::SeparatorText(ICON_FA_INFO " Volume3D - Informations");
+        ImGui::SeparatorText(ICON_FA_INFO " DenseVolume3D - Informations");
         
         if(ImGui::DragFloat3("BBox Minimum", &bboxMinimum[0], 0.1f)){
             m_interactor->SetBboxMin(bboxMinimum);
         }
-        
-        
+
         if(ImGui::DragFloat3("BBox Maximum", &bboxMaximum[0], 0.1f)){
             m_interactor->SetBboxMax(bboxMaximum);
         }
+
+        ImGui::BeginDisabled();
+        auto res = m_interactor->GetResolution();
+        ImGui::InputInt3("Resolution", &res[0]);
+        ImGui::EndDisabled();
 
         ImGui::Separator();
         ImGui::BeginDisabled();

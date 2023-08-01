@@ -9,7 +9,7 @@
 #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
 #include "ShaderPipeline.hpp"
-#include "Volume3D.hpp"
+#include "Volume/DenseVolume3D.hpp"
 #include "Camera/Camera.hpp"
 #include "../cuda/kernel.cuh"
 #include "../cuda/RayCasterParams.cuh"

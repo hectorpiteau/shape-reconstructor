@@ -1,7 +1,7 @@
 #include <memory>
 #include <glm/glm.hpp>
 
-#include "../model/Volume3D.hpp"
+#include "../model/Volume/DenseVolume3D.hpp"
 
 #include "Volume3DInteractor.hpp"
 
@@ -15,12 +15,12 @@ Volume3DInteractor::~Volume3DInteractor()
 {
 }
 
-void Volume3DInteractor::SetActiveVolume3D(std::shared_ptr<Volume3D> volume)
+void Volume3DInteractor::SetActiveVolume3D(std::shared_ptr<DenseVolume3D> volume)
 {
     m_volume = volume;
 }
 
-std::shared_ptr<Volume3D> &Volume3DInteractor::GetVolume3D()
+std::shared_ptr<DenseVolume3D> &Volume3DInteractor::GetVolume3D()
 {
     return m_volume;
 }

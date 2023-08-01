@@ -21,6 +21,8 @@ enum SceneObjectTypes
     RAYCASTER,
     PLANECUT,
     ADAMOPTIMIZER,
+    SPARSEVOLUME3D,
+    DENSEVOLUME3D,
     NONE
 };
 
@@ -29,7 +31,7 @@ static const std::vector<const char *> SceneObjectNames = {
     "Camera",
     "Lines",
     "LineGrid",
-    "Volume3D",
+    "DenseVolume3D",
     "NeRF Dataset",
     "Camera Set",
     "Gizmo",
@@ -39,6 +41,8 @@ static const std::vector<const char *> SceneObjectNames = {
     "Raycaster",
     "PlaneCut",
     "Adam Optimizer",
+    "Sparse Volume 3D",
+    "Dense Volume 3D",
     "None"};
 
 class SceneObject : public Renderable
@@ -53,7 +57,7 @@ protected:
     /** The Object's name. */
     std::string m_name;
     /** The Object's type, stored as a string in order to be easily extended. */
-    const std::string m_typeName;
+    std::string m_typeName;
     /** The Object's type as the enum, used for fast comparison. */
     enum SceneObjectTypes m_type;
 
@@ -187,5 +191,14 @@ public:
     void SetIsVisibleInList(bool visible) { m_listVisible = visible; }
     bool IsVisibleInList() { return m_listVisible; }
 
+protected:
+    /**
+     * Set the Object's type.
+     * Only available in subclasses to handle heritage class type change.
+     *
+     * @param type : The new SceneObjectTypes.
+     */
+    void SetType(SceneObjectTypes type) { m_type = type; }
+    void SetTypeName(const std::string& typeName) { m_typeName = std::move(typeName); }
 
 };

@@ -13,14 +13,14 @@ Modified: 2023-06-06T07:41:43.500Z
 #include "PlaneCut.hpp"
 #include "CudaTexture.hpp"
 #include "../controllers/Scene/Scene.hpp"
-#include "Volume3D.hpp"
+#include "Volume/DenseVolume3D.hpp"
 
-PlaneCut::PlaneCut(Scene *scene, std::shared_ptr<Volume3D> targetVolume) : SceneObject{std::string("PlaneCut"),
-                                                                                       SceneObjectTypes::PLANECUT},
-                                                                           m_scene(scene),
-                                                                           m_dir(PlaneCutDirection::Y),
-                                                                           m_pos(vec3(0, 0, 0)),
-                                                                           m_targetVolume(std::move(targetVolume)), m_cursorPixel() {
+PlaneCut::PlaneCut(Scene *scene, std::shared_ptr<DenseVolume3D> targetVolume) : SceneObject{std::string("PlaneCut"),
+                                                                                            SceneObjectTypes::PLANECUT},
+                                                                                m_scene(scene),
+                                                                                m_dir(PlaneCutDirection::Y),
+                                                                                m_pos(vec3(0, 0, 0)),
+                                                                                m_targetVolume(std::move(targetVolume)), m_cursorPixel() {
     SetName("PlaneCut");
     /** Create the overlay plane that will be used to display the volume rendering texture on. */
     m_overlay = std::make_shared<OverlayPlane>(
@@ -104,5 +104,9 @@ void PlaneCut::SetMode(PlaneCutMode mode) {
 }
 
 void PlaneCut::SetTargetVolume(std::shared_ptr<Volume3D> vol) {
-    m_targetVolume = vol;
+    if(vol->GetType() == SceneObjectTypes::DENSEVOLUME3D){
+        m_targetVolume = std::dynamic_pointer_cast<DenseVolume3D>(vol);
+    }else if(vol->GetType() == SceneObjectTypes::SPARSEVOLUME3D){
+        m_s_targetVolume = std::dynamic_pointer_cast<SparseVolume3D>(vol);
+    }
 }

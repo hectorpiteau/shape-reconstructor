@@ -47,28 +47,28 @@ __device__ bool IsPointInBBox(const vec3 &point, SparseVolumeDescriptor *volume)
         return false;
 }
 
-__device__ bool IsPointInBBox(const vec3 &point, VolumeDescriptor *volume) {
+__device__ bool IsPointInBBox(const vec3 &point, DenseVolumeDescriptor *volume) {
     if (all(lessThan(point, volume->bboxMax)) && all(greaterThan(point, volume->bboxMin)))
         return true;
     else
         return false;
 }
 
-__device__ vec4 forward_sparse(Ray &ray, SparseVolumeDescriptor *volume) //, float4* volume, const ivec3& resolution)
+__device__ vec4 forward_sparse(Ray &ray, SparseVolumeDescriptor *volume)
 {
-/** Partial transmittance. */
+    /** Partial transmittance. */
     float Tpartial = 1.0f;
-/** Partial color. */
+    /** Partial color. */
     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
 
     float step = (volume->worldSize.x / (float)volume->res.x) * 0.5f;
 
     size_t indices[8] = {};
 
-/** The ray's min must be strictly smaller than max. */
+    /** The ray's min must be strictly smaller than max. */
     if (ray.tmin < ray.tmax) {
 
-/** Travel through the ray from it's min to max. */
+        /** Travel through the ray from it's min to max. */
         for (float t = ray.tmin; t < ray.tmax; t += step) {
             vec3 pos = ray.origin + t * ray.dir;
 
@@ -76,12 +76,10 @@ __device__ vec4 forward_sparse(Ray &ray, SparseVolumeDescriptor *volume) //, flo
                 vec4 data = ReadVolume(pos, volume, indices);
                 vec3 color = vec3(data.r, data.g, data.b);
                 float alpha = data.a;
-                alpha = clamp(alpha, 0.0f, 0.99f);
+                alpha = clamp(alpha, 0.0f, 0.9999f);
 
-//                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
                 Cpartial += Tpartial * alpha * color;
                 Tpartial *= (1.0f - alpha);
-//                Tpartial *= (1.0f / exp(alpha));
 
                 if (Tpartial < 0.001f) {
                     Tpartial = 0.0f;
@@ -93,7 +91,7 @@ __device__ vec4 forward_sparse(Ray &ray, SparseVolumeDescriptor *volume) //, flo
     return {Cpartial, Tpartial};
 }
 
-__device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, const ivec3& resolution)
+__device__ vec4 forward(Ray &ray, DenseVolumeDescriptor *volume)
 {
     /** Partial transmittance. */
     float Tpartial = 1.0f;
@@ -117,10 +115,8 @@ __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, 
                 float alpha = data.a;
                 alpha = clamp(alpha, 0.0f, 0.99f);
 
-//                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
                 Cpartial += Tpartial * alpha * color;
                 Tpartial *= (1.0f - alpha);
-//                Tpartial *= (1.0f / exp(alpha));
 
                 if (Tpartial < 0.001f) {
                     Tpartial = 0.0f;
@@ -133,7 +129,7 @@ __device__ vec4 forward(Ray &ray, VolumeDescriptor *volume) //, float4* volume, 
 }
 
 
-__global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescriptor *camera, VolumeDescriptor *volume) {
+__global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescriptor *camera, DenseVolumeDescriptor *volume) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -147,14 +143,12 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
         uint maxpy = camera->height - raycaster->maxPixelY;
 
         uint4 a = make_uint4(maxpx, maxpy, minpx, minpy);
-        minpx = a.x;
-        minpy = a.y;
-        maxpx = a.z;
-        maxpy = a.w;
+        minpx = a.x; minpy = a.y; maxpx = a.z; maxpy = a.w;
 
         if (x >= minpx && x <= maxpx && y >= minpy && y <= maxpy) {
             Ray ray = SingleRayCaster::GetRay(vec2(x, y), camera);
             bool res = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
+
             if (!res) {
                 uchar4 element = make_uchar4(0, 0, 0, 0);
                 surf2Dwrite<uchar4>(element, raycaster->surface, x * sizeof(uchar4), y);
@@ -195,14 +189,12 @@ __global__ void sparseVolumeRenderingUI8(RayCasterDescriptor *raycaster, CameraD
         uint maxpy = camera->height - raycaster->maxPixelY;
 
         uint4 a = make_uint4(maxpx, maxpy, minpx, minpy);
-        minpx = a.x;
-        minpy = a.y;
-        maxpx = a.z;
-        maxpy = a.w;
+        minpx = a.x; minpy = a.y; maxpx = a.z; maxpy = a.w;
 
         if (x >= minpx && x <= maxpx && y >= minpy && y <= maxpy) {
             Ray ray = SingleRayCaster::GetRay(vec2(x, y), camera);
             bool res = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
+
             if (!res) {
                 uchar4 element = make_uchar4(0, 0, 0, 0);
                 surf2Dwrite<uchar4>(element, raycaster->surface, x * sizeof(uchar4), y);
@@ -211,27 +203,24 @@ __global__ void sparseVolumeRenderingUI8(RayCasterDescriptor *raycaster, CameraD
 
             /** Call forward. */
             vec4 result = forward_sparse(ray, volume);
-//            vec4 result = vec4(1.0, 1.0, 0.0, 0.0);
             result.w = 1.0f - result.w;
             result *= 255.0f;
-            uchar4 element = make_uchar4(result.x, result.y, result.z, result.w);
+            uchar4 element = VEC4_TO_UCHAR4(result);
             surf2Dwrite<uchar4>(element, raycaster->surface, (x) * sizeof(uchar4), y);
         } else {
             uchar4 element = make_uchar4(0, 0, 0, 0);
             surf2Dwrite<uchar4>(element, raycaster->surface, x * sizeof(uchar4), y);
         }
-
     } else {
         Ray ray = SingleRayCaster::GetRay(vec2(x, y), camera);
         /** Call forward. */
-//        vec4 result = forward_sparse(ray, volume) * 255.0f;
-        vec4 result = vec4(1.0, 0.0, 0.0, 0.0);
-        uchar4 element = make_uchar4(result.x, result.y, result.z, result.w);
+        vec4 result = forward_sparse(ray, volume) * 255.0f;
+        uchar4 element = VEC4_TO_UCHAR4(result);
         surf2Dwrite<uchar4>(element, raycaster->surface, (x) * sizeof(uchar4), y);
     }
 }
 
-extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster, GPUData<CameraDescriptor> &camera, GPUData<VolumeDescriptor> &volume) {
+extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster, GPUData<CameraDescriptor> &camera, GPUData<DenseVolumeDescriptor> &volume) {
     /** Max 1024 per block. As each pixel is independent, may be useful to search for optimal size. */
     dim3 threadsPerBlock(16, 16);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
@@ -271,13 +260,68 @@ extern "C" void sparse_volume_rendering_wrapper(GPUData<RayCasterDescriptor> &ra
     cudaDeviceSynchronize();
 }
 
+__device__ void forward_one_ray(unsigned int x, unsigned int y, Ray& ray, DenseVolumeDescriptor* volume,  BatchItemDescriptor *item, uchar4 ground_truth, SuperResolutionDescriptor* superRes, int superResIndex = 0){
+
+    vec3 gt_color = UCHAR4_TO_VEC3(ground_truth) / vec3(255.0f);
+    auto alpha_gt = __uint2float_rn(ground_truth.w);
+
+    bool bboxres = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
+
+    ray.tmin = clamp(ray.tmin, 0.0f, INFINITY);
+    ray.tmax = clamp(ray.tmax, 0.0f, INFINITY);
+
+    /** Run forward function. */
+    vec4 res = forward(ray, volume);
+    res = clamp(res, vec4(0.0), vec4(1.0));
+    item->cpred[LINEAR_IMG_INDEX(x, y, item->res, superResIndex)] = res;
+
+    /** Store loss. */
+    float epsilon = 1.0E-8f;
+    vec3 pred_color = vec3(res);
+    vec3 loss = (gt_color - pred_color) / ((pred_color + epsilon) * (pred_color + epsilon));
+    auto alpha_loss = (alpha_gt - res.w) / ((res.w + epsilon) * (res.w + epsilon));
+
+    item->loss[LINEAR_IMG_INDEX(x, y, item->res, superResIndex)] = vec4(loss, alpha_loss);
+
+    /** PSNR */
+    auto psnr_diff = pow( gt_color - pred_color, vec3(2));
+    atomicAdd(&item->psnr.x, psnr_diff.x);
+    atomicAdd(&item->psnr.y, psnr_diff.y);
+    atomicAdd(&item->psnr.z, psnr_diff.z);
+
+    if (item->debugRender) {
+        uchar4 element;
+        switch(item->mode){
+            case RenderMode::COLOR_LOSS:
+                loss *= 255.0f;
+                loss = clamp(loss, vec3(0.0, 0.0, 0.0), vec3(255.0, 255.0, 255.0));
+                element = VEC3_255_TO_UCHAR4((loss));
+                break;
+            case RenderMode::ALPHA_LOSS:
+                alpha_loss = clamp(alpha_loss, 0.0f, 255.0f);
+                element = VEC3_255_TO_UCHAR4((vec3(alpha_loss,alpha_loss,alpha_loss)));
+                break;
+            case RenderMode::PREDICTED_COLOR:
+                pred_color *= 255.0f;
+                pred_color = clamp(pred_color, 0.0f, 255.0f);
+                element = VEC3_255_TO_UCHAR4(pred_color);
+                break;
+            case RenderMode::GROUND_TRUTH:
+            default:
+                element = ground_truth;
+                break;
+        }
+        surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
+    }
+}
+
+
 __global__ void batched_forward_sparse(SparseVolumeDescriptor *volume, BatchItemDescriptor *item) {
     /** Pixel coords. */
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= item->cam->width || y >= item->cam->height) return;
-
 
     uchar4 ground_truth = make_uchar4(
             item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x)],
@@ -299,7 +343,7 @@ __global__ void batched_forward_sparse(SparseVolumeDescriptor *volume, BatchItem
     item->cpred[LINEAR_IMG_INDEX(x, y, item->res, 0)] = res;
 
     /** Store loss. */
-    float epsilon = 0.001f;
+    float epsilon = 1.0E-8f;
     vec3 pred_color = vec3(res);
     vec3 loss = (gt_color - pred_color) / ((pred_color + epsilon) * (pred_color + epsilon));
     auto alpha_loss = (alpha_gt - res.w) / ((res.w + epsilon) * (res.w + epsilon));
@@ -334,55 +378,8 @@ __global__ void batched_forward_sparse(SparseVolumeDescriptor *volume, BatchItem
     }
 }
 
-__device__ void forward_one_ray(unsigned int x, unsigned int y, Ray& ray, VolumeDescriptor* volume,  BatchItemDescriptor *item, uchar4 ground_truth, SuperResolutionDescriptor* superRes, int superResIndex = 0){
 
-    vec3 gt_color = UCHAR4_TO_VEC3(ground_truth) / 255.0f;
-    auto alpha_gt = __uint2float_rn(ground_truth.w);
-
-    bool bboxres = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
-
-    ray.tmin = clamp(ray.tmin, 0.0f, INFINITY);
-    ray.tmax = clamp(ray.tmax, 0.0f, INFINITY);
-
-    /** Run forward function. */
-    vec4 res = forward(ray, volume);
-    item->cpred[LINEAR_IMG_INDEX(x, y, item->res, superResIndex)] = res;
-
-    /** Store loss. */
-    float epsilon = 0.001f;
-    vec3 pred_color = vec3(res);
-    vec3 loss = (gt_color - pred_color) / ((pred_color + epsilon) * (pred_color + epsilon));
-    auto alpha_loss = (alpha_gt - res.w) / ((res.w + epsilon) * (res.w + epsilon));
-
-    item->loss[LINEAR_IMG_INDEX(x, y, item->res, superResIndex)] = vec4(loss, alpha_loss);
-
-    if (item->debugRender) {
-        uchar4 element;
-        switch(item->mode){
-            case RenderMode::COLOR_LOSS:
-                loss *= 255.0f;
-                loss = clamp(loss, vec3(0.0, 0.0, 0.0), vec3(255.0, 255.0, 255.0));
-                element = VEC3_255_TO_UCHAR4((loss));
-                break;
-            case RenderMode::ALPHA_LOSS:
-                alpha_loss = clamp(alpha_loss, 0.0f, 255.0f);
-                element = VEC3_255_TO_UCHAR4((vec3(alpha_loss,alpha_loss,alpha_loss)));
-                break;
-            case RenderMode::PREDICTED_COLOR:
-                pred_color *= 255.0f;
-                pred_color = clamp(pred_color, 0.0f, 255.0f);
-                element = VEC3_255_TO_UCHAR4(pred_color);
-                break;
-            case RenderMode::GROUND_TRUTH:
-            default:
-                element = ground_truth;
-                break;
-        }
-        surf2Dwrite<uchar4>(element, item->debugSurface, (x) * sizeof(uchar4), y);
-    }
-}
-
-__global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *item, SuperResolutionDescriptor* superRes) {
+__global__ void batched_forward(DenseVolumeDescriptor *volume, BatchItemDescriptor *item, SuperResolutionDescriptor* superRes) {
     /** Pixel coords. */
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -414,8 +411,7 @@ __global__ void batched_forward(VolumeDescriptor *volume, BatchItemDescriptor *i
     }
 }
 
-
-__global__ void batched_backward_sparse(SparseVolumeDescriptor *volume, BatchItemDescriptor *item, AdamOptimizerDescriptor* adam) {
+__global__ void batched_backward_sparse(SparseVolumeDescriptor *volume, BatchItemDescriptor *item, SparseAdamOptimizerDescriptor* adam) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -434,18 +430,12 @@ __global__ void batched_backward_sparse(SparseVolumeDescriptor *volume, BatchIte
             item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 2],
             item->img->data[STBI_IMG_INDEX(x, y, item->img->res.x) + 3]
     );
+
     vec3 cgt = UCHAR4_TO_VEC3(ground_truth) / 255.0f;
     auto alpha_gt = 1.0f - (__uint2float_rn(ground_truth.w) / 255.0f);
-
-//    float epsilon = 0.001f;
-
-//    auto loss = item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)];
     auto cpred = item->cpred[LINEAR_IMG_INDEX(x, y, item->res, 0)];
     auto colorPred = vec3(cpred);
-//    auto dLdC = (2.0f * (colorPred - cgt)) / ((colorPred + vec3(epsilon)) * (colorPred + vec3(epsilon)));
     auto dLdC = (2.0f * (colorPred - cgt));
-
-//    auto dLdalpha = (2.0f * (cpred.w - alpha_gt)) / ((cpred.w + epsilon) * (cpred.w + epsilon));
 
     dLdC = clamp(dLdC, -10.0f, 10.0f);
 
@@ -473,27 +463,20 @@ __global__ void batched_backward_sparse(SparseVolumeDescriptor *volume, BatchIte
                 float alpha = data.a;
                 alpha = clamp(alpha, 0.0f, 0.99f);
 
-//                Cpartial += Tpartial * (1 - exp(-alpha)) * color;
                 Cpartial += Tpartial * alpha * color;
 
                 /** Compute full loss */
                 auto dLo_dCi = Tpartial * (alpha);
                 auto color_grad = adam->color_0_w * dLdC * dLo_dCi;
 
-//                vec3 posp1 = (ray.origin + (t+1) * ray.dir);
-//                auto c_k1 = ReadVolume(posp1, volume);  //TEST WITH COLOR_k+1
                 auto dCdAlpha = Tpartial * color - (colorPred - color) / (1.0f - alpha);
 
-
-//                auto alpha_reg_i = 2.0f * (-alpha * (1.0f - cpred.w)) - 2.0f * alpha_gt * ( -alpha * (1.0f - cpred.w));
                 auto alpha_reg_i = 2.0f * (Tinf - alpha_gt) * Tinf / (1.0f - alpha);
 
                 auto alpha_grad = adam->alpha_0_w *  dot(dLdC, dCdAlpha) + adam->alpha_reg_0_w *  alpha_reg_i;
 
-
                 WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad), indices, adam);
 
-//                Tpartial *= exp(-alpha);
                 Tpartial *= (1.0f - alpha);
 
                 if (Tpartial < 0.001f) {
@@ -505,7 +488,7 @@ __global__ void batched_backward_sparse(SparseVolumeDescriptor *volume, BatchIte
     }
 }
 
-__device__ void backward_one_ray(unsigned int x, unsigned int y, uchar4 ground_truth, Ray& ray, VolumeDescriptor* volume, BatchItemDescriptor* item, AdamOptimizerDescriptor* adam, SuperResolutionDescriptor* superRes, unsigned int srIndex = 0){
+__device__ void backward_one_ray(unsigned int x, unsigned int y, uchar4 ground_truth, Ray& ray, DenseVolumeDescriptor* volume, BatchItemDescriptor* item, AdamOptimizerDescriptor* adam, SuperResolutionDescriptor* superRes, unsigned int srIndex = 0){
     bool bboxres = BBoxTminTmax(ray.origin, ray.dir, volume->bboxMin, volume->bboxMax, &ray.tmin, &ray.tmax);
     if(!bboxres) return;
 
@@ -515,14 +498,13 @@ __device__ void backward_one_ray(unsigned int x, unsigned int y, uchar4 ground_t
     vec3 cgt = UCHAR4_TO_VEC3(ground_truth) / 255.0f;
     auto alpha_gt = 1.0f - (__uint2float_rn(ground_truth.w) / 255.0f);
 
-    float epsilon = 0.001f;
+    float epsilon = 1.0E-8f;
 
 //    auto loss = item->loss[LINEAR_IMG_INDEX(x, y, item->res.y)];
     auto cpred = item->cpred[LINEAR_IMG_INDEX(x, y, item->res, srIndex)];
     auto colorPred = vec3(cpred);
 //    auto dLdC = (2.0f * (colorPred - cgt)) / ((colorPred + vec3(epsilon)) * (colorPred + vec3(epsilon)));
     auto dLdC = (2.0f * (colorPred - cgt));
-
 
 //    auto dLdalpha = (2.0f * (cpred.w - alpha_gt)) / ((cpred.w + epsilon) * (cpred.w + epsilon));
 
@@ -577,7 +559,6 @@ __device__ void backward_one_ray(unsigned int x, unsigned int y, uchar4 ground_t
 
                 WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad), indices, adam);
 
-//                Tpartial *= exp(-alpha);
                 Tpartial *= (1.0f - alpha);
 
                 if (Tpartial < 0.001f) {
@@ -589,7 +570,7 @@ __device__ void backward_one_ray(unsigned int x, unsigned int y, uchar4 ground_t
     }
 }
 
-__global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *item, AdamOptimizerDescriptor* adam, SuperResolutionDescriptor* superRes) {
+__global__ void batched_backward(DenseVolumeDescriptor *volume, BatchItemDescriptor *item, AdamOptimizerDescriptor* adam, SuperResolutionDescriptor* superRes) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -614,7 +595,7 @@ __global__ void batched_backward(VolumeDescriptor *volume, BatchItemDescriptor *
 }
 
 
-extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<VolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam, GPUData<SuperResolutionDescriptor>& superRes) {
+extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<DenseVolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam, GPUData<SuperResolutionDescriptor>& superRes) {
     dim3 threads(16, 16);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
     dim3 blocks((item.Host()->res.x + threads.x - 1) / threads.x,
@@ -629,7 +610,7 @@ extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor>& item, GPU
     }
 }
 
-extern "C" void batched_backward_sparse_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<SparseVolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam) {
+extern "C" void batched_backward_sparse_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<SparseVolumeDescriptor>& volume, GPUData<SparseAdamOptimizerDescriptor>& adam) {
     dim3 threads(16, 16);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
     dim3 blocks((item.Host()->res.x + threads.x - 1) / threads.x,
@@ -641,21 +622,6 @@ extern "C" void batched_backward_sparse_wrapper(GPUData<BatchItemDescriptor>& it
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         std::cerr << "(batched_backward_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
-    }
-}
-
-extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor> &item, GPUData<VolumeDescriptor> &volume, GPUData<SuperResolutionDescriptor>& superRes) {
-    dim3 threads(8, 8);
-    /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
-    dim3 blocks((item.Host()->res.x + threads.x - 1) / threads.x,
-                (item.Host()->res.y + threads.y - 1) / threads.y);
-
-    batched_forward<<<blocks, threads>>>(volume.Device(), item.Device(), superRes.Device());
-    cudaDeviceSynchronize();
-
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        std::cerr << "(batched_forward_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
     }
 }
 
@@ -674,8 +640,23 @@ extern "C" void batched_forward_sparse_wrapper(GPUData<BatchItemDescriptor> &ite
     }
 }
 
+extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor> &item, GPUData<DenseVolumeDescriptor> &volume, GPUData<SuperResolutionDescriptor>& superRes) {
+    dim3 threads(16, 16);
+    /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
+    dim3 blocks((item.Host()->res.x + threads.x - 1) / threads.x,
+                (item.Host()->res.y + threads.y - 1) / threads.y);
 
-__global__ void volume_gradients(VolumeDescriptor *volume, AdamOptimizerDescriptor* adam){
+    batched_forward<<<blocks, threads>>>(volume.Device(), item.Device(), superRes.Device());
+    cudaDeviceSynchronize();
+
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "(batched_forward_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
+    }
+}
+
+
+__global__ void volume_gradients(DenseVolumeDescriptor *volume, AdamOptimizerDescriptor* adam){
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
     unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
@@ -742,14 +723,14 @@ __global__ void volume_gradients(VolumeDescriptor *volume, AdamOptimizerDescript
             tmp.w + tvl2_loss_alpha);
 }
 
-extern "C" void volume_backward(GPUData<VolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam){
+extern "C" void volume_backward(GPUData<DenseVolumeDescriptor>* volume, GPUData<AdamOptimizerDescriptor>* adam){
     dim3 threads(4,4,4);
     /** This create enough blocks to cover the whole volume, may contain threads that does not have pixel's assigned. */
-    dim3 blocks((adam.Host()->res.x + threads.x - 1) / threads.x,
-                (adam.Host()->res.y + threads.y - 1) / threads.y,
-                (adam.Host()->res.z + threads.z - 1) / threads.z);
+    dim3 blocks((adam->Host()->res.x + threads.x - 1) / threads.x,
+                (adam->Host()->res.y + threads.y - 1) / threads.y,
+                (adam->Host()->res.z + threads.z - 1) / threads.z);
 
-    volume_gradients<<<blocks, threads>>>(volume.Device(), adam.Device());
+    volume_gradients<<<blocks, threads>>>(volume->Device(), adam->Device());
     cudaDeviceSynchronize();
 
     cudaError_t err = cudaGetLastError();
