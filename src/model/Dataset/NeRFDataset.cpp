@@ -70,11 +70,6 @@ bool NeRFDataset::LoadCalibrations() {
         fov = data["camera_angle_x"];
     }
 
-    /** Parse FOV x : */
-    if(data["camera_angle_x"] != nullptr && data["camera_angle_x"].is_number_float()){
-        fov = data["camera_angle_x"];
-    }
-
     int image_counter = 0;
     for (auto &img: data["frames"]) {
         /** Verify that transform_matrix exists and that it is an array. */
@@ -119,16 +114,6 @@ bool NeRFDataset::LoadCalibrations() {
                 float value = img["transform_matrix"][i][j];
                 tmp.transformMatrix[i][j] = value;
             }
-
-            /** Create intrinsic and extrinsic matrices. */
-            glm::mat4 K = glm::mat4(1.0f);
-            float fx = width / (2.0 * glm::tan(tmp.fov / 2.0));
-            float fy = height / (2.0 * glm::tan(tmp.fov / 2.0));
-            K[0, 0] = fx
-            K[1, 1] = fy
-            K[0, 2] = width / 2.0
-            K[1, 2] = height / 2.0
-            tmp.intrinsic = K;
         }
 
         tmp.transformMatrix = glm::transpose(tmp.transformMatrix);
@@ -177,7 +162,7 @@ bool NeRFDataset::LoadCalibrations() {
     }
 
     m_isCalibrationLoaded = true;
-    return true;
+    return m_isCalibrationLoaded;
 }
 
 size_t NeRFDataset::Size()
@@ -200,21 +185,6 @@ const char *NeRFDataset::GetModeName()
 enum NeRFDatasetModes NeRFDataset::GetMode()
 {
     return m_mode;
-}
-
-size_t NeRFDataset::Size() {
-    return m_images.size();
-}
-
-const char *NeRFDataset::GetModeName() {
-    switch (m_mode) {
-        case NeRFDatasetModes::TRAIN:
-            return NeRFDatasetModesNames[0];
-        case NeRFDatasetModes::VALID:
-            return NeRFDatasetModesNames[1];
-        default:
-            return NeRFDatasetModesNames[0];
-    }
 }
 
 void NeRFDataset::SetMode(enum NeRFDatasetModes mode) {

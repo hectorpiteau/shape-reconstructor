@@ -93,8 +93,6 @@ public:
      */
     bool Load() override;
 
-    size_t Size();
-
     /**
      * @brief Get the amount of images in the dataset currently loaded.
      * 
@@ -108,7 +106,6 @@ public:
      * @return enum NeRFDatasetModes : Either TRAIN, VALID, (TEST) 
      */
     enum NeRFDatasetModes GetMode();
-    const char* GetModeName();
 
     /**
      * @brief Get the Mode's name as a string (char*).

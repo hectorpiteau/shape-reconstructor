@@ -191,12 +191,6 @@ public:
     void SetIsVisibleInList(bool visible) { m_listVisible = visible; }
     bool IsVisibleInList() { return m_listVisible; }
 
-    std::vector<std::shared_ptr<SceneObject>>& GetChildren(){ return m_children;}
-
-    bool IsChild(){ return m_isChild;}
-
-    void SetIsChild(bool isChild){m_isChild = isChild;}
-
 protected:
     /**
      * Set the Object's type.
