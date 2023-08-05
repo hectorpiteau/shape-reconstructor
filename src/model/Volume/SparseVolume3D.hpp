@@ -11,6 +11,8 @@
 #include "../../view/SceneObject/SceneObject.hpp"
 #include "Volume3D.h"
 
+#define LONG_INF 0b1111111111111111111111111111111111111111111111111111111111111111
+
 struct stageCell {
 
 };
@@ -32,6 +34,7 @@ private:
     SparseVolumeConfiguration m_configuration;
 
     ivec3 m_initialResolution = 2 * ivec3(16, 16, 24);
+    ivec3 m_maxResolution;
 
     unsigned int m_maxDepth = 1; /** Includes: 0, 1*/
 
@@ -72,7 +75,7 @@ public:
      * Get the Sparse Volume GPU Descriptor for interacting with the data.
      * @return
      */
-    GPUData<SparseVolumeDescriptor>& GetDescriptor();
+    GPUData<SparseVolumeDescriptor>* GetDescriptor();
 
     /**
      * @brief Allocates a block of 8 cells in the Stage1 Array.
@@ -110,6 +113,8 @@ public:
             return INF;
         }
     }
+
+    const glm::ivec3 &GetInitialResolution();
 
     /** ********** Volume3D ********** */
     const glm::ivec3 &GetResolution() override;

@@ -5,6 +5,7 @@
 #include <random>
 #include "SparseVolume3D.hpp"
 #include "SparseVolumeUtils.cuh"
+#include "Utils.cuh"
 
 SparseVolume3D::SparseVolume3D(const ivec3& res) :  m_initialResolution(res) {
     /** ********** SceneObject ********** */
@@ -33,20 +34,28 @@ SparseVolume3D::SparseVolume3D(const ivec3& res) :  m_initialResolution(res) {
     m_desc.Host()->data_oc = (bool*) GPUData<SparseVolumeDescriptor>::AllocateOnDevice(sizeof(bool) * m_desc.Host()->dataSize);
     std::cout << "Allocate data: " << std::to_string(sizeof(cell) * m_desc.Host()->dataSize) << std::endl;
 
+    /** Other buffers */
+    m_desc.Host()->adam_g1 = (cell*) GPUData<SparseVolumeDescriptor>::AllocateOnDevice(sizeof(cell) * m_desc.Host()->dataSize);
+    m_desc.Host()->adam_g2 = (cell*) GPUData<SparseVolumeDescriptor>::AllocateOnDevice(sizeof(cell) * m_desc.Host()->dataSize);
+    m_desc.Host()->grads = (cell*) GPUData<SparseVolumeDescriptor>::AllocateOnDevice(sizeof(cell) * m_desc.Host()->dataSize);
+
+    m_maxResolution = 4 * m_initialResolution;
+
     m_desc.Host()->initialResolution = m_initialResolution;
-    m_desc.Host()->res = ivec3(m_initialResolution.x * 4, m_initialResolution.y * 4, m_initialResolution.z * 4);
+    m_desc.Host()->res = m_maxResolution;
     m_desc.Host()->worldSize = vec3(2, 2, 3);
     m_desc.Host()->bboxMax = vec3(1.0, 1.2, 1.5);
     m_desc.Host()->bboxMin = vec3(-1.0, -0.8, -1.5);
     m_desc.Host()->maxDepth = m_maxDepth;
+    m_desc.Host()->occupiedVoxelCount = 0;
 
     m_desc.ToDevice();
 
     Initialize();
 }
 
-GPUData<SparseVolumeDescriptor> &SparseVolume3D::GetDescriptor() {
-    return m_desc;
+GPUData<SparseVolumeDescriptor>* SparseVolume3D::GetDescriptor() {
+    return &m_desc;
 }
 
 void SparseVolume3D::Initialize() {
@@ -74,6 +83,7 @@ void SparseVolume3D::InitStub() {
                 stage0[STAGE0_INDEX(x,y,z, m_initialResolution)].active = true;
 
                 stage1[stage1_index_ptr].is_leaf = true;
+                stage1[stage1_index_ptr].leaf = 0;
                 stage1_oc[stage1_index_ptr] = true;
 
                 for(int i=0; i<4; ++i){
@@ -82,6 +92,7 @@ void SparseVolume3D::InitStub() {
                             data[data_index_ptr].data = make_float4(distribution(generator),distribution(generator),distribution(generator), 0.01f);
                             data_oc[data_index_ptr] = true;
                             stage1[stage1_index_ptr].indexes[SHIFT_INDEX_4x4x4(ivec3(i,j,k))] = data_index_ptr;
+                            stage1->leaf = set_bit_4x4x4(stage1->leaf, SHIFT_INDEX_4x4x4(ivec3(i,j,k)));
                             data_index_ptr++;
                         }
                     }
@@ -136,6 +147,7 @@ void SparseVolume3D::InitializeZeros() {
                             data_oc[data_index_ptr] = true;
                             stage1[stage1_index_ptr].indexes[SHIFT_INDEX_4x4x4(ivec3(i,j,k))] = data_index_ptr;
                             data_index_ptr++;
+                            m_desc.Host()->occupiedVoxelCount += 1;
                         }
                     }
                 }
@@ -156,7 +168,7 @@ void SparseVolume3D::InitializeZeros() {
 }
 
 const glm::ivec3 &SparseVolume3D::GetResolution() {
-    return m_desc.Host()->res;
+    return m_maxResolution;
 }
 
 const glm::vec3 &SparseVolume3D::GetBboxMax() {
@@ -183,4 +195,8 @@ BBoxDescriptor *SparseVolume3D::GetBBoxGPUDescriptor() {
 
 GPUData<VolumeDescriptor> *SparseVolume3D::GetGPUData() {
     return (GPUData<VolumeDescriptor>*) &m_desc;
+}
+
+const glm::ivec3 &SparseVolume3D::GetInitialResolution() {
+    return m_initialResolution;
 }

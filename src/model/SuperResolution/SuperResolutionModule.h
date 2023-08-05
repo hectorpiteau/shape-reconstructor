@@ -49,7 +49,7 @@ public:
      *
      * @return A reference to the GPUData object.
      */
-    GPUData<SuperResolutionDescriptor>& GetDescriptor();
+    GPUData<SuperResolutionDescriptor>* GetDescriptor();
 
     std::vector<vec2>* GetShifts();
 

@@ -121,7 +121,33 @@ CUDA_DEV inline glm::vec4 ReadVolume(glm::vec3 &pos, DenseVolumeDescriptor *volu
     return glm::mix(c0, c1, wz);
 }
 
-CUDA_DEV inline unsigned int SparseVolumeGetDataIndex(ivec3 coords, SparseVolumeDescriptor *volume) {
+
+//CUDA_DEV inline unsigned int SparseVolumeGetStage1Index(ivec3 coords, SparseVolumeDescriptor *volume){
+//    /** Locate the coarser cell in the stage0. */
+//    auto s0_tmp = vec3(coords) / vec3(4);
+//
+//    auto s0_coords = ivec3(floor(s0_tmp));
+//
+//    unsigned int s0index = STAGE0_INDEX(s0_coords.x, s0_coords.y, s0_coords.z, volume->initialResolution);
+//
+//    auto s0_cell = volume->stage0[s0index];
+//
+//    /** If the cell is not active then nothing is inside. return. */
+//    if (s0_cell.active == false) return INF;
+//
+//    /** If the voxel is not empty, locate the cell in the stage1. */
+//    if (s0_cell.index >= volume->stage1Size) return INF;
+//    return s0_cell.index;
+//}
+
+struct SparseVolumeDataIndexResult {
+    unsigned int data_index;
+    unsigned int stage0_index;
+    unsigned int stage1_index;
+    unsigned int stage1_inner_index;
+};
+
+CUDA_DEV inline SparseVolumeDataIndexResult SparseVolumeGetDataIndex(ivec3 coords, SparseVolumeDescriptor *volume) {
     /** Locate the coarser cell in the stage0. */
     auto s0_tmp = vec3(coords) / vec3(4);
 
@@ -132,23 +158,23 @@ CUDA_DEV inline unsigned int SparseVolumeGetDataIndex(ivec3 coords, SparseVolume
     auto s0_cell = volume->stage0[s0index];
 
     /** If the cell is not active then nothing is inside. return. */
-    if (s0_cell.active == false) return INF;
+    if (s0_cell.active == false) return {.data_index = INF, .stage0_index = INF, .stage1_index = INF, .stage1_inner_index = INF};
 
     /** If the voxel is not empty, locate the cell in the stage1. */
-    if (s0_cell.index >= volume->stage1Size) return INF;
-    auto s1_cell = volume->stage1[s0_cell.index];
+    if (s0_cell.index >= volume->stage1Size) return {.data_index = INF, .stage0_index = s0index, .stage1_index = INF, .stage1_inner_index = INF};
+    unsigned int s1index = s0_cell.index;
+    auto s1_cell = volume->stage1[s1index];
 
     auto previous_res = volume->initialResolution;
-
     /** While its not a leaf, traverse the tree. */
     while (!s1_cell.is_leaf) {
         auto current_coords = vec3(coords) / vec3(4);
         auto s1_tmp = floor((round(current_coords) - floor(current_coords)) * 4.0f);
         auto tmp_ind = SHIFT_INDEX_4x4x4(ivec3(s1_tmp));
-        if (tmp_ind >= 64) return INF;
-        auto index = s1_cell.indexes[tmp_ind];
-        if (index >= volume->stage1Size) return INF;
-        s1_cell = volume->stage1[index];
+        if (tmp_ind >= 64) return {.data_index = INF, .stage0_index = s0index, .stage1_index = INF, .stage1_inner_index = INF};
+        s1index = s1_cell.indexes[tmp_ind];
+        if (s1index >= volume->stage1Size) return {.data_index = INF, .stage0_index = s0index, .stage1_index = INF, .stage1_inner_index = INF};
+        s1_cell = volume->stage1[s1index];
         previous_res = previous_res * 4;
     }
 
@@ -158,30 +184,30 @@ CUDA_DEV inline unsigned int SparseVolumeGetDataIndex(ivec3 coords, SparseVolume
     auto s1_tmp = glm::floor((glm::round(current_coords) - glm::floor(current_coords)) * 4.0f);
     s1_tmp = glm::clamp(s1_tmp, vec3(0), vec3(4 - 1));
 
-    auto tmp_ind = SHIFT_INDEX_4x4x4(ivec3(s1_tmp));
-    if (tmp_ind >= 64) return INF;
+    unsigned int tmp_ind = SHIFT_INDEX_4x4x4(ivec3(s1_tmp));
+    if (tmp_ind >= 64) return {.data_index = INF, .stage0_index = s0index, .stage1_index = s1index, .stage1_inner_index = INF};
 
-    return s1_cell.indexes[tmp_ind];
+    return {.data_index = s1_cell.indexes[tmp_ind], .stage0_index = s0index, .stage1_index = s1index, .stage1_inner_index = tmp_ind};
 }
 
 
 CUDA_DEV inline void SparseVolumeSet(vec3 coords, vec4 value, SparseVolumeDescriptor *volume) {
     auto index = SparseVolumeGetDataIndex(coords, volume);
-    if (index == INF) return;
-    volume->data[index].data = make_float4(value.x, value.y, value.z, value.w);
+    if (index.data_index == INF) return;
+    volume->data[index.data_index].data = make_float4(value.x, value.y, value.z, value.w);
 }
 
 CUDA_DEV inline void SparseVolumeAtomicSet(vec3 coords, vec4 value, SparseVolumeDescriptor *volume) {
     auto index = SparseVolumeGetDataIndex(coords, volume);
-    if (index == INF) return;
-    volume->data[index].data = make_float4(value.x, value.y, value.z, value.w);
+    if (index.data_index == INF) return;
+    volume->data[index.data_index].data = make_float4(value.x, value.y, value.z, value.w);
 }
 
 CUDA_DEV inline cell SparseVolumeGet(ivec3 coords, SparseVolumeDescriptor *volume) {
     auto index = SparseVolumeGetDataIndex(coords, volume);
     /** Check if it points to infinity, then there is no data. */
-    if (index == INF) return {.data = make_float4(0.0, 0.0, 0.0, 0.0)};
-    return volume->data[index];
+    if (index.data_index == INF) return {.data = make_float4(0.0, 0.0, 0.0, 0.0)};
+    return volume->data[index.data_index];
 }
 
 CUDA_DEV inline glm::vec4 ReadVolume(glm::vec3 &pos, SparseVolumeDescriptor *volume, size_t *indices) {
@@ -200,26 +226,23 @@ CUDA_DEV inline glm::vec4 ReadVolume(glm::vec3 &pos, SparseVolumeDescriptor *vol
     glm::vec4 wy = vec4(weights.y);
     glm::vec4 wz = vec4(weights.z);
 
-//    auto res = vec3(min.x % 32, min.y %32, min.z %32) / glm::vec3(32); //volume->res
-//    return vec4(res, 1.0);
+    indices[0] = SparseVolumeGetDataIndex(vec3(min.x, min.y, min.z), volume).data_index; //min.x * x_step + min.y * y_step + min.z;
+//    if (indices[0] == INF) return vec4(1.0, 0.0, 0.0, 1.0);
+    indices[1] = SparseVolumeGetDataIndex(vec3(min.x, min.y, max.z), volume).data_index; //min.x * x_step + min.y * y_step + max.z;
+//    if (indices[1] == INF) return vec4(0.0, 0.0, 1.0, 1.0);
+    indices[2] = SparseVolumeGetDataIndex(vec3(min.x, max.y, min.z), volume).data_index; //min.x * x_step + max.y * y_step + min.z;
+//    if (indices[2] == INF) return vec4(1.0, 0.0, 1.0, 1.0);
+    indices[3] = SparseVolumeGetDataIndex(vec3(min.x, max.y, max.z), volume).data_index; //min.x * x_step + max.y * y_step + max.z;
+//    if (indices[3] == INF) return vec4(1.0, 1.0, 0.0, 1.0);
 
-    indices[0] = SparseVolumeGetDataIndex(vec3(min.x, min.y, min.z), volume); //min.x * x_step + min.y * y_step + min.z;
-    if (indices[0] == INF) return vec4(1.0, 0.0, 0.0, 1.0);
-    indices[1] = SparseVolumeGetDataIndex(vec3(min.x, min.y, max.z), volume); //min.x * x_step + min.y * y_step + max.z;
-    if (indices[1] == INF) return vec4(0.0, 0.0, 1.0, 1.0);
-    indices[2] = SparseVolumeGetDataIndex(vec3(min.x, max.y, min.z), volume); //min.x * x_step + max.y * y_step + min.z;
-    if (indices[2] == INF) return vec4(1.0, 0.0, 1.0, 1.0);
-    indices[3] = SparseVolumeGetDataIndex(vec3(min.x, max.y, max.z), volume); //min.x * x_step + max.y * y_step + max.z;
-    if (indices[3] == INF) return vec4(1.0, 1.0, 0.0, 1.0);
-
-    indices[4] = SparseVolumeGetDataIndex(vec3(max.x, min.y, min.z), volume); //max.x * x_step + min.y * y_step + min.z;
-    if (indices[4] == INF) return vec4(0.0, 0.5, 0.0, 1.0);
-    indices[5] = SparseVolumeGetDataIndex(vec3(max.x, min.y, max.z), volume); //max.x * x_step + min.y * y_step + max.z;
-    if (indices[5] == INF) return vec4(0.0, 0.6, 0.0, 1.0);
-    indices[6] = SparseVolumeGetDataIndex(vec3(max.x, max.y, min.z), volume); //max.x * x_step + max.y * y_step + min.z;
-    if (indices[6] == INF) return vec4(0.0, 0.7, 0.0, 1.0);
-    indices[7] = SparseVolumeGetDataIndex(vec3(max.x, max.y, max.z), volume); //max.x * x_step + max.y * y_step + max.z;
-    if (indices[7] == INF) return vec4(0.0, 0.8, 0.0, 1.0);
+    indices[4] = SparseVolumeGetDataIndex(vec3(max.x, min.y, min.z), volume).data_index; //max.x * x_step + min.y * y_step + min.z;
+//    if (indices[4] == INF) return vec4(0.0, 0.5, 0.0, 1.0);
+    indices[5] = SparseVolumeGetDataIndex(vec3(max.x, min.y, max.z), volume).data_index; //max.x * x_step + min.y * y_step + max.z;
+//    if (indices[5] == INF) return vec4(0.0, 0.6, 0.0, 1.0);
+    indices[6] = SparseVolumeGetDataIndex(vec3(max.x, max.y, min.z), volume).data_index; //max.x * x_step + max.y * y_step + min.z;
+//    if (indices[6] == INF) return vec4(0.0, 0.7, 0.0, 1.0);
+    indices[7] = SparseVolumeGetDataIndex(vec3(max.x, max.y, max.z), volume).data_index; //max.x * x_step + max.y * y_step + max.z;
+//    if (indices[7] == INF) return vec4(0.0, 0.8, 0.0, 1.0);
 
     /** Sample all around the pos point in the grid.  (8 voxels) */
     glm::vec4 c000 = cellToVec4(volume->data[indices[0]]); // back face
@@ -263,29 +286,35 @@ CUDA_DEV inline glm::vec4 ReadVolumeNearest(glm::vec3 &pos, SparseVolumeDescript
     glm::ivec3 nearest = glm::round(full_coords); // first project [0,1] to [0, resolution], then take the floor index.
     nearest = glm::clamp(nearest, glm::ivec3(0, 0, 0), volume->res - 1);
 
-    return cellToVec4(volume->data[SparseVolumeGetDataIndex(nearest, volume)]);
+    return cellToVec4(volume->data[SparseVolumeGetDataIndex(nearest, volume).data_index]);
 }
 
 
 CUDA_DEV inline void AtomicWriteVec4(glm::vec4 *addr, const glm::vec4 &data) {
+#ifdef __CUDACC__
     atomicAdd((float *) (addr), data.x);
     atomicAdd((float *) (addr + 1), data.y);
     atomicAdd((float *) (addr + 2), data.z);
     atomicAdd((float *) (addr + 3), data.w);
+#endif
 }
 
 CUDA_DEV inline void AtomicWriteFloat4(float4 *addr, const glm::vec4 &data) {
+#ifdef __CUDACC__
     atomicAdd((float *) (&addr->x), data.x);
     atomicAdd((float *) (&addr->y), data.y);
     atomicAdd((float *) (&addr->z), data.z);
     atomicAdd((float *) (&addr->w), data.w);
+#endif
 }
 
 CUDA_DEV inline void AtomicWriteCell(cell *addr, const glm::vec4 &data) {
+#ifdef __CUDACC__
     atomicAdd((float *) (&addr->data.x), data.x);
     atomicAdd((float *) (&addr->data.y), data.y);
     atomicAdd((float *) (&addr->data.z), data.z);
     atomicAdd((float *) (&addr->data.w), data.w);
+#endif
 }
 
 /**
@@ -371,8 +400,8 @@ CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, SparseVolumeDescriptor *volu
     glm::vec3 omw = glm::vec3(1.0, 1.0, 1.0) - w;
 
     /** Sample all around the pos point in the grid.  (8 voxels) */
-    for (int i = 0; i < adam->amountOfGradientsToWrite; ++i) {
-        auto index = adam->writeGradientIndexes[i];
+    for (int i = 0; i < 8; ++i) { //adam->amountOfGradientsToWrite
+        auto index = i;// adam->writeGradientIndexes[i];
         switch (index) {
             case 0:
                 // c000
@@ -413,6 +442,11 @@ CUDA_DEV inline void WriteVolumeTRI(glm::vec3 &pos, SparseVolumeDescriptor *volu
 CUDA_HOSTDEV inline bool test_bit_4x4x4(unsigned long bits, unsigned int shift) {
     unsigned long bit_to_test = 1 << shift;
     return bits && bit_to_test;
+};
+
+CUDA_HOSTDEV inline unsigned long set_bit_4x4x4(unsigned long bits, unsigned int index) {
+    unsigned long bit_to_add = 1 >> index;
+    return bits & bit_to_add;
 };
 
 

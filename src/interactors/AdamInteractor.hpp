@@ -42,6 +42,8 @@ public:
     void Step();
 
     void NextLOD();
+    void CullVolume();
+    void DivideVolume();
 
     void SetRenderMode(RenderMode mode);
 

@@ -40,8 +40,8 @@ void SuperResolutionModule::Step() {
     m_desc.ToDevice();
 }
 
-GPUData<SuperResolutionDescriptor> &SuperResolutionModule::GetDescriptor() {
-    return m_desc;
+GPUData<SuperResolutionDescriptor>* SuperResolutionModule::GetDescriptor() {
+    return &m_desc;
 }
 
 bool SuperResolutionModule::IsActive() {

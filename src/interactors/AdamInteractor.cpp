@@ -119,3 +119,11 @@ bool AdamInteractor::UseSuperResolution() {
 SuperResolutionModule* AdamInteractor::GetSuperResolutionModule() {
     return m_adam->GetSuperResolutionModule();
 }
+
+void AdamInteractor::CullVolume() {
+    m_adam->CullVolume();
+}
+
+void AdamInteractor::DivideVolume() {
+    m_adam->DivideVolume();
+}

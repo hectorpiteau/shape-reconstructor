@@ -158,7 +158,114 @@ __global__ void volume_resize_double(DenseVolumeDescriptor *source, DenseVolumeD
         /** y+1, x+1, z+1 */
         target->data[VOLUME_INDEX(target_coords.x,target_coords.y,target_coords.z, target->res)].data = make_float4(source_cell.data.x, source_cell.data.y, source_cell.data.z, source_cell.data.w);
     }
+}
 
+/** Free the data cells unused. */
+__global__ void volume_cull_step_1(SparseVolumeDescriptor *volume){
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+    unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
+
+    if(x > volume->res.x || y > volume->res.y || z > volume->res.z) return;
+
+    auto indexes = SparseVolumeGetDataIndex(ivec3(x,y,z), volume);
+
+    auto cell = volume->data[indexes.data_index];
+
+    if(cell.data.w < 0.001f){
+        /** remove cell */
+        volume->data_oc[indexes.data_index] = false;
+
+        atomicAdd((float *) (&volume->occupiedVoxelCount), -1);
+    }
+}
+
+__global__ void volume_cull_step_2(SparseVolumeDescriptor *volume){
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+    unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
+
+    if(x > volume->res.x || y > volume->res.y || z > volume->res.z) return;
+
+    auto indexes = SparseVolumeGetDataIndex(ivec3(x,y,z), volume);
+
+    auto cell = volume->data[indexes.data_index];
+
+    if(cell.data.w < 0.001f){
+        /** remove cell */
+        volume->data_oc[indexes.data_index] = false;
+
+        atomicAdd((float *) (&volume->occupiedVoxelCount), -1);
+    }
+}
+
+__global__ void volume_divide(SparseVolumeDescriptor *volume){
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+    unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
+
+    if(x > volume->res.x || y > volume->res.y || z > volume->res.z) return;
+
+    auto coords = ivec3(x,y,z);
+    /** Get the index of the data cell and check that the cell exists. */
+    auto index = SparseVolumeGetDataIndex(coords, volume);
+
+    if(index.data_index != INF){
+        /** If the cell exists, check that it is worth dividing it. */
+        if(volume->data[index.data_index].data.w > 0.05f){
+//            volume->data[index.data_index].data.x = 1.0f;
+//            volume->data[index.data_index].data.y = 0.0f;
+//            volume->data[index.data_index].data.z = 0.0f;
+//            volume->data[index.data_index].data.w = 1.0f;
+
+            atomicAdd((int *) (&volume->occupiedVoxelCount), 1);
+
+            volume->data_oc[index.data_index] = false;
+            volume->stage1[index.stage1_index].is_leaf = false;
+
+            auto data_saved = volume->data[index.data_index];
+
+            /** retrieve the last stage1-cell that points to this data-cell and make it point
+             * to a new stage1-cell. */
+
+            auto new_stage1_index = atomicAdd((int*) &volume->stage1_pt, 1);
+            int cpt = 0;
+            while(!volume->stage1_oc[new_stage1_index] && cpt < 1000){
+                new_stage1_index = atomicAdd((int*) &volume->stage1_pt, 1);
+                cpt++;
+            }
+
+            /** Set the previous pointer to the new stage-1 cell. */
+            volume->stage1[index.stage1_index].indexes[index.stage1_inner_index] = new_stage1_index;
+
+            volume->stage1[new_stage1_index].is_leaf = true;
+
+            for(int i=0; i < (4*4*4); i++ ){
+                auto new_data_index = atomicAdd((int*) &volume->data_pt, +1);
+                cpt = 0;
+                while(!volume->data_oc[new_data_index] && cpt < 1000 ){
+                    new_data_index = atomicAdd((int*) &volume->data_pt, 1);
+                    cpt++;
+                }
+
+                volume->stage1[new_stage1_index].indexes[i] = new_data_index;
+
+            }
+
+            /** Duplicate the data-cell by 4*4*4 by allocating space in the data buffer for this new data   */
+
+        }
+
+
+    }
+
+
+//    auto cell = volume->data[index];
+
+//
+//    atomicAdd((float *) (&volume->occupiedVoxelCount), 1);
+//
+//    auto new_index_stage_1 = atomicAdd((&volume->stage1_pt), 1);
 }
 
 extern "C" void volume_resize_double_wrapper(GPUData<DenseVolumeDescriptor>* source, GPUData<DenseVolumeDescriptor>* target){
@@ -179,4 +286,40 @@ extern "C" void volume_resize_double_wrapper(GPUData<DenseVolumeDescriptor>* sou
         std::cerr << "(volume_resize_double) ERROR: " << cudaGetErrorString(err) << std::endl;
     }
 }
+
+extern "C" void sparse_volume_cull_wrapper(GPUData<SparseVolumeDescriptor>* volume){
+    dim3 threads(8,8,8);
+    /** This create enough blocks to cover the whole volume,
+     * may contain threads that does not have pixel's assigned. */
+    dim3 blocks((volume->Host()->res.x + threads.x - 1) / threads.x,
+                (volume->Host()->res.y + threads.y - 1) / threads.y,
+                (volume->Host()->res.z + threads.z - 1) / threads.z);
+
+    volume_cull_step_1<<<blocks, threads>>>(volume->Device());
+    cudaDeviceSynchronize();
+
+    std::cout << "Resize volume done. " << std::endl;
+
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "(volume_resize_double) ERROR: " << cudaGetErrorString(err) << std::endl;
+    }
+}
+
+extern "C" void sparse_volume_divide_wrapper(GPUData<SparseVolumeDescriptor>* volume){
+    dim3 threads(8,8,8);
+    /** This create enough blocks to cover the whole volume,
+     * may contain threads that does not have pixel's assigned. */
+    dim3 blocks((volume->Host()->res.x + threads.x - 1) / threads.x,
+                (volume->Host()->res.y + threads.y - 1) / threads.y,
+                (volume->Host()->res.z + threads.z - 1) / threads.z);
+
+    volume_divide<<<blocks, threads>>>(volume->Device());
+    cudaDeviceSynchronize();
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "(volume_resize_double) ERROR: " << cudaGetErrorString(err) << std::endl;
+    }
+}
+
 

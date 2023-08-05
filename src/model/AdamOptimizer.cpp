@@ -8,6 +8,7 @@
 #include "Volume/DenseVolume3D.hpp"
 #include "Adam.cuh"
 #include "Dataset/NeRFDataset.hpp"
+#include "Volume.cuh"
 
 using namespace glm;
 
@@ -34,7 +35,7 @@ AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std
     m_scene->Add(m_adamG1, true, true);
     m_children.push_back(m_adamG1);
 
-    m_s_adamG1 = std::make_shared<SparseVolume3D>(target->GetResolution());
+    m_s_adamG1 = std::make_shared<SparseVolume3D>(sparseVolume->GetInitialResolution());
     m_s_adamG1->SetName("Sparse Adam G1");
     m_s_adamG1->InitializeZeros();
     m_scene->Add(m_s_adamG1, true, true);
@@ -49,7 +50,7 @@ AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std
     m_scene->Add(m_adamG2, true, true);
     m_children.push_back(m_adamG2);
 
-    m_s_adamG2 = std::make_shared<SparseVolume3D>(target->GetResolution());
+    m_s_adamG2 = std::make_shared<SparseVolume3D>(sparseVolume->GetInitialResolution());
     m_s_adamG2->SetName("Sparse Adam G2");
     m_s_adamG2->InitializeZeros();
     m_scene->Add(m_s_adamG2, true, true);
@@ -63,7 +64,7 @@ AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std
     m_scene->Add(m_grads, true, true);
     m_children.push_back(m_grads);
 
-    m_s_grads = std::make_shared<SparseVolume3D>(target->GetResolution());
+    m_s_grads = std::make_shared<SparseVolume3D>(sparseVolume->GetInitialResolution());
     m_s_grads->SetName("Sparse Adam Gradients");
     m_s_grads->InitializeZeros();
     m_scene->Add(m_s_grads, true, true);
@@ -108,7 +109,8 @@ void AdamOptimizer::Initialize() {
     /** Initialize dataset. */
     m_dataLoader->Initialize(m_superResModule.GetRaysAmount());
 
-    zero_adam_wrapper(&m_adamDescriptor);
+//    zero_adam_wrapper(&m_adamDescriptor);
+    sparse_zero_adam_wrapper(&m_s_adamDescriptor);
 }
 
 bool AdamOptimizer::IntegrationRangeLoaded() const {
@@ -151,7 +153,8 @@ void AdamOptimizer::Step() {
     m_volumeRenderer->UpdateGPUDescriptors();
 
     /** Zero gradients. */
-    zero_adam_wrapper(&m_adamDescriptor);
+//    zero_adam_wrapper(&m_adamDescriptor);
+    sparse_zero_adam_wrapper(&m_s_adamDescriptor);
 
     /** Forward Pass.  */
     auto items = m_dataLoader->GetGPUDatas();
@@ -163,11 +166,16 @@ void AdamOptimizer::Step() {
     /** Backward Pass.  */
     for (size_t i = 0; i < m_dataLoader->GetBatchSize(); ++i) {
 //        batched_backward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor, m_superResModule.GetDescriptor());
-        batched_backward_sparse_wrapper(*items[i], m_s_target->GetDescriptor(), m_s_adamDescriptor);
+        batched_backward_sparse_wrapper(
+                items[i],
+                m_s_target->GetDescriptor(),
+                &m_s_adamDescriptor,
+                m_superResModule.GetDescriptor());
     }
 
     /** Volume Backward. Computing gradients on voxels and not on image rays. */
 //    volume_backward((GPUData<DenseVolumeDescriptor>*)(m_volumeRenderer->GetVolumeGPUData()), &m_adamDescriptor);
+    sparse_volume_backward((GPUData<SparseVolumeDescriptor>*)(m_s_target->GetDescriptor()), &m_s_adamDescriptor);
 
 //    items[0]->ToHost();
 //    auto mse = items[0]->Host()->psnr.x / (float)(items[0]->Host()->res.x * items[0]->Host()->res.y);
@@ -215,41 +223,41 @@ void AdamOptimizer::UpdateGPUDescriptor() {
     m_gradsDescriptor.Host()->res = m_grads->GetResolution();
     m_gradsDescriptor.ToDevice();
 
-    m_adamDescriptor.Host()->epsilon = m_epsilon;
-    m_adamDescriptor.Host()->eta = m_eta;
-    m_adamDescriptor.Host()->adamG1 = m_adamG1->GetCudaVolume()->GetDevicePtr();
-    m_adamDescriptor.Host()->adamG2 = m_adamG2->GetCudaVolume()->GetDevicePtr();
-    m_adamDescriptor.Host()->target = m_target->GetCudaVolume()->GetDevicePtr();
-    m_adamDescriptor.Host()->grads = m_gradsDescriptor.Device();
-    m_adamDescriptor.Host()->iteration = (int) m_steps;
-    m_adamDescriptor.Host()->res = m_target->GetResolution();
-    m_adamDescriptor.Host()->color_0_w = GetColor0W();
-    m_adamDescriptor.Host()->alpha_0_w = GetAlpha0W();
-    m_adamDescriptor.Host()->alpha_reg_0_w = GetAlphaReg0W();
-    m_adamDescriptor.Host()->tvl2_0_w = GetTVL20W();
-    m_adamDescriptor.Host()->amountOfGradientsToWrite = 4;
+//    m_adamDescriptor.Host()->epsilon = m_epsilon;
+//    m_adamDescriptor.Host()->eta = m_eta;
+//    m_adamDescriptor.Host()->adamG1 = m_adamG1->GetCudaVolume()->GetDevicePtr();
+//    m_adamDescriptor.Host()->adamG2 = m_adamG2->GetCudaVolume()->GetDevicePtr();
+//    m_adamDescriptor.Host()->target = m_target->GetCudaVolume()->GetDevicePtr();
+//    m_adamDescriptor.Host()->grads = m_gradsDescriptor.Device();
+//    m_adamDescriptor.Host()->iteration = (int) m_steps;
+//    m_adamDescriptor.Host()->res = m_target->GetResolution();
+//    m_adamDescriptor.Host()->color_0_w = GetColor0W();
+//    m_adamDescriptor.Host()->alpha_0_w = GetAlpha0W();
+//    m_adamDescriptor.Host()->alpha_reg_0_w = GetAlphaReg0W();
+//    m_adamDescriptor.Host()->tvl2_0_w = GetTVL20W();
+//    m_adamDescriptor.Host()->amountOfGradientsToWrite = m_amountOfGradientsToWrite;
 
     m_s_adamDescriptor.Host()->epsilon = m_epsilon;
     m_s_adamDescriptor.Host()->eta = m_eta;
     m_s_adamDescriptor.Host()->beta = m_beta;
     m_s_adamDescriptor.Host()->res = m_s_target->GetResolution();
-    m_s_adamDescriptor.Host()->grads = m_s_grads->GetDescriptor().Device();
-    m_s_adamDescriptor.Host()->adamG1 = m_s_adamG1->GetDescriptor().Device();
-    m_s_adamDescriptor.Host()->adamG2 = m_s_adamG2->GetDescriptor().Device();
-    m_s_adamDescriptor.Host()->target = m_s_target->GetDescriptor().Device();
+    m_s_adamDescriptor.Host()->grads = m_s_grads->GetDescriptor()->Device();
+    m_s_adamDescriptor.Host()->adamG1 = m_s_adamG1->GetDescriptor()->Device();
+    m_s_adamDescriptor.Host()->adamG2 = m_s_adamG2->GetDescriptor()->Device();
+    m_s_adamDescriptor.Host()->target = m_s_target->GetDescriptor()->Device();
     m_s_adamDescriptor.Host()->iteration = m_steps;
     m_s_adamDescriptor.Host()->color_0_w = GetColor0W();
     m_s_adamDescriptor.Host()->alpha_0_w = GetAlpha0W();
     m_s_adamDescriptor.Host()->alpha_reg_0_w = GetAlphaReg0W();
     m_s_adamDescriptor.Host()->tvl2_0_w = GetTVL20W();
-    m_s_adamDescriptor.Host()->amountOfGradientsToWrite = 4;
+    m_s_adamDescriptor.Host()->amountOfGradientsToWrite = m_amountOfGradientsToWrite;
 
-    for(int i=0; i < m_adamDescriptor.Host()->amountOfGradientsToWrite; i++) {
-        m_adamDescriptor.Host()->writeGradientIndexes[i] = m_uniformDistribution.Get();
+    for(int i=0; i < m_amountOfGradientsToWrite; i++) {
+//        m_adamDescriptor.Host()->writeGradientIndexes[i] = m_uniformDistribution.Get();
         m_s_adamDescriptor.Host()->writeGradientIndexes[i] = m_uniformDistribution.Get();
     }
 
-    m_adamDescriptor.ToDevice();
+//    m_adamDescriptor.ToDevice();
     m_s_adamDescriptor.ToDevice();
 }
 
@@ -315,4 +323,17 @@ bool AdamOptimizer::UseSuperResolution() {
 
 SuperResolutionModule* AdamOptimizer::GetSuperResolutionModule(){
     return &m_superResModule;
+}
+
+void AdamOptimizer::CullVolume(){
+    sparse_volume_cull_wrapper(m_s_target->GetDescriptor());
+}
+
+void AdamOptimizer::DivideVolume(){
+    m_s_target->GetDescriptor()->Host()->occupiedVoxelCount = 0;
+    m_s_target->GetDescriptor()->ToDevice();
+    std::cout << "Voxel count before : " << std::to_string(m_s_target->GetDescriptor()->Host()->occupiedVoxelCount) << std::endl;
+    sparse_volume_divide_wrapper(m_s_target->GetDescriptor());
+    m_s_target->GetDescriptor()->ToHost();
+    std::cout << "Voxel count after : " << std::to_string(m_s_target->GetDescriptor()->Host()->occupiedVoxelCount) << std::endl;
 }

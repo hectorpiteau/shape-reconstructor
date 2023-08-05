@@ -37,7 +37,7 @@ private:
     vec3 m_pos;
     /** The target volume to cut and render on the planeCut. */
     std::shared_ptr<DenseVolume3D> m_targetVolume;
-    std::shared_ptr<SparseVolume3D> m_s_targetVolume;
+    std::shared_ptr<SparseVolume3D> m_s_targetVolume = nullptr;
 
     /* Descriptors. */
     GPUData<CameraDescriptor> m_cameraDesc;

@@ -33,12 +33,18 @@ using namespace glm;
 #define VOLUME_FP32
 //#define VOLUME_UINT8
 
+
 struct cell {
 #ifdef VOLUME_FP16
     __half2 rg; /** Hergé */
     __half2 ba; /** Béa */
 #elif defined VOLUME_FP32
     float4 data;
+
+//    float4 adam_g1;
+//    float4 adam_g2;
+//    float4 grads;
+
 #elif defined VOLUME_UINT8
     ushort4 data;
 #endif

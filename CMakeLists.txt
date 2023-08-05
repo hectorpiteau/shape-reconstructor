@@ -54,7 +54,8 @@ set(CUDA_SOURCE_FILES
         src/model/Statistics/Statistics.cpp
         src/model/Statistics/Statistics.h
         src/model/Statistics/StatsType.h
-        src/model/Volume/Volume3D.h)
+        src/model/Volume/Volume3D.h
+)
 set(CUDA_ARCH "-arch=sm_75")
 set(CMAKE_CUDA_ARCHITECTURES "75")
 

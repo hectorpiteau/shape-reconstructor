@@ -30,16 +30,17 @@ Modified: 2023-04-24T13:03:22.194Z
 #define CUDA_DEV
 #endif
 
-
 #define STAGE0_INDEX(X, Y, Z, RES) ((X) * (RES).y*(RES).z + (Y) * (RES).z + (Z))
 #define SHIFT_INDEX_2x2x2(shifts) (4 * (shifts).y + 2 * (shifts).z + (shifts).x)
 #define SHIFT_INDEX_4x4x4(shifts) (16 * (shifts).x + 4 * (shifts).y + (shifts).z)
-
 
 struct stage0_cell
 {
     unsigned int index;
     bool active;
+
+//    unsigned int indexes[4*4*4];
+//    unsigned long long leaf;
 };
 
 struct stage_cell
@@ -47,7 +48,6 @@ struct stage_cell
     unsigned int indexes[4 * 4 * 4];
     bool is_leaf;
     unsigned long long leaf; //64bits
-
 };
 
 //struct stage_cell_222

@@ -19,6 +19,6 @@ Modified: 2023-04-25T12:53:31.894Z
 using namespace glm;
 
 extern "C" void plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor>& planeCut, GPUData<DenseVolumeDescriptor>& volume, GPUData<CameraDescriptor>& camera, GPUData<CursorPixel>& cursorPixel);
-extern "C" void sparse_plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor>& planeCut, GPUData<SparseVolumeDescriptor>& volume, GPUData<CameraDescriptor>& camera, GPUData<CursorPixel>& cursorPixel);
+extern "C" void sparse_plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor>& planeCut, GPUData<SparseVolumeDescriptor>* volume, GPUData<CameraDescriptor>& camera, GPUData<CursorPixel>& cursorPixel);
 
 #endif // PLANE_CUT_RENDERING_H

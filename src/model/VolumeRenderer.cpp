@@ -13,25 +13,13 @@ Modified: 2023-04-26T13:51:29.197Z
 
 #include "VolumeRenderer.hpp"
 
-#include "../view/SceneObject/SceneObject.hpp"
-#include "../view/OverlayPlane.hpp"
-#include "../view/Lines.hpp"
-// #include "RayCaster/RayCaster.hpp"
-// #include "RayCaster/SingleRayCaster.hpp"
 #include "Volume/DenseVolume3D.hpp"
-#include "Texture2D.hpp"
 #include "CudaTexture.hpp"
 
 #include "Camera/Camera.hpp"
 
-#include "../cuda/VolumeRendering.cuh"
-#include "../cuda/Projection.cuh"
-#include "../cuda/Common.cuh"
-
 #include "RayCaster/RayCaster.hpp"
-#include "../cuda/GPUData.cuh"
 #include "../../include/icons/IconsFontAwesome6.h"
-#include "../utils/SceneGlobalVariables.hpp"
 #include "Volume/SparseVolume3D.hpp"
 
 using namespace glm;

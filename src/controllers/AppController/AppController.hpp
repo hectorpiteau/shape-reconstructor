@@ -50,8 +50,9 @@ public:
                 .stages = { {.multiplicationFactor = 2, .resolution=ivec3(32, 32, 32+16)}}
         };
 
-        auto sparseVolume = std::make_shared<SparseVolume3D>(ivec3(32, 32, 32+16));
+        auto sparseVolume = std::make_shared<SparseVolume3D>(2 * ivec3(16, 16, 16+8));
         sparseVolume->InitStub();
+        m_scene->Add(sparseVolume);
 
         auto volumeRenderer = std::make_shared<VolumeRenderer>(m_scene, volume3D, sparseVolume);
         m_scene->Add(volumeRenderer);

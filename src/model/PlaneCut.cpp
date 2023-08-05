@@ -91,7 +91,11 @@ void PlaneCut::Render() {
     m_planeCutDesc.ToDevice();
 
     /** Run kernel on texture. */
-    plane_cut_rendering_wrapper(m_planeCutDesc, m_volumeDesc, m_cameraDesc, m_cursorPixel);
+//    plane_cut_rendering_wrapper(m_planeCutDesc, m_volumeDesc, m_cameraDesc, m_cursorPixel);
+    if(m_s_targetVolume != nullptr){
+        sparse_plane_cut_rendering_wrapper(m_planeCutDesc, m_s_targetVolume->GetDescriptor(), m_cameraDesc, m_cursorPixel);
+    }
+
     m_cudaTex->CloseSurface();
 
     m_overlay->Render(true, m_cudaTex->GetTex());

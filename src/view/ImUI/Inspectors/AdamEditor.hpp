@@ -125,10 +125,19 @@ public:
         if(ImGui::Button("Optimize", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
             m_interactor->Optimize();
         }
+//        ImGui::Spacing();
+//        if(ImGui::Button("Next LOD", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
+//            m_interactor->NextLOD();
+//        }
         ImGui::Spacing();
-        if(ImGui::Button("Next LOD", ImVec2(ImGui::GetWindowSize().x*0.96f, 30.0f))){
-            m_interactor->NextLOD();
+        if(ImGui::Button("Cull", ImVec2(ImGui::GetWindowSize().x*0.48, 30.0f))){
+            m_interactor->CullVolume();
         }
+        ImGui::SameLine();
+        if(ImGui::Button("Divide", ImVec2(ImGui::GetWindowSize().x*0.48, 30.0f))){
+            m_interactor->DivideVolume();
+        }
+
 
         ImGui::SeparatorText( "SuperResolution");
         ImGui::Spacing();

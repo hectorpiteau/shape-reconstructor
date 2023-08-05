@@ -15,14 +15,13 @@ __global__ void SparseUpdateAdam(SparseAdamOptimizerDescriptor* adam){
 
     if(x > adam->res.x || y > adam->res.y || z > adam->res.z) return;
 
+    auto indexes = SparseVolumeGetDataIndex(ivec3(x,y,z), adam->target);
+    if(indexes.data_index == INF) return;
 
-    auto _index = SparseVolumeGetDataIndex(ivec3(x,y,z), adam->target);
-    if(_index == INF) return;
-
-    auto target = float4ToVec4(adam->target->data[_index].data);
-    auto grad = float4ToVec4(adam->grads->data[_index].data);
-    auto g1 = float4ToVec4(adam->adamG1->data[_index].data);
-    auto g2 = float4ToVec4(adam->adamG2->data[_index].data);
+    auto target = float4ToVec4(adam->target->data[indexes.data_index].data);
+    auto grad = float4ToVec4(adam->grads->data[indexes.data_index].data);
+    auto g1 = float4ToVec4(adam->adamG1->data[indexes.data_index].data);
+    auto g2 = float4ToVec4(adam->adamG2->data[indexes.data_index].data);
 
     auto m_g1 = adam->beta.x * g1 + (1.0f - adam->beta.x) * grad;
     auto v_g2 = adam->beta.y * g2 + (1.0f - adam->beta.y)*( grad * grad) ;
@@ -36,11 +35,11 @@ __global__ void SparseUpdateAdam(SparseAdamOptimizerDescriptor* adam){
     tmp = clamp(tmp, vec4(0.0), vec4(1.0));
     tmp.w = clamp(tmp.w, 0.0f, 0.99f);
 //    tmp += vec4(0.1);
-    adam->target->data[_index].data = vec4ToFloat4(tmp);
+    adam->target->data[indexes.data_index].data = vec4ToFloat4(tmp);
 
     /** Update adam gradients. */
-    adam->adamG1->data[_index].data = vec4ToFloat4(m_g1);
-    adam->adamG2->data[_index].data = vec4ToFloat4(v_g2);
+    adam->adamG1->data[indexes.data_index].data = vec4ToFloat4(m_g1);
+    adam->adamG2->data[indexes.data_index].data = vec4ToFloat4(v_g2);
 }
 
 __global__ void UpdateAdam(AdamOptimizerDescriptor* adam){
@@ -85,6 +84,17 @@ __global__ void ZeroAdam(AdamOptimizerDescriptor* adam){
 
 }
 
+__global__ void SparseZeroAdam(SparseAdamOptimizerDescriptor* adam){
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+    unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
+    if(x > adam->res.x || y > adam->res.y || z > adam->res.z) return;
+    auto indexes = SparseVolumeGetDataIndex(ivec3(x,y,z), adam->grads);
+    if(indexes.data_index == INF) return;
+    adam->grads->data[indexes.data_index].data = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+
 extern "C" void sparse_update_adam_wrapper(GPUData<SparseAdamOptimizerDescriptor>* adam){
     dim3 threads(8, 8, 8);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
@@ -98,7 +108,7 @@ extern "C" void sparse_update_adam_wrapper(GPUData<SparseAdamOptimizerDescriptor
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
-        std::cerr << "(update_adam_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "(sparse_update_adam_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
     }
 }
 
@@ -118,6 +128,22 @@ extern "C" void update_adam_wrapper(GPUData<AdamOptimizerDescriptor>* adam){
         std::cerr << "(update_adam_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
     }
 }
+extern "C" void sparse_zero_adam_wrapper(GPUData<SparseAdamOptimizerDescriptor>* adam){
+    dim3 threads(8, 8, 8);
+    /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
+    dim3 blocks((adam->Host()->res.x + threads.x - 1) / threads.x,
+                (adam->Host()->res.y + threads.y - 1) / threads.y,
+                (adam->Host()->res.z + threads.z - 1) / threads.z);
+
+    SparseZeroAdam<<<blocks, threads>>>(adam->Device());
+
+    cudaDeviceSynchronize();
+
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "(sparse_zero_adam_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
+    }
+}
 
 extern "C" void zero_adam_wrapper(GPUData<AdamOptimizerDescriptor>* adam){
     dim3 threads(8, 8, 8);
@@ -132,6 +158,6 @@ extern "C" void zero_adam_wrapper(GPUData<AdamOptimizerDescriptor>* adam){
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
-        std::cerr << "(zero_adam_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "(0 zero_adam_wrapper) ERROR: " << cudaGetErrorString(err) << std::endl;
     }
 }

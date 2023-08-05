@@ -63,10 +63,16 @@ __uint2float_rn(UCH.y), \
 __uint2float_rn(UCH.z))
 
 #define UCHAR4_TO_VEC4(UCH) vec4( \
-uint2float(UCH.x, cudaRoundNearest), \
-uint2float(UCH.y, cudaRoundNearest), \
-uint2float(UCH.z, cudaRoundNearest), \
-uint2float(UCH.w, cudaRoundNearest))
+__uint2float_rn(UCH.x), \
+__uint2float_rn(UCH.y), \
+__uint2float_rn(UCH.z), \
+__uint2float_rn(UCH.w))
+
+//#define UCHAR4_TO_VEC4(UCH) vec4( \
+//uint2float(UCH.x, cudaRoundNearest), \
+//uint2float(UCH.y, cudaRoundNearest), \
+//uint2float(UCH.z, cudaRoundNearest), \
+//uint2float(UCH.w, cudaRoundNearest))
 
 #define VEC3_255_TO_UCHAR4(VEC) make_uchar4( \
 (unsigned char)float2uint(VEC.x, cudaRoundNearest), \
@@ -132,8 +138,16 @@ struct SparseVolumeDescriptor : public VolumeDescriptor {
     stage_cell* stage1;
     size_t stage1Size;
     bool* stage1_oc;
+    int stage1_pt;
 
+    size_t occupiedVoxelCount;
+    size_t data_pt;
     cell* data;
+    cell* adam_g1;
+    cell* adam_g2;
+    cell* grads;
+
+
     size_t dataSize;
     bool* data_oc;
     unsigned int maxDepth;

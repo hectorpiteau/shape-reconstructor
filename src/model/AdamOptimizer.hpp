@@ -103,7 +103,6 @@ private:
 
     GPUData<DenseVolumeDescriptor> m_gradsDescriptor;
 
-
     /** Adam Optimizer GPU Data Descriptor. In order to use Adam values in a CUDA Kernel. */
     GPUData<AdamOptimizerDescriptor> m_adamDescriptor;
     GPUData<SparseAdamOptimizerDescriptor> m_s_adamDescriptor;
@@ -143,6 +142,7 @@ private:
 
     /** Super Resolution */
     SuperResolutionModule m_superResModule;
+    unsigned short m_amountOfGradientsToWrite = 8;
 
     UniformDistribution<short> m_uniformDistribution;
 
@@ -232,6 +232,10 @@ public:
     bool UseSuperResolution();
 
     SuperResolutionModule* GetSuperResolutionModule();
+
+    void CullVolume();
+
+    void DivideVolume();
 };
 
 

@@ -30,7 +30,7 @@ Modified: 2023-04-25T12:53:31.894Z
 using namespace glm;
 
 
-__global__ void sparsePlaneCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor *camera, SparseVolumeDescriptor *volume, CursorPixel* cursorPixel) {
+__global__ void SparsePlaneCutRendering(PlaneCutDescriptor *planeCut, CameraDescriptor *camera, SparseVolumeDescriptor *volume, CursorPixel* cursorPixel) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -187,7 +187,7 @@ void plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor> &planeCut, GPUData<
 }
 
 extern "C"
-void sparse_plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor> &planeCut, GPUData<SparseVolumeDescriptor> &volume,
+void sparse_plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor> &planeCut, GPUData<SparseVolumeDescriptor>* volume,
                                  GPUData<CameraDescriptor> &camera, GPUData<CursorPixel>& cursorPixel) {
     /** Max 1024 per block. As each pixel is independent, may be useful to search for optimal size. */
     dim3 threadsPerBlock(16, 16);
@@ -197,7 +197,7 @@ void sparse_plane_cut_rendering_wrapper(GPUData<PlaneCutDescriptor> &planeCut, G
             (camera.Host()->height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     /** Call the main rendering kernel. **/
-    sparsePlaneCutRendering<<<numBlocks, threadsPerBlock>>>(planeCut.Device(), camera.Device(), volume.Device(), cursorPixel.Device());
+    SparsePlaneCutRendering<<<numBlocks, threadsPerBlock>>>(planeCut.Device(), camera.Device(), volume->Device(), cursorPixel.Device());
 
     /** Get last error after rendering. */
     cudaError_t err = cudaGetLastError();

@@ -22,4 +22,8 @@ Modified: 2023-04-25T12:53:31.894Z
 
 extern "C" void volume_resize_double_wrapper(GPUData<DenseVolumeDescriptor>* source, GPUData<DenseVolumeDescriptor>* target);
 
+
+extern "C" void sparse_volume_cull_wrapper(GPUData<SparseVolumeDescriptor>* volume);
+extern "C" void sparse_volume_divide_wrapper(GPUData<SparseVolumeDescriptor>* volume);
+
 #endif // VOLUME_H
