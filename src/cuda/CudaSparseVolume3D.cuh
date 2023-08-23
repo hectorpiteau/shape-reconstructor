@@ -34,27 +34,41 @@ Modified: 2023-04-24T13:03:22.194Z
 #define SHIFT_INDEX_2x2x2(shifts) (4 * (shifts).y + 2 * (shifts).z + (shifts).x)
 #define SHIFT_INDEX_4x4x4(shifts) (16 * (shifts).x + 4 * (shifts).y + (shifts).z)
 
-struct stage0_cell
+struct Stage0Cell
 {
     unsigned int index;
-    bool active;
-
-//    unsigned int indexes[4*4*4];
-//    unsigned long long leaf;
 };
 
-struct stage_cell
+struct StageCell
 {
     unsigned int indexes[4 * 4 * 4];
-    bool is_leaf;
-    unsigned long long leaf; //64bits
+    bool leafs[4 * 4 * 4];
 };
 
-//struct stage_cell_222
-//{
-//    unsigned int indexes[2 * 2 * 2];
-//    bool is_leaf;
-//};
+struct SparseVolumeStage {
+    ivec3 res;
+    ivec3 cellSize;
+
+    size_t cellsAllocatedAmount;
+    size_t cellsUsedAmount;
+
+    size_t memorySize;
+};
+
+struct SparseVolumeStage0 : public SparseVolumeStage {
+    Stage0Cell* data;
+};
+
+struct SparseVolumeStage1 : public SparseVolumeStage {
+    StageCell* data;
+    bool* occupancy;
+};
+
+struct SparseVolumeConfiguration {
+    SparseVolumeStage0 stage0;
+    SparseVolumeStage1 stage1;
+};
+
 
 //CUDA_DEV void SparseVolumeGetDataIndex(ivec3 coords, SparseVolumeDescriptor *volume) {
 //

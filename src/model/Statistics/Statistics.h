@@ -8,6 +8,7 @@
 #include <queue>
 #include "../../view/SceneObject/SceneObject.hpp"
 #include "StatsType.h"
+#include "ScrollingBuffer.h"
 
 class Statistics : public SceneObject  {
 private:
@@ -17,14 +18,50 @@ private:
 
     size_t m_saveAmount = 100;
 
+
+    ScrollingBuffer m_psnrBuffer;
+    double m_t = 0;
+
+    double m_tt[7] = {0,0,0,0,0,0,0};
+    ScrollingBuffer m_loadBatchBuffer;
+    ScrollingBuffer m_uploadDescBuffer;
+    ScrollingBuffer m_zeroGradBuffer;
+    ScrollingBuffer m_forwardBuffer;
+    ScrollingBuffer m_rayBackwardBuffer;
+    ScrollingBuffer m_volBackwardBuffer;
+    ScrollingBuffer m_adamUpdateBuffer;
+
 public:
 
     Statistics();
     Statistics(const Statistics&) = delete;
-    ~Statistics() = default;
+    ~Statistics() override = default;
 
     void Set(StatsType type, float value);
 
+    void AddPSNR(float value);
+    void AddLoadBatchTime(double value);
+    void AddUploadDescTime(double value);
+    void AddZeroGradientTime(double value);
+    void AddForwardTime(double value);
+    void AddRayBackwardTime(double value);
+    void AddVolBackwardTime(double value);
+    void AddAdamUpdateTime(double value);
+
+    ScrollingBuffer* GetLoadBatchBuffer( );
+    ScrollingBuffer* GetUploadDescBuffer( );
+    ScrollingBuffer* GetZeroGradientBuffer( );
+    ScrollingBuffer* GetForwardBuffer( );
+    ScrollingBuffer* GetRayBackwardBuffer( );
+    ScrollingBuffer* GetVolBackwardBuffer( );
+    ScrollingBuffer* GetAdamUpdateBuffer( );
+
+    double GetTime();
+    double* GetTTime();
+
+    ScrollingBuffer* GetPSNRBuffer();
+
+    void Render() override;
 };
 
 

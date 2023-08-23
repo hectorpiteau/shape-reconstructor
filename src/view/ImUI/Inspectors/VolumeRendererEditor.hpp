@@ -45,6 +45,8 @@ public:
 
         m_comboBoxCameras = m_interactor->GetAvailableCameras();
 
+        auto debugRayDesc = m_interactor->GetDebugRayDescriptor();
+
         ImGui::SeparatorText("VolumeRenderer");
 
         ImGui::BeginDisabled();
@@ -95,7 +97,29 @@ public:
                 m_interactor->SetIsRendering(isRendering);
             }
 
-            ImGui::Separator();
+            ImGui::SeparatorText("Ray Samples Values");
+
+            ImGui::TextWrapped("Place the cursor where you want then press : [ctrl] + [d]");
+
+            ImGui::Spacing();
+            ImGui::Spacing();
+            static int drag_i = debugRayDesc->Host()->points;
+            ImGui::DragInt("Show (0 -> 100)", &drag_i, 0.5f, 0, 100, "%d");
+
+            ImVec2 scrolling_child_size = ImVec2(0, ImGui::GetFrameHeightWithSpacing() * 15 + 30);
+            ImGui::BeginChild("scrolling", scrolling_child_size, true, ImGuiWindowFlags_HorizontalScrollbar);
+            for(int i=0; i< drag_i; i++){
+                auto name1 = std::string("Pos ##").append(std::to_string(i));
+                auto name2 = std::string("Value ##").append(std::to_string(i));
+                vec3 value1 = debugRayDesc->Host()->pointsWorldCoords[i];
+                vec4 value2 = debugRayDesc->Host()->pointsSamples[i];
+                ImGui::InputFloat3(name1.c_str(), &value1[0]);
+                ImGui::InputFloat4(name2.c_str(), &value2[0]);
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Spacing();
+            }
+            ImGui::EndChild();
         }
     }
 

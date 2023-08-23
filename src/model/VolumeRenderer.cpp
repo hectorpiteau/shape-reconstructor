@@ -22,10 +22,16 @@ Modified: 2023-04-26T13:51:29.197Z
 #include "../../include/icons/IconsFontAwesome6.h"
 #include "Volume/SparseVolume3D.hpp"
 
+#include <GLFW/glfw3.h>
+
 using namespace glm;
 
-VolumeRenderer::VolumeRenderer(Scene *scene, std::shared_ptr<DenseVolume3D> target, std::shared_ptr<SparseVolume3D> sparseVolume)
-        : SceneObject{std::string("VolumeRenderer"), SceneObjectTypes::VOLUMERENDERER}, m_scene(scene), m_volume(target), m_sparseVolume(sparseVolume) {
+static glm::vec3 tmp_points[1] = {vec3(0,0,0)};
+
+VolumeRenderer::VolumeRenderer(Scene *scene, std::shared_ptr<DenseVolume3D> target,
+                               std::shared_ptr<SparseVolume3D> sparseVolume)
+        : SceneObject{std::string("VolumeRenderer"), SceneObjectTypes::VOLUMERENDERER}, m_scene(scene),
+          m_volume(target), m_sparseVolume(sparseVolume), m_debugRayPoints(scene, tmp_points, 1) {
     SetName(std::string(ICON_FA_SPINNER " Volume Renderer"));
     m_scene->Add(m_volume, true, true);
     m_children.push_back(m_volume);
@@ -50,8 +56,22 @@ VolumeRenderer::VolumeRenderer(Scene *scene, std::shared_ptr<DenseVolume3D> targ
             m_scene->GetSceneSettings()->GetViewportWidth(),
             m_scene->GetSceneSettings()->GetViewportHeight()
     );
+
+    /** Initialize the data for the debug ray. */
+    for (int i = 0; i < 400; i++) {
+        m_debugRayDesc.Host()->pointsWorldCoords[i] = vec3(0);
+        m_debugRayDesc.Host()->pointsSamples[i] = vec4(0);
+    }
+
+    m_debugRayDesc.Host()->active = false;
+    m_debugRayDesc.Host()->points = 0;
+    m_debugRayDesc.ToDevice();
+
 }
 
+GPUData<OneRayDebugInfoDescriptor>* VolumeRenderer::GetDebugRayDescriptor() {
+    return &m_debugRayDesc;
+}
 void VolumeRenderer::SetUseDefaultCamera(bool useDefaultCamera) {
     m_useDefaultCamera = useDefaultCamera;
     m_camera = m_scene->GetDefaultCam();
@@ -107,6 +127,7 @@ void VolumeRenderer::ComputeRenderingZone() {
 }
 
 void VolumeRenderer::Render() {
+
     m_isRendering = m_scene->GetSceneSettings()->GetVariable(SceneGlobalVariables::VOLUME_RENDERING);
     std::shared_ptr<Camera> cam = (m_useDefaultCamera || m_camera == nullptr) ? m_scene->GetActiveCam() : m_camera;
 
@@ -114,6 +135,18 @@ void VolumeRenderer::Render() {
 
     /** Render volume using the raycaster. */
     if (m_isRendering) {
+        if (m_scene->GetSceneSettings()->GetCtrlKey() && m_scene->GetSceneSettings()->IsKeyPressed(GLFW_KEY_D)) {
+            std::cout << "Debug Ray points : " << std::to_string(m_debugRayDesc.Host()->points) << std::endl;
+            double x, y;
+            glfwGetCursorPos(m_scene->GetWindow(), &x, &y);
+            m_debugRayDesc.Host()->pixelCoords = ivec2(x, y);
+            m_debugRayDesc.Host()->active = true;
+            m_debugRayDesc.ToDevice();
+        }else{
+            m_debugRayDesc.Host()->active = false;
+            m_debugRayDesc.ToDevice();
+        }
+
         cam->UpdateGPUDescriptor();
 
         m_raycasterDesc.Host()->minPixelX = m_rayCaster->GetRenderingZoneMinPixel().x;
@@ -125,7 +158,16 @@ void VolumeRenderer::Render() {
         m_raycasterDesc.ToDevice();
 
 //        volume_rendering_wrapper(m_raycasterDesc, cam->GetGPUData(), m_volume->GetGPUData());
-        sparse_volume_rendering_wrapper(m_raycasterDesc, cam->GetGPUData(), m_sparseVolume->GetDescriptor());
+        sparse_volume_rendering_wrapper(m_raycasterDesc, cam->GetGPUData(), m_sparseVolume->GetDescriptor(),
+                                        &m_debugRayDesc);
+
+        if(m_debugRayDesc.Host()->active){
+            m_debugRayDesc.ToHost();
+
+            m_debugRayPoints.UpdatePoints(m_debugRayDesc.Host()->pointsWorldCoords, m_debugRayDesc.Host()->points);
+        }
+
+
         m_cudaTex->CloseSurface();
     }
 
@@ -143,10 +185,12 @@ void VolumeRenderer::Render() {
     if (m_isRendering) {
         m_outPlane->Render(true, m_cudaTex->GetTex());
     }
+
+    m_debugRayPoints.Render();
 }
 
 
-GPUData<RayCasterDescriptor>& VolumeRenderer::GetRayCasterGPUData() {
+GPUData<RayCasterDescriptor> &VolumeRenderer::GetRayCasterGPUData() {
     m_raycasterDesc.Host()->minPixelX = m_rayCaster->GetRenderingZoneMinPixel().x;
     m_raycasterDesc.Host()->minPixelY = m_rayCaster->GetRenderingZoneMinPixel().y;
     m_raycasterDesc.Host()->maxPixelX = m_rayCaster->GetRenderingZoneMaxPixel().x;
@@ -155,7 +199,7 @@ GPUData<RayCasterDescriptor>& VolumeRenderer::GetRayCasterGPUData() {
     return m_raycasterDesc;
 }
 
-void VolumeRenderer::UpdateGPUDescriptors(){
+void VolumeRenderer::UpdateGPUDescriptors() {
     m_volumeDesc.Host()->bboxMin = m_volume->GetBboxMin();
     m_volumeDesc.Host()->bboxMax = m_volume->GetBboxMax();
     m_volumeDesc.Host()->worldSize = m_volume->GetBboxMax() - m_volume->GetBboxMin();
@@ -164,8 +208,8 @@ void VolumeRenderer::UpdateGPUDescriptors(){
     m_volumeDesc.ToDevice();
 }
 
-GPUData<VolumeDescriptor>* VolumeRenderer::GetVolumeGPUData() {
-    return (GPUData<VolumeDescriptor>*) &m_volumeDesc;
+GPUData<VolumeDescriptor> *VolumeRenderer::GetVolumeGPUData() {
+    return (GPUData<VolumeDescriptor> *) &m_volumeDesc;
 }
 
 const vec2 &VolumeRenderer::GetRenderingZoneMinNDC() const {

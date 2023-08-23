@@ -4,19 +4,22 @@
 
 #include <memory>
 #include <utility>
+#include <chrono>
 #include "AdamOptimizer.hpp"
 #include "Volume/DenseVolume3D.hpp"
 #include "Adam.cuh"
 #include "Dataset/NeRFDataset.hpp"
 #include "Volume.cuh"
 
+using namespace std::chrono;
+
 using namespace glm;
 
 AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<DenseVolume3D> target,
-                             std::shared_ptr<VolumeRenderer> renderer, std::shared_ptr<SparseVolume3D> sparseVolume) :
-        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_target(target), m_gradsDescriptor(), m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_volumeRenderer(renderer), m_superResModule(4), m_uniformDistribution(0, 8) {
+                             std::shared_ptr<VolumeRenderer> renderer, std::shared_ptr<SparseVolume3D> sparseVolume, std::shared_ptr<Statistics> statistics) :
+        SceneObject{std::string("ADAMOPTIMIZER"), SceneObjectTypes::ADAMOPTIMIZER}, m_scene(scene), m_target(target), m_gradsDescriptor(), m_dataset(std::move(dataset)), m_integrationRangeDescriptor(), m_volumeRenderer(std::move(renderer)), m_superResModule(4), m_uniformDistribution(0, 8), m_stats(std::move(statistics)){
     SetName("Adam Optimizer");
-    m_s_target = sparseVolume;
+    m_s_target = std::move(sparseVolume);
 
     /** Create the overlay plane that will be used to display the volume rendering texture on. */
     m_overlay = std::make_shared<OverlayPlane>(
@@ -35,7 +38,7 @@ AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std
     m_scene->Add(m_adamG1, true, true);
     m_children.push_back(m_adamG1);
 
-    m_s_adamG1 = std::make_shared<SparseVolume3D>(sparseVolume->GetInitialResolution());
+    m_s_adamG1 = std::make_shared<SparseVolume3D>();
     m_s_adamG1->SetName("Sparse Adam G1");
     m_s_adamG1->InitializeZeros();
     m_scene->Add(m_s_adamG1, true, true);
@@ -50,7 +53,7 @@ AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std
     m_scene->Add(m_adamG2, true, true);
     m_children.push_back(m_adamG2);
 
-    m_s_adamG2 = std::make_shared<SparseVolume3D>(sparseVolume->GetInitialResolution());
+    m_s_adamG2 = std::make_shared<SparseVolume3D>();
     m_s_adamG2->SetName("Sparse Adam G2");
     m_s_adamG2->InitializeZeros();
     m_scene->Add(m_s_adamG2, true, true);
@@ -64,7 +67,7 @@ AdamOptimizer::AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std
     m_scene->Add(m_grads, true, true);
     m_children.push_back(m_grads);
 
-    m_s_grads = std::make_shared<SparseVolume3D>(sparseVolume->GetInitialResolution());
+    m_s_grads = std::make_shared<SparseVolume3D>();
     m_s_grads->SetName("Sparse Adam Gradients");
     m_s_grads->InitializeZeros();
     m_scene->Add(m_s_grads, true, true);
@@ -145,47 +148,73 @@ void AdamOptimizer::Render() {
 }
 
 void AdamOptimizer::Step() {
+
+    auto start_loadBatch = high_resolution_clock::now();
     m_dataLoader->LoadBatch(m_renderMode);
+    auto stop_loadBatch = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop_loadBatch - start_loadBatch);
+    m_stats->AddLoadBatchTime(duration.count());
 
     /** Update adam descriptor's data on GPU. */
+    auto start_updateDescriptor = high_resolution_clock::now();
     UpdateGPUDescriptor();
-    m_superResModule.Step();
     m_volumeRenderer->UpdateGPUDescriptors();
+    m_superResModule.Step();
+    auto stop_updateDescriptor = high_resolution_clock::now();
+    auto duration1 = duration_cast<microseconds>(stop_updateDescriptor - start_updateDescriptor);
+    m_stats->AddUploadDescTime(duration1.count());
 
     /** Zero gradients. */
-//    zero_adam_wrapper(&m_adamDescriptor);
+    auto start_zeroGradient = high_resolution_clock::now();
     sparse_zero_adam_wrapper(&m_s_adamDescriptor);
+    auto stop_zeroGradient = high_resolution_clock::now();
+    auto duration2 = duration_cast<microseconds>(stop_zeroGradient - start_zeroGradient);
+    m_stats->AddZeroGradientTime(duration2.count());
 
     /** Forward Pass.  */
+    auto start_forward = high_resolution_clock::now();
     auto items = m_dataLoader->GetGPUDatas();
     for (size_t i = 0; i < m_dataLoader->GetBatchSize(); ++i) {
-//        batched_forward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_superResModule.GetDescriptor());
         batched_forward_sparse_wrapper(*items[i], m_s_target->GetDescriptor());
     }
+    auto stop_forward = high_resolution_clock::now();
+    auto duration3 = duration_cast<microseconds>(stop_forward - start_forward);
+    m_stats->AddForwardTime(duration3.count());
+
+    items[0]->ToHost();
+    auto mse = items[0]->Host()->psnr.x / (float)(items[0]->Host()->res.x * items[0]->Host()->res.y);
+    auto psnr = 10.0f * log10(1.0f / mse);
+    std::cout << "PSNR x: " << std::to_string(items[0]->Host()->psnr.x) << " / " << std::to_string(mse) << " / " << std::to_string(items[0]->Host()->res.x) << std::endl;
+    m_stats->AddPSNR(psnr);
 
     /** Backward Pass.  */
+    auto start_rayBackward = high_resolution_clock::now();
     for (size_t i = 0; i < m_dataLoader->GetBatchSize(); ++i) {
-//        batched_backward_wrapper(*items[i], m_volumeRenderer->GetVolumeGPUData(), m_adamDescriptor, m_superResModule.GetDescriptor());
         batched_backward_sparse_wrapper(
                 items[i],
                 m_s_target->GetDescriptor(),
                 &m_s_adamDescriptor,
                 m_superResModule.GetDescriptor());
     }
+    auto stop_rayBackward = high_resolution_clock::now();
+    auto duration4 = duration_cast<microseconds>(stop_rayBackward - start_rayBackward);
+    m_stats->AddRayBackwardTime(duration4.count());
 
     /** Volume Backward. Computing gradients on voxels and not on image rays. */
-//    volume_backward((GPUData<DenseVolumeDescriptor>*)(m_volumeRenderer->GetVolumeGPUData()), &m_adamDescriptor);
+    auto start_volBackward = high_resolution_clock::now();
     sparse_volume_backward((GPUData<SparseVolumeDescriptor>*)(m_s_target->GetDescriptor()), &m_s_adamDescriptor);
+    auto stop_volBackward = high_resolution_clock::now();
+    auto duration5 = duration_cast<microseconds>(stop_volBackward - start_volBackward);
+    m_stats->AddVolBackwardTime(duration5.count());
 
-//    items[0]->ToHost();
-//    auto mse = items[0]->Host()->psnr.x / (float)(items[0]->Host()->res.x * items[0]->Host()->res.y);
-//    auto psnr = 10.0f * log10(1.0f / mse);
-//    std::cout << "PSNR x: " << std::to_string(items[0]->Host()->psnr.x) << " / " << std::to_string(psnr) << " / " << std::to_string(items[0]->Host()->res.x) << std::endl;
 
     /** Update target volume weights. */
-//    update_adam_wrapper(&m_adamDescriptor);
+    auto start_adamUpdate = high_resolution_clock::now();
     sparse_update_adam_wrapper(&m_s_adamDescriptor);
-
+    auto stop_adamUpdate = high_resolution_clock::now();
+    auto duration6 = duration_cast<microseconds>(stop_adamUpdate - start_adamUpdate);
+    m_stats->AddAdamUpdateTime(duration6.count());
+    
     m_steps += 1;
 
     m_dataLoader->UnloadBatch();
@@ -330,10 +359,10 @@ void AdamOptimizer::CullVolume(){
 }
 
 void AdamOptimizer::DivideVolume(){
-    m_s_target->GetDescriptor()->Host()->occupiedVoxelCount = 0;
+//    m_s_target->GetDescriptor()->Host()->occupiedVoxelCount = 0;
     m_s_target->GetDescriptor()->ToDevice();
-    std::cout << "Voxel count before : " << std::to_string(m_s_target->GetDescriptor()->Host()->occupiedVoxelCount) << std::endl;
+//    std::cout << "Voxel count before : " << std::to_string(m_s_target->GetDescriptor()->Host()->occupiedVoxelCount) << std::endl;
     sparse_volume_divide_wrapper(m_s_target->GetDescriptor());
     m_s_target->GetDescriptor()->ToHost();
-    std::cout << "Voxel count after : " << std::to_string(m_s_target->GetDescriptor()->Host()->occupiedVoxelCount) << std::endl;
+//    std::cout << "Voxel count after : " << std::to_string(m_s_target->GetDescriptor()->Host()->occupiedVoxelCount) << std::endl;
 }

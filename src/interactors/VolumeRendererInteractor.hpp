@@ -33,6 +33,8 @@ public:
     const vec2 GetRenderingZoneMaxPixel();
     
     std::vector<std::shared_ptr<Camera>>& GetAvailableCameras();
+
+    GPUData<OneRayDebugInfoDescriptor>* GetDebugRayDescriptor();
     
     void SetTargetCamera(std::shared_ptr<Camera> cam);
     // std::shared_ptr<Camera> GetTargetCamera();

@@ -15,4 +15,6 @@ void main()
     vec4 tex_res = texture(texture0, TexCoord) / 255.0;
 
     FragColor = tex_res;
+//    gl_FragDepth  = ;
+
 }

@@ -18,6 +18,7 @@
 #include "SuperResolution/SuperResolutionModule.h"
 #include "Distribution/UniformDistribution.hpp"
 #include "Volume/SparseVolume3D.hpp"
+#include "Statistics/Statistics.h"
 
 using namespace glm;
 
@@ -146,9 +147,11 @@ private:
 
     UniformDistribution<short> m_uniformDistribution;
 
+    std::shared_ptr<Statistics> m_stats;
+
 public:
     explicit AdamOptimizer(Scene *scene, std::shared_ptr<Dataset> dataset, std::shared_ptr<DenseVolume3D> target,
-                           std::shared_ptr<VolumeRenderer> renderer, std::shared_ptr<SparseVolume3D> sparseVolume);
+                           std::shared_ptr<VolumeRenderer> renderer, std::shared_ptr<SparseVolume3D> sparseVolume, std::shared_ptr<Statistics> statistics);
 
     AdamOptimizer(const AdamOptimizer &) = delete;
 

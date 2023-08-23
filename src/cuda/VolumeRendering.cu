@@ -3,11 +3,7 @@ Author: Hector Piteau (hector.piteau@gmail.com)
 VolumeRendering.cu (c) 2023
 Desc: Volume rendering algorithms.
 Created:  2023-04-13T12:33:22.433Z
-<<<<<<< HEAD
 Modified: 2023-05-11T22:28:51.324Z
-=======
-Modified: 2023-04-26T12:25:44.190Z
->>>>>>> main
 */
 
 #include <glm/glm.hpp>
@@ -58,35 +54,51 @@ __device__ bool IsPointInBBox(const vec3 &point, DenseVolumeDescriptor *volume) 
         return false;
 }
 
-__device__ vec4 forward_sparse(Ray &ray, SparseVolumeDescriptor *volume)
+__device__ inline float adaptive_step(vec4& previous_data ) {
+    return clamp(1.0f / (5.0f *  previous_data.w + 0.5f), 0.01f, 10.0f);
+}
+
+__device__ vec4 forward_sparse(Ray &ray, SparseVolumeDescriptor *volume, OneRayDebugInfoDescriptor* debugRay = NULL)
 {
     /** Partial transmittance. */
     float Tpartial = 1.0f;
     /** Partial color. */
     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
     float pstep = (volume->worldSize.x / (float)volume->res.x);
-    float mstep = 0.5f;
+    float mstep = 1.0f;
     float step = pstep * mstep;
 
+    int cpt = 0;
+    vec4 data = {};
+
     size_t indices[8] = {};
+
 
     /** The ray's min must be strictly smaller than max. */
     if (ray.tmin < ray.tmax) {
 
         /** Travel through the ray from it's min to max. */
-        for (float t = ray.tmin; t < ray.tmax; t += step) {
+        for (float t = ray.tmin; t < ray.tmax; t += step * adaptive_step(data)) {
             vec3 pos = ray.origin + t * ray.dir;
 
             if (IsPointInBBox(pos, volume)) {
-                vec4 data = ReadVolume(pos, volume, indices);
+                data = ReadVolume(pos, volume, indices);
+
+                if(debugRay != NULL && debugRay->active){
+                    debugRay->pointsWorldCoords[cpt] = pos;
+                    debugRay->pointsSamples[cpt] = data;
+                    debugRay->points = cpt;
+                    cpt += 1;
+                }
+
                 vec3 color = vec3(data.r, data.g, data.b);
                 float alpha = data.a;
 
                 alpha = clamp(alpha, 0.0f, 0.9999f);
 
-                mstep = 0.6f + (0.6f - 0.1f) * alpha;
-                mstep = clamp(mstep, 0.1f, 0.6f);
-                step = pstep * mstep;
+//                mstep = 0.6f + (0.6f - 0.1f) * alpha;
+//                mstep = clamp(mstep, 0.1f, 0.6f);
+//                step = pstep * mstep;
 
                 color = clamp(color, vec3(0.0), vec3(1.0));
 
@@ -187,11 +199,16 @@ __global__ void volumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescrip
     }
 }
 
-__global__ void sparseVolumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescriptor *camera, SparseVolumeDescriptor *volume) {
+__global__ void sparseVolumeRenderingUI8(RayCasterDescriptor *raycaster, CameraDescriptor *camera, SparseVolumeDescriptor *volume, OneRayDebugInfoDescriptor* debugRay) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= camera->width || y >= camera->height) return;
+
+    bool debugRayValid = false;
+    if(x == debugRay->pixelCoords.x && (1080 - y) == debugRay->pixelCoords.y) {
+        debugRayValid = true;
+    }
 
 //    if (!raycaster->renderAllPixels) {
         uint minpx = camera->width - raycaster->minPixelX;
@@ -213,8 +230,10 @@ __global__ void sparseVolumeRenderingUI8(RayCasterDescriptor *raycaster, CameraD
                 return;
             }
 
+
+
             /** Call forward. */
-            vec4 result = forward_sparse(ray, volume);
+            vec4 result = forward_sparse(ray, volume, debugRayValid ? debugRay : NULL);
             result.w = 1.0f - result.w;
             result *= 255.0f;
             uchar4 element = VEC4_TO_UCHAR4(result);
@@ -252,7 +271,7 @@ extern "C" void volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster
     cudaDeviceSynchronize();
 }
 
-extern "C" void sparse_volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster, GPUData<CameraDescriptor> &camera, GPUData<SparseVolumeDescriptor>* volume) {
+extern "C" void sparse_volume_rendering_wrapper(GPUData<RayCasterDescriptor> &raycaster, GPUData<CameraDescriptor> &camera, GPUData<SparseVolumeDescriptor>* volume, GPUData<OneRayDebugInfoDescriptor> *debugRay) {
     /** Max 1024 per block. As each pixel is independent, may be useful to search for optimal size. */
     dim3 threadsPerBlock(16, 16);
     /** This create enough blocks to cover the whole texture, may contain threads that does not have pixel's assigned. */
@@ -261,7 +280,7 @@ extern "C" void sparse_volume_rendering_wrapper(GPUData<RayCasterDescriptor> &ra
             (camera.Host()->height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     /** Call the main volumeRendering kernel. **/
-    sparseVolumeRenderingUI8<<<numBlocks, threadsPerBlock>>>(raycaster.Device(), camera.Device(), volume->Device());
+    sparseVolumeRenderingUI8<<<numBlocks, threadsPerBlock>>>(raycaster.Device(), camera.Device(), volume->Device(), debugRay->Device());
 
     /** Get last error after rendering. */
     cudaError_t err = cudaGetLastError();
@@ -300,6 +319,7 @@ __device__ void forward_one_ray(unsigned int x, unsigned int y, Ray& ray, DenseV
     atomicAdd(&item->psnr.x, psnr_diff.x);
     atomicAdd(&item->psnr.y, psnr_diff.y);
     atomicAdd(&item->psnr.z, psnr_diff.z);
+
 
     if (item->debugRender) {
         uchar4 element;
@@ -361,6 +381,11 @@ __global__ void batched_forward_sparse(SparseVolumeDescriptor *volume, BatchItem
     auto alpha_loss = (alpha_gt - res.w) / ((res.w + epsilon) * (res.w + epsilon));
 
     item->loss[LINEAR_IMG_INDEX(x, y, item->res, 0)] = vec4(loss, alpha_loss);
+
+    auto psnr_diff = pow( gt_color - pred_color, vec3(2));
+    atomicAdd(&item->psnr.x, psnr_diff.x);
+    atomicAdd(&item->psnr.y, psnr_diff.y);
+    atomicAdd(&item->psnr.z, psnr_diff.z);
 
     if (item->debugRender) {
         uchar4 element;
@@ -659,88 +684,80 @@ extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor> &item, GPUD
 }
 
 __global__ void sparse_volume_gradients(SparseVolumeDescriptor *volume, SparseAdamOptimizerDescriptor* adam){
-    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
-    unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
+    const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+    const unsigned int z = blockIdx.z * blockDim.z + threadIdx.z;
 
     if(x > adam->res.x || y > adam->res.y || z > adam->res.z) return;
 
     auto indexes = SparseVolumeGetDataIndex(ivec3(x,y,z), adam->target);
 
+    if(indexes.data_index == INF) return;
+
     /** Retrieve voxel's data. */
     cell d = volume->data[indexes.data_index];
-    vec3 color = vec3(d.data.x, d.data.y, d.data.z);
-    float alpha = d.data.w;
+    vec4 center_data = vec4(d.data.x, d.data.y, d.data.z, d.data.w);
 
     /** Create loss variables to store partial gradients. */
-    vec3 tvl2_loss = vec3(0.0f);
-    float tvl2_loss_alpha = 0.0f;
+    vec4 tvl2_full_loss = vec4(0.0f);
 
     /** Check if not on the min border x. */
-    int tmp_x = (int)(x) - 1;
+    int tmp_x = ((int)x) - 1;
     if(tmp_x > 0){
-        indexes = SparseVolumeGetDataIndex(ivec3(tmp_x, y, z), adam->grads);
-        if(indexes.data_index != INF){
-            auto d_x_0 = float4ToVec4(volume->data[indexes.data_index].data);
-            tvl2_loss += 2.0f * (color - vec3(d_x_0));
-            tvl2_loss_alpha += 2.0f * (alpha - d_x_0.w);
+        auto ind = SparseVolumeGetDataIndex(ivec3(tmp_x, y, z), volume);
+        if(ind.data_index != INF){
+            auto tmp = float4ToVec4(volume->data[ind.data_index].data);
+            tvl2_full_loss += 2.0f * (center_data - tmp);
         }
     }
     tmp_x = (int)(x) + 1;
     if(tmp_x < adam->res.x){
-        indexes = SparseVolumeGetDataIndex(ivec3(tmp_x, y, z), adam->grads);
-        if(indexes.data_index != INF){
-            auto d_x_1 = float4ToVec4(volume->data[indexes.data_index].data);
-            tvl2_loss += 2.0f * (color - vec3(d_x_1));
-            tvl2_loss_alpha += 2.0f * (alpha - d_x_1.w);
+        auto ind = SparseVolumeGetDataIndex(ivec3(tmp_x, y, z), volume);
+        if(ind.data_index != INF){
+            auto tmp = float4ToVec4(volume->data[ind.data_index].data);
+            tvl2_full_loss += 2.0f * (center_data - tmp);
         }
     }
     int tmp_y = (int)(y) - 1;
     if(tmp_y > 0){
-        indexes = SparseVolumeGetDataIndex(ivec3(x, tmp_y, z), adam->grads);
-        if(indexes.data_index != INF){
-            auto d_y_0 = float4ToVec4(volume->data[indexes.data_index].data);
-            tvl2_loss += 2.0f * (color - vec3(d_y_0));
-            tvl2_loss_alpha += 2.0f * (alpha - d_y_0.w);
+        auto ind = SparseVolumeGetDataIndex(ivec3(x, tmp_y, z), volume);
+        if(ind.data_index != INF){
+            auto tmp = float4ToVec4(volume->data[ind.data_index].data);
+            tvl2_full_loss += 2.0f * (center_data - tmp);
         }
     }
     tmp_y = (int)(y) + 1;
     if(tmp_y < volume->res.y){
-        indexes = SparseVolumeGetDataIndex(ivec3(x, tmp_y, z), adam->grads);
-        if(indexes.data_index != INF){
-            auto d_y_1 = float4ToVec4(volume->data[indexes.data_index].data);
-            tvl2_loss += 2.0f * (color - vec3(d_y_1));
-            tvl2_loss_alpha += 2.0f * (alpha - d_y_1.w);
+        auto ind = SparseVolumeGetDataIndex(ivec3(x, tmp_y, z), volume);
+        if(ind.data_index != INF){
+            auto tmp = float4ToVec4(volume->data[ind.data_index].data);
+            tvl2_full_loss += 2.0f * (center_data - tmp);
         }
     }
     int tmp_z = (int)(z) - 1;
     if(tmp_z > 0){
-        indexes = SparseVolumeGetDataIndex(ivec3(x, y, tmp_z), adam->grads);
-        if(indexes.data_index != INF){
-            auto d_z_0 = float4ToVec4(volume->data[indexes.data_index].data);
-            tvl2_loss += 2.0f * (color - vec3(d_z_0));
-            tvl2_loss_alpha += 2.0f * (alpha - d_z_0.w);
+        auto ind = SparseVolumeGetDataIndex(ivec3(x, y, tmp_z), volume);
+        if(ind.data_index != INF){
+            auto tmp = float4ToVec4(volume->data[ind.data_index].data);
+            tvl2_full_loss += 2.0f * (center_data - tmp);
         }
     }
     tmp_z = (int)(z) + 1;
     if(tmp_z < volume->res.z){
-        indexes = SparseVolumeGetDataIndex(ivec3(x, y, tmp_z), adam->grads);
-        if(indexes.data_index != INF){
-            auto d_z_1 = float4ToVec4(volume->data[indexes.data_index].data);
-            tvl2_loss += 2.0f * (color - vec3(d_z_1));
-            tvl2_loss_alpha += 2.0f * (alpha - d_z_1.w);
+        auto ind = SparseVolumeGetDataIndex(ivec3(x, y, tmp_z), volume);
+        if(ind.data_index != INF){
+            auto tmp = float4ToVec4(volume->data[ind.data_index].data);
+            tvl2_full_loss += 2.0f * (center_data - tmp);
         }
     }
 
     /** Write gradients. */
-    tvl2_loss *= adam->tvl2_0_w;
-    tvl2_loss_alpha *= adam->tvl2_0_w;
-    auto tmp = adam->grads->data[indexes.data_index].data;
-    adam->grads->data[indexes.data_index].data = make_float4(
-            tmp.x + tvl2_loss.x,
-            tmp.y + tvl2_loss.y,
-            tmp.z + tvl2_loss.z,
-            tmp.w + tvl2_loss_alpha);
+    tvl2_full_loss = tvl2_full_loss * adam->tvl2_0_w;
+
+    atomicAdd(& (adam->grads->data[indexes.data_index].data.x), tvl2_full_loss.x);
+    atomicAdd(& (adam->grads->data[indexes.data_index].data.y), tvl2_full_loss.y);
+    atomicAdd(& (adam->grads->data[indexes.data_index].data.z), tvl2_full_loss.z);
+    atomicAdd(& (adam->grads->data[indexes.data_index].data.w), tvl2_full_loss.w);
 }
 
 __global__ void volume_gradients(DenseVolumeDescriptor *volume, AdamOptimizerDescriptor* adam){

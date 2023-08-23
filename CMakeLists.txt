@@ -55,6 +55,11 @@ set(CUDA_SOURCE_FILES
         src/model/Statistics/Statistics.h
         src/model/Statistics/StatsType.h
         src/model/Volume/Volume3D.h
+        src/view/PointCloud.cpp
+        src/view/PointCloud.h
+        src/view/ImUI/StatsView.cpp
+        src/view/ImUI/StatsView.h
+        src/model/Statistics/ScrollingBuffer.h
 )
 set(CUDA_ARCH "-arch=sm_75")
 set(CMAKE_CUDA_ARCHITECTURES "75")
@@ -116,6 +121,9 @@ cuda_add_executable(DRTMCS
         src/view/Gizmo.cpp
         src/view/Lines.cpp
         src/view/LineGrid.cpp
+        src/view/PointCloud.cpp
+
+        src/utils/SceneSettings.cpp
 
         ${CUDA_SOURCE_FILES})
 

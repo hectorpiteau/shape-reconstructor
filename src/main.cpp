@@ -4,15 +4,10 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 
 #include <opencv2/opencv.hpp>
 
-#include <cuda.h>
 #include <cuda_runtime_api.h>
-#include <cuda_runtime.h>
-#include <cuda_gl_interop.h>
-#include <tgmath.h>
 
 #include <sstream>
 #include "model/ShaderPipeline.hpp"
@@ -77,11 +72,6 @@ static void pxl_glfw_fps(GLFWwindow *window)
     frame_count++;
 }
 
-// static void render(GLFWwindow *window, GLuint shaderProgram)
-// {
-//     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-// }
-
 static void error_callback(int error, const char *description)
 {
     fputs(description, stderr);
@@ -140,6 +130,8 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
+
+    sceneSettings->SetKey(key, action);
 
     if (action == GLFW_PRESS)
     {
@@ -334,7 +326,7 @@ void GLInitialization()
     // // Accept fragment if it closer to the camera than the former one
     glDepthFunc(GL_LESS);
 
-    glEnable(GL_MULTISAMPLE);
+//    glEnable(GL_MULTISAMPLE);
 
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);

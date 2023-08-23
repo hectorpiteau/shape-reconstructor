@@ -32,7 +32,6 @@ Lines::Lines(Scene* scene, const float *data, size_t dataLength)
     glEnableVertexAttribArray(0);
 
     m_model = glm::mat4(1.0f);
-    // m_model = glm::translate(m_model, glm::vec3(0.0, 0.5, 0.0));
 
     m_ready = true;
 }
@@ -40,15 +39,6 @@ Lines::Lines(Scene* scene, const float *data, size_t dataLength)
 Lines::Lines() : SceneObject {std::string("LINES"), SceneObjectTypes::LINES}, m_pipeline("../src/shaders/v_lines.glsl", "../src/shaders/f_lines.glsl"), m_data(nullptr), m_dataLength(0)
 {
     m_mvpLocation = m_pipeline.AddUniform("mvp");
-
-    // glGenBuffers(1, &m_VBO);
-    // glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    // glBufferData(GL_ARRAY_BUFFER, 0 * sizeof(float), (void*)0, GL_STREAM_DRAW);
-
-    // glGenVertexArrays(1, &m_VAO);
-    // glBindVertexArray(m_VAO);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
-    // glEnableVertexAttribArray(0);
 
     m_model = glm::mat4(1.0f);
     m_model = glm::translate(m_model, glm::vec3(0.0, 0.5, 0.0));
@@ -118,31 +108,11 @@ void Lines::SetColor(const glm::vec4 &color)
 /**
  * @brief Render lines on screen.
  *
- * @param projectionMatrix : The current camera projection matrix.
- * @param viewMatrix : The current camera view matrix.
-//  */
-// void Lines::Render(const glm::mat4 &projectionMatrix, const glm::mat4 &viewMatrix)
-// {
-//     if (!m_ready)
-//         return;
-
-//     m_pipeline.UseShader();
-//     glm::mat4 MVP = projectionMatrix * viewMatrix * m_model;
-
-//     /** Subscribe color vec4. */
-//     glUniform4fv(m_colorLocation, 1, glm::value_ptr(m_color));
-//     /** Subscribe MVP matrix. */
-//     glUniformMatrix4fv(m_mvpLocation, 1, GL_FALSE, &MVP[0][0]);
-
-//     glBindVertexArray(m_VAO);
-
-//     glDrawArrays(GL_LINES, 0, m_dataLength); // previous length: m_dataLength
-// }
-
-
+*/
 void Lines::Render()
 {
     if (!m_ready) return;
+//    glPointSize(10.0f);
 
     m_pipeline.UseShader();
 
@@ -155,5 +125,6 @@ void Lines::Render()
 
     glBindVertexArray(m_VAO);
 
+//    glDrawArrays(GL_POINTS, 0, m_dataLength / 3); // previous length: m_dataLength
     glDrawArrays(GL_LINES, 0, m_dataLength / 3); // previous length: m_dataLength
 }

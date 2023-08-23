@@ -52,6 +52,11 @@ public:
         auto useSuperRes = m_interactor->UseSuperResolution();
         auto superResModule = m_interactor->GetSuperResolutionModule();
 
+        bool enableColorLoss;
+        bool enableAlphaL2Loss;
+        bool enableAlphaReg;
+        bool enableTVL2Loss;
+
         ImGui::SeparatorText(ICON_FA_INFO " Adam Optimizer - Information");
         ImGui::Spacing();
 
@@ -180,18 +185,30 @@ public:
         ImGui::SeparatorText( "Loss weighting");
         ImGui::Spacing();
 
+
+        ImGui::Checkbox("##ENABLECOLORL2", &enableColorLoss);
+        ImGui::SameLine();
         if(ImGui::DragFloat("Color L2", &color0w, 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetColor0W(color0w);
         }
 
+
+        ImGui::Checkbox("##ENABLEAlphaL2Loss", &enableAlphaL2Loss);
+        ImGui::SameLine();
         if(ImGui::DragFloat("Alpha L2", &alpha0w, 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetAlpha0W(alpha0w);
         }
 
+
+        ImGui::Checkbox("##ENABLEAlphaReg", &enableAlphaReg);
+        ImGui::SameLine();
         if(ImGui::DragFloat("Alpha Reg", &alphareg0w, 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetAlphaReg0W(alphareg0w);
         }
 
+
+        ImGui::Checkbox("##ENABLETVL2", &enableTVL2Loss);
+        ImGui::SameLine();
         if(ImGui::DragFloat("TVL2 Reg", &tvl20w, 0.001f, -100.0f, 100.0f, "%.5f")){
             m_interactor->SetTVL20W(tvl20w);
         }

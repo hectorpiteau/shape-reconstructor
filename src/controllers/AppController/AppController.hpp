@@ -19,6 +19,7 @@
 #include "../../model/VolumeRenderer.hpp"
 #include "../../model/PlaneCut.hpp"
 #include "../../model/AdamOptimizer.hpp"
+#include "../../view/ImUI/StatsView.h"
 
 class AppController
 {
@@ -28,15 +29,18 @@ public:
         /** Create the Scene */
         m_scene = new Scene(m_sceneSettings, window);
 
+        m_stats = std::make_shared<Statistics>();
+        m_statsView = std::make_shared<StatsView>(m_stats);
+
         ivec3 volumeResolution = {32, 32, 16*3};
-        volumeResolution *= 2;
+        volumeResolution *= 1;
 
         /** Fill default Scene. */
-        auto cam1 = std::make_shared<Camera>(m_scene, std::string("CameraT"), vec3(-4.0, 3.0, -4.0), vec3(0.0, 0.0, 0.0));
+//        auto cam1 = std::make_shared<Camera>(m_scene, std::string("CameraT"), vec3(-4.0, 3.0, -4.0), vec3(0.0, 0.0, 0.0));
+//
+//        m_scene->Add(cam1);
 
-        m_scene->Add(cam1);
-
-        m_scene->Add(std::make_shared<LineGrid>(m_scene));
+//        m_scene->Add(std::make_shared<LineGrid>(m_scene));
 
         auto nerfdataset = std::make_shared<NeRFDataset>(m_scene);
         nerfdataset->Load();
@@ -44,20 +48,14 @@ public:
 
         auto volume3D = std::make_shared<DenseVolume3D>(m_scene, volumeResolution);
 
-        SparseVolumeConfiguration sparseVolumeConfig = {
-                .initialResolution = ivec3 (32, 32, 32+16),
-                .stagesAmount = 2,
-                .stages = { {.multiplicationFactor = 2, .resolution=ivec3(32, 32, 32+16)}}
-        };
-
-        auto sparseVolume = std::make_shared<SparseVolume3D>(2 * ivec3(16, 16, 16+8));
+        auto sparseVolume = std::make_shared<SparseVolume3D>();
         sparseVolume->InitStub();
         m_scene->Add(sparseVolume);
 
         auto volumeRenderer = std::make_shared<VolumeRenderer>(m_scene, volume3D, sparseVolume);
         m_scene->Add(volumeRenderer);
 
-        auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volume3D, volumeRenderer, sparseVolume);
+        auto adamOptimizer = std::make_shared<AdamOptimizer>(m_scene, nerfdataset, volume3D, volumeRenderer, sparseVolume, m_stats);
         m_scene->Add(adamOptimizer);
 
         m_scene->Add(std::make_shared<PlaneCut>(m_scene, adamOptimizer->GetGradVolume() ));
@@ -84,20 +82,24 @@ public:
         m_objectListInteractor->Render();
 
         m_sceneObjectInteractor->Render();
+
+        m_statsView->Render();
     }
 
 private:
     GLFWwindow *m_window;
     std::shared_ptr<SceneSettings> m_sceneSettings;
-    Scene* m_scene;
-
     /** Interactors */
+    std::shared_ptr<Statistics> m_stats;
+
+    Scene* m_scene;
     std::shared_ptr<ObjectListInteractor> m_objectListInteractor;
     std::shared_ptr<SceneObjectInteractor> m_sceneObjectInteractor;
     
     /** views */
     std::shared_ptr<ObjectListView> m_objectListView;
     std::shared_ptr<InspectorView> m_inspectorView;
+    std::shared_ptr<StatsView> m_statsView;
 
     OpenCVCalibrator* m_calibrator;
 

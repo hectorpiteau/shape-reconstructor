@@ -147,47 +147,61 @@ struct SparseVolumeDataIndexResult {
     unsigned int stage1_inner_index;
 };
 
-CUDA_DEV inline SparseVolumeDataIndexResult SparseVolumeGetDataIndex(ivec3 coords, SparseVolumeDescriptor *volume) {
+CUDA_DEV inline SparseVolumeDataIndexResult SparseVolumeGetDataIndex(const ivec3& coords, SparseVolumeDescriptor *volume) {
     /** Locate the coarser cell in the stage0. */
     auto s0_tmp = vec3(coords) / vec3(4);
 
     auto s0_coords = ivec3(floor(s0_tmp));
 
-    unsigned int s0index = STAGE0_INDEX(s0_coords.x, s0_coords.y, s0_coords.z, volume->initialResolution );
+    unsigned int s0index = STAGE0_INDEX(s0_coords.x, s0_coords.y, s0_coords.z, volume->stage0Res );
 
     auto s0_cell = volume->stage0[s0index];
 
-    /** If the cell is not active then nothing is inside. return. */
-    if (s0_cell.active == false) return {.data_index = INF, .stage0_index = INF, .stage1_index = INF, .stage1_inner_index = INF};
+    if(s0_cell.index == INF) return  {.data_index = INF, .stage0_index = INF, .stage1_index = INF, .stage1_inner_index = INF};
 
-    /** If the voxel is not empty, locate the cell in the stage1. */
-    if (s0_cell.index >= volume->stage1Size) return {.data_index = INF, .stage0_index = s0index, .stage1_index = INF, .stage1_inner_index = INF};
-    unsigned int s1index = s0_cell.index;
-    auto s1_cell = volume->stage1[s1index];
+    auto s1_cell = volume->stage1[s0_cell.index];
 
-    auto previous_res = volume->initialResolution;
-    /** While its not a leaf, traverse the tree. */
-    while (!s1_cell.is_leaf) {
-        auto current_coords = vec3(coords) / vec3(4);
-        auto s1_tmp = floor((round(current_coords) - floor(current_coords)) * 4.0f);
-        auto tmp_ind = SHIFT_INDEX_4x4x4(ivec3(s1_tmp));
-        if (tmp_ind >= 64) return {.data_index = INF, .stage0_index = s0index, .stage1_index = INF, .stage1_inner_index = INF};
-        s1index = s1_cell.indexes[tmp_ind];
-        if (s1index >= volume->stage1Size) return {.data_index = INF, .stage0_index = s0index, .stage1_index = INF, .stage1_inner_index = INF};
-        s1_cell = volume->stage1[s1index];
-        previous_res = previous_res * 4;
-    }
+    auto s1_inner_coords = ivec3(  floor( 4.0f * (s0_tmp - floor(s0_tmp)) ) );
 
-    /** The cell is a leaf so the indexes correspond to the data buffer now. */
-    /** Let find the last voxel in the last block of 4x4x4. */
-    auto current_coords = vec3(coords) / vec3(4);
-    auto s1_tmp = glm::floor((glm::round(current_coords) - glm::floor(current_coords)) * 4.0f);
-    s1_tmp = glm::clamp(s1_tmp, vec3(0), vec3(4 - 1));
+    s1_inner_coords = clamp(s1_inner_coords, ivec3(0), ivec3(4));
 
-    unsigned int tmp_ind = SHIFT_INDEX_4x4x4(ivec3(s1_tmp));
-    if (tmp_ind >= 64) return {.data_index = INF, .stage0_index = s0index, .stage1_index = s1index, .stage1_inner_index = INF};
+//    if(!s1_cell.leafs[SHIFT_INDEX_4x4x4(s1_inner_coords)]) return {.data_index = INF, .stage0_index = INF, .stage1_index = INF, .stage1_inner_index = INF};
 
-    return {.data_index = s1_cell.indexes[tmp_ind], .stage0_index = s0index, .stage1_index = s1index, .stage1_inner_index = tmp_ind};
+    auto data_index = s1_cell.indexes[SHIFT_INDEX_4x4x4(s1_inner_coords)];
+
+    return {.data_index = data_index, .stage0_index = s0index, .stage1_index = s0_cell.index, .stage1_inner_index = (unsigned int)SHIFT_INDEX_4x4x4(s1_inner_coords)};
+
+//    /** If the cell is not active then nothing is inside. return. */
+//    if (s0_cell.active == false) return {.data_index = INF, .stage0_index = INF, .stage1_index = INF, .stage1_inner_index = INF};
+//
+//    /** If the voxel is not empty, locate the cell in the stage1. */
+//    if (s0_cell.index >= volume->stage1Size) return {.data_index = INF, .stage0_index = s0index, .stage1_index = INF, .stage1_inner_index = INF};
+//    unsigned int s1index = s0_cell.index;
+//    auto s1_cell = volume->stage1[s1index];
+//
+//    auto previous_res = volume->initialResolution;
+//    /** While its not a leaf, traverse the tree. */
+//    while (!s1_cell.is_leaf) {
+//        auto current_coords = vec3(coords) / vec3(4);
+//        auto s1_tmp = floor((round(current_coords) - floor(current_coords)) * 4.0f);
+//        auto tmp_ind = SHIFT_INDEX_4x4x4(ivec3(s1_tmp));
+//        if (tmp_ind >= 64) return {.data_index = INF, .stage0_index = s0index, .stage1_index = INF, .stage1_inner_index = INF};
+//        s1index = s1_cell.indexes[tmp_ind];
+//        if (s1index >= volume->stage1Size) return {.data_index = INF, .stage0_index = s0index, .stage1_index = INF, .stage1_inner_index = INF};
+//        s1_cell = volume->stage1[s1index];
+//        previous_res = previous_res * 4;
+//    }
+//
+//    /** The cell is a leaf so the indexes correspond to the data buffer now. */
+//    /** Let find the last voxel in the last block of 4x4x4. */
+//    auto current_coords = vec3(coords) / vec3(4);
+//    auto s1_tmp = glm::floor((glm::round(current_coords) - glm::floor(current_coords)) * 4.0f);
+//    s1_tmp = glm::clamp(s1_tmp, vec3(0), vec3(4 - 1));
+//
+//    unsigned int tmp_ind = SHIFT_INDEX_4x4x4(ivec3(s1_tmp));
+//    if (tmp_ind >= 64) return {.data_index = INF, .stage0_index = s0index, .stage1_index = s1index, .stage1_inner_index = INF};
+//
+//    return {.data_index = s1_cell.indexes[tmp_ind], .stage0_index = s0index, .stage1_index = s1index, .stage1_inner_index = tmp_ind};
 }
 
 
@@ -285,8 +299,9 @@ CUDA_DEV inline glm::vec4 ReadVolumeNearest(glm::vec3 &pos, SparseVolumeDescript
     full_coords -= vec3(0.5, 0.5, 0.5);
     glm::ivec3 nearest = glm::round(full_coords); // first project [0,1] to [0, resolution], then take the floor index.
     nearest = glm::clamp(nearest, glm::ivec3(0, 0, 0), volume->res - 1);
-
-    return cellToVec4(volume->data[SparseVolumeGetDataIndex(nearest, volume).data_index]);
+    auto index = SparseVolumeGetDataIndex(nearest, volume);
+    if(index.data_index == INF) return vec4(0);
+    return cellToVec4(volume->data[index.data_index]);
 }
 
 

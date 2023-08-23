@@ -26,6 +26,7 @@ Modified: 2023-04-26T11:14:57.290Z
 #include "RayCaster/RayCaster.hpp"
 #include "../cuda/GPUData.cuh"
 #include "Volume/SparseVolume3D.hpp"
+#include "../view/PointCloud.h"
 
 using namespace glm;
 
@@ -50,9 +51,12 @@ private:
     GPUData<CameraDescriptor> m_cameraDesc;
     GPUData<DenseVolumeDescriptor> m_volumeDesc;
     GPUData<RayCasterDescriptor> m_raycasterDesc;
+    GPUData<OneRayDebugInfoDescriptor> m_debugRayDesc;
+
+    PointCloud m_debugRayPoints;
 
     RayCasterParams m_params{};
-    // void RunKernel(cudaArray *image_array, uint width, uint height);
+
 public:
     explicit VolumeRenderer(Scene* scene, std::shared_ptr<DenseVolume3D> target, std::shared_ptr<SparseVolume3D> sparseVolume);
     VolumeRenderer(const VolumeRenderer&) = delete;
@@ -93,6 +97,8 @@ public:
      * @return False to hide it.
      */
     bool GetShowRenderingZone() const;
+
+    GPUData<OneRayDebugInfoDescriptor>* GetDebugRayDescriptor();
 
     [[nodiscard]] bool IsRendering() const;
     void SetIsRendering(bool value);

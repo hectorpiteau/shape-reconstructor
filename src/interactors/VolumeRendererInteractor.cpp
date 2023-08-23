@@ -45,6 +45,11 @@ std::vector<std::shared_ptr<Camera>>& VolumeRendererInteractor::GetAvailableCame
     return m_availableCameras;
 }
 
+
+GPUData<OneRayDebugInfoDescriptor>* VolumeRendererInteractor::GetDebugRayDescriptor(){
+    return m_volumeRenderer->GetDebugRayDescriptor();
+}
+
 void VolumeRendererInteractor::SetTargetCamera(std::shared_ptr<Camera> cam){
     m_volumeRenderer->SetTargetCamera(cam);
 }

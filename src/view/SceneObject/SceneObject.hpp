@@ -23,6 +23,7 @@ enum SceneObjectTypes
     ADAMOPTIMIZER,
     SPARSEVOLUME3D,
     DENSEVOLUME3D,
+    POINTCLOUD,
     NONE
 };
 
@@ -43,6 +44,7 @@ static const std::vector<const char *> SceneObjectNames = {
     "Adam Optimizer",
     "Sparse Volume 3D",
     "Dense Volume 3D",
+    "Point Cloud",
     "None"};
 
 class SceneObject : public Renderable

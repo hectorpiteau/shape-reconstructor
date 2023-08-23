@@ -105,6 +105,15 @@ struct DebugInfo {
     ivec3 iv3;
 };
 
+struct OneRayDebugInfoDescriptor {
+    ivec2 pixelCoords;
+    vec3 pointsWorldCoords[400];
+    vec4 pointsSamples[400];
+    bool active;
+
+    int points;
+};
+
 struct SuperResolutionDescriptor {
     /** Number of rays per pixel. */
     unsigned int raysAmount;
@@ -130,27 +139,26 @@ struct DenseVolumeDescriptor : public VolumeDescriptor {
 };
 
 struct SparseVolumeDescriptor : public VolumeDescriptor {
-    ivec3 initialResolution;
-
-    stage0_cell* stage0;
+    /** Stage0 */
+    Stage0Cell* stage0;
     size_t stage0Size;
+    ivec3 stage0Res;
+    ivec3 stage0CellSize;
 
-    stage_cell* stage1;
+    /** Stage1 */
+    StageCell* stage1; /** Stage1 Cell Buffer*/
     size_t stage1Size;
-    bool* stage1_oc;
-    int stage1_pt;
+    ivec3 stage1Res;
+    ivec3 stage1CellSize;
+    bool* stage1Occupancy;
 
-    size_t occupiedVoxelCount;
-    size_t data_pt;
+    /** Data */
     cell* data;
-    cell* adam_g1;
-    cell* adam_g2;
-    cell* grads;
 
+    size_t data_pt;
 
-    size_t dataSize;
+    size_t dataSize; /** Amount of cells in the Data Buffer. */
     bool* data_oc;
-    unsigned int maxDepth;
 };
 
 struct SparseAdamOptimizerDescriptor {
@@ -236,14 +244,14 @@ struct CursorPixel {
     vec4 value;
 };
 
-
-
 struct ImageDescriptor {
     /** image information */
     ivec2 imgRes;
     /** Image storage representation. */
     cudaSurfaceObject_t surface;
 };
+
+
 
 struct RayCasterDescriptor {
     /** Active zone min coordinates in pixels. */

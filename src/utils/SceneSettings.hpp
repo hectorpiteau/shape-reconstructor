@@ -1,7 +1,12 @@
 #ifndef SCENE_SETTINGS_H
 #define SCENE_SETTINGS_H
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <glm/glm.hpp>
+#include <map>
 #include "SceneGlobalVariables.hpp"
+
 enum CameraMovementModel
 {
     FPS,
@@ -13,7 +18,7 @@ class SceneSettings
 {
 private:
 
-    /** Viewport informations */
+    /** Viewport information */
     int m_viewportWidth, m_viewportHeight;
 
     /** Camera movement model to be used by the active camera. */
@@ -35,65 +40,47 @@ private:
 
     bool m_volumeRendering = true;
 
+    /** Keys */
+    std::map<int, int> m_keyPressed;
+
 public:
-    SceneSettings(int viewportWidth, int viewportHeight) : m_viewportWidth(viewportWidth), m_viewportHeight(viewportHeight) {};
+    SceneSettings(int viewportWidth, int viewportHeight);
 
-    enum CameraMovementModel GetCameraModel() { return m_cameraModel; }
-    void SetCameraModel(enum CameraMovementModel model)
-    {
-        m_cameraModel = model;
-        std::cout << "Set camera mode: " << model << std::endl;
-    }
+    enum CameraMovementModel GetCameraModel();
+    void SetCameraModel(enum CameraMovementModel model);
 
-    void Scroll(double xOffset, double yOffset)
-    {
-        m_scrollOffsets.x += xOffset * m_scrollSpeed;
-        m_scrollOffsets.y += yOffset * m_scrollSpeed;
-    };
+    void Scroll(double xOffset, double yOffset);
 
-    glm::vec2 GetScrollOffsets() { return m_scrollOffsets; }
+    glm::vec2 GetScrollOffsets();
 
-    bool GetMouseLeftClick() { return m_mouseLeftClick; }
-    void SetMouseLeftClick(bool value) { m_mouseLeftClick = value; }
+    bool GetMouseLeftClick();
+    void SetMouseLeftClick(bool value);
 
-    void SetMouseRightClick(bool value) { m_mouseRightClick = value; }
-    bool GetMouseRightClick() { return m_mouseRightClick; }
+    void SetMouseRightClick(bool value);
+    bool GetMouseRightClick();
 
-    void SetShiftKey(bool value){ m_shiftKey = value;}
-    bool GetShiftKey(){ return m_shiftKey;}
+    void SetShiftKey(bool value);
+    bool GetShiftKey();
 
-    void SetCtrlKey(bool value){ m_ctrlKey = value;}
-    bool GetCtrlKey(){ return m_ctrlKey;}
+    void SetCtrlKey(bool value);
+    bool GetCtrlKey();
     
-    void SetAltKey(bool value){ m_altKey = value;}
-    bool GetAltKey(){ return m_altKey;}
+    void SetAltKey(bool value);
+    bool GetAltKey();
 
-    int GetViewportWidth(){return m_viewportWidth;}
-    int GetViewportHeight(){return m_viewportHeight;}
+    int GetViewportWidth();
+    int GetViewportHeight();
 
-    float GetViewportRatio(){ return ((float)(m_viewportWidth))/((float)(m_viewportHeight));}
+    float GetViewportRatio();
 
-    void IncreaseScrollSpeed(){ m_scrollSpeed += 0.01f; std::cout << "inc scroll" << std::endl;}
-    void DecreaseScrollSpeed(){ m_scrollSpeed -= 0.01f;std::cout << "dec scroll" << std::endl;}
+    void IncreaseScrollSpeed();
+    void DecreaseScrollSpeed();
 
-    void SetVariable(SceneGlobalVariables var, bool value){
-        switch(var){
-            case SceneGlobalVariables::VOLUME_RENDERING:
-                m_volumeRendering = !m_volumeRendering;
-                break;
-        }
-    }
+    void SetVariable(SceneGlobalVariables var, bool value);
+    bool GetVariable(SceneGlobalVariables var);
 
-    bool GetVariable(SceneGlobalVariables var){
-        switch(var){
-            case SceneGlobalVariables::VOLUME_RENDERING:
-                return m_volumeRendering;
-                break;
-            
-        }
-        return false;
-
-    }
+    void SetKey(int key, int action);
+    bool IsKeyPressed(int key);
 };
 
 #endif // SCENE_SETTINGS_H

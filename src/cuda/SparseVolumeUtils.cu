@@ -9,15 +9,15 @@ __global__ void sparse_volume_init_stage0(SparseVolumeDescriptor* volume){
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     if(x > volume->stage0Size) return;
     volume->stage0[x].index = INF;
-    volume->stage0[x].active = true;
+//    volume->stage0[x].active = true;
 }
 
 __global__ void sparse_volume_init_stage1(SparseVolumeDescriptor* volume){
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     if(x > volume->stage1Size) return;
     for(int i=0; i<8; ++i) volume->stage1[x].indexes[i] = INF;
-    volume->stage1[x].is_leaf = false;
-    volume->stage1_oc[x] = false;
+//    volume->stage1[x].is_leaf = false;
+    volume->stage1Occupancy[x] = false;
 }
 
 __global__ void sparse_volume_init_data(SparseVolumeDescriptor* volume){
