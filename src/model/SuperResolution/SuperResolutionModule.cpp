@@ -5,7 +5,7 @@
 #include "SuperResolutionModule.h"
 
 
-SuperResolutionModule::SuperResolutionModule(unsigned int raysAmount): m_normalDistribution(0.0f, 0.5f, -0.5f, 0.5f),  m_raysAmount(raysAmount), m_shifts(), m_desc() {
+SuperResolutionModule::SuperResolutionModule(unsigned int raysAmount): m_normalDistribution(0.0f, 0.15f, -0.5f, 0.5f),  m_raysAmount(raysAmount), m_shifts(), m_desc() {
 
     m_desc.Host()->shifts = static_cast<vec2 *>(GPUData<SuperResolutionDescriptor>::AllocateOnDevice(
             m_raysAmount * sizeof(glm::vec2)

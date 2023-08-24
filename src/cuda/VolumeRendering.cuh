@@ -29,7 +29,7 @@ extern "C" void sparse_volume_rendering_wrapper(GPUData<RayCasterDescriptor>& ra
 
 extern "C" void batched_forward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<DenseVolumeDescriptor>& volume, GPUData<SuperResolutionDescriptor>& superRes);
 extern "C" void batched_backward_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<DenseVolumeDescriptor>& volume, GPUData<AdamOptimizerDescriptor>& adam, GPUData<SuperResolutionDescriptor>& superRes);
-extern "C" void batched_forward_sparse_wrapper(GPUData<BatchItemDescriptor> &item, GPUData<SparseVolumeDescriptor> *volume);
+extern "C" void batched_forward_sparse_wrapper(GPUData<BatchItemDescriptor> &item, GPUData<SparseVolumeDescriptor> *volume, GPUData<SuperResolutionDescriptor>* superRes);
 //extern "C" void batched_backward_sparse_wrapper(GPUData<BatchItemDescriptor>& item, GPUData<SparseVolumeDescriptor>* volume, GPUData<SparseAdamOptimizerDescriptor>& adam);
 extern "C" void batched_backward_sparse_wrapper(GPUData<BatchItemDescriptor>* item, GPUData<SparseVolumeDescriptor>* volume, GPUData<SparseAdamOptimizerDescriptor>* adam, GPUData<SuperResolutionDescriptor>* superRes );
 

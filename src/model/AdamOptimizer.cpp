@@ -175,7 +175,7 @@ void AdamOptimizer::Step() {
     auto start_forward = high_resolution_clock::now();
     auto items = m_dataLoader->GetGPUDatas();
     for (size_t i = 0; i < m_dataLoader->GetBatchSize(); ++i) {
-        batched_forward_sparse_wrapper(*items[i], m_s_target->GetDescriptor());
+        batched_forward_sparse_wrapper(*items[i], m_s_target->GetDescriptor(), m_superResModule.GetDescriptor());
     }
     auto stop_forward = high_resolution_clock::now();
     auto duration3 = duration_cast<microseconds>(stop_forward - start_forward);
@@ -184,7 +184,6 @@ void AdamOptimizer::Step() {
     items[0]->ToHost();
     auto mse = items[0]->Host()->psnr.x / (float)(items[0]->Host()->res.x * items[0]->Host()->res.y);
     auto psnr = 10.0f * log10(1.0f / mse);
-    std::cout << "PSNR x: " << std::to_string(items[0]->Host()->psnr.x) << " / " << std::to_string(mse) << " / " << std::to_string(items[0]->Host()->res.x) << std::endl;
     m_stats->AddPSNR(psnr);
 
     /** Backward Pass.  */
