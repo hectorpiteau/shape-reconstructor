@@ -77,7 +77,7 @@ __device__ vec4 forward_sparse(Ray &ray, SparseVolumeDescriptor *volume, OneRayD
     if (ray.tmin < ray.tmax) {
 
         /** Travel through the ray from it's min to max. */
-        for (float t = ray.tmin; t < ray.tmax; t += step * adaptive_step(data)) {
+        for (float t = ray.tmin; t < ray.tmax; t += step) {
             vec3 pos = ray.origin + t * ray.dir;
 
             if (IsPointInBBox(pos, volume)) {
