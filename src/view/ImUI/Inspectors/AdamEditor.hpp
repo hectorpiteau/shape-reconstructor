@@ -176,10 +176,6 @@ public:
         ImGui::Text("Amount of iterations: ");
         ImGui::SameLine();
         ImGui::TextUnformatted(std::to_string(0).c_str());
-
-        static float arr[] = { 0.0f };
-        ImGui::PlotLines("PSNR", arr, IM_ARRAYSIZE(arr), 0, nullptr, 0.0f, 45.0f,  ImVec2(0, 80.0f));
-
         ImGui::Separator();
 
         ImGui::SeparatorText( "Loss weighting");

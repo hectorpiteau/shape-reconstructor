@@ -21,7 +21,8 @@ vec4 mouseData;
 
 void main()
 {
-    FragColor = texture(texture0, TexCoord) / 255.0f;
+    vec4 tmp = texture(texture0, TexCoord);
+    FragColor = tmp / 255.0f;
 
-    if(mousePos == ivec2(gl_FragCoord)) mouseData = FragColor;
+    if(mousePos == ivec2(gl_FragCoord)) mouseData = tmp;
 }

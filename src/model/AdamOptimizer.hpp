@@ -134,8 +134,8 @@ private:
     /** Losses weightings */
 
     float m_color0W = 1.0f;
-    float m_alpha0W = 0.5f;
-    float m_alphaReg0W = -2.0f;
+    float m_alpha0W = 1.0f;
+    float m_alphaReg0W = -1.0f;
     float m_TVL20W = 1.0f;
 
     /** LOD */
@@ -143,7 +143,7 @@ private:
 
     /** Super Resolution */
     SuperResolutionModule m_superResModule;
-    unsigned short m_amountOfGradientsToWrite = 8;
+    unsigned short m_amountOfGradientsToWrite = 2;
 
     UniformDistribution<short> m_uniformDistribution;
 

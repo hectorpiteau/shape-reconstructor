@@ -64,7 +64,7 @@ __device__ vec4 forward_sparse(Ray &ray, SparseVolumeDescriptor *volume, OneRayD
     /** Partial color. */
     vec3 Cpartial = vec3(0.0f, 0.0f, 0.0f);
     float pstep = (volume->worldSize.x / (float) volume->res.x);
-    float mstep = 1.0f;
+    float mstep = 0.5f;
     float step = pstep * mstep;
 
     int cpt = 0;
@@ -371,15 +371,15 @@ __device__ void sparse_forward_one_ray(unsigned int x, unsigned int y, Ray &ray,
 
     /** Run forward function. */
     vec4 res = forward_sparse(ray, volume);
-    item->cpred[LINEAR_IMG_INDEX(x, y, item->res, 0)] = res;
+    item->cpred[LINEAR_IMG_INDEX(x, y, item->res, superRedIndex)] = res;
 
     /** Store loss. */
     float epsilon = 1.0E-8f;
     vec3 pred_color = vec3(res);
-    vec3 loss = (gt_color - pred_color) / ((pred_color + epsilon) * (pred_color + epsilon));
-    auto alpha_loss = (alpha_gt - res.w) / ((res.w + epsilon) * (res.w + epsilon));
+//    vec3 loss = (gt_color - pred_color) / ((pred_color + epsilon) * (pred_color + epsilon));
+//    auto alpha_loss = (alpha_gt - res.w) / ((res.w + epsilon) * (res.w + epsilon));
 
-    item->loss[LINEAR_IMG_INDEX(x, y, item->res, 0)] = vec4(loss, alpha_loss);
+//    item->loss[LINEAR_IMG_INDEX(x, y, item->res, 0)] = vec4(loss, alpha_loss);
 
     auto psnr_diff = pow(gt_color - pred_color, vec3(2));
     atomicAdd(&item->psnr.x, psnr_diff.x);
@@ -390,13 +390,13 @@ __device__ void sparse_forward_one_ray(unsigned int x, unsigned int y, Ray &ray,
         uchar4 element;
         switch (item->mode) {
             case RenderMode::COLOR_LOSS:
-                loss *= 255.0f;
-                loss = clamp(loss, vec3(0.0, 0.0, 0.0), vec3(255.0, 255.0, 255.0));
-                element = VEC3_255_TO_UCHAR4((loss));
+//                loss *= 255.0f;
+//                loss = clamp(loss, vec3(0.0, 0.0, 0.0), vec3(255.0, 255.0, 255.0));
+//                element = VEC3_255_TO_UCHAR4((loss));
                 break;
             case RenderMode::ALPHA_LOSS:
-                alpha_loss = clamp(alpha_loss, 0.0f, 255.0f);
-                element = VEC3_255_TO_UCHAR4((vec3(alpha_loss, alpha_loss, alpha_loss)));
+//                alpha_loss = clamp(alpha_loss, 0.0f, 255.0f);
+//                element = VEC3_255_TO_UCHAR4((vec3(alpha_loss, alpha_loss, alpha_loss)));
                 break;
             case RenderMode::PREDICTED_COLOR:
                 pred_color *= 255.0f;
@@ -432,7 +432,7 @@ batched_forward_sparse(SparseVolumeDescriptor *volume, BatchItemDescriptor *item
 
     if (superRes->active) {
         for (int i = 0; i < superRes->raysAmount; ++i) {
-            Ray ray = SingleRayCaster::GetRay(vec2(((float)x) + superRes->shifts[i].x, ((float)y) + superRes->shifts[i].y), item->cam);
+            Ray ray = SingleRayCaster::GetRay(vec2(((float)x) + superRes->shifts[i].x, ((float)y)) + superRes->shifts[i].y, item->cam);
             sparse_forward_one_ray(
                     x,
                     y,
@@ -519,7 +519,7 @@ __device__ void backward_one_ray(unsigned int x, unsigned int y,
 
 //    auto dLdalpha = (2.0f * (cpred.w - alpha_gt)) / ((cpred.w + epsilon) * (cpred.w + epsilon));
 
-    dLdC = clamp(dLdC, -10.0f, 10.0f);
+    dLdC = clamp(dLdC, -100.0f, 100.0f);
 
     auto Tinf = cpred.w;
 
@@ -530,7 +530,7 @@ __device__ void backward_one_ray(unsigned int x, unsigned int y,
 
     float step = 0.1f;
     if (use_sparse)
-        step = (s_volume->worldSize.x / (float) s_volume->res.x) * 0.5f;
+        step = (s_volume->worldSize.x / (float) s_volume->res.x) * 0.25f;
     else
         step = (volume->worldSize.x / (float) volume->res.x) * 0.5f;
 
@@ -584,6 +584,7 @@ __device__ void backward_one_ray(unsigned int x, unsigned int y,
                 }
 
                 if (use_sparse) {
+                    //color_grad, alpha_grad
                     WriteVolumeTRI(pos, s_adam->grads, vec4(color_grad, alpha_grad), indices, s_adam);
                 } else {
                     WriteVolumeTRI(pos, adam->grads, vec4(color_grad, alpha_grad), indices, adam);
@@ -617,9 +618,10 @@ BatchedBackwardSparse(SparseVolumeDescriptor *volume, BatchItemDescriptor *item,
 
     if (superRes->active) {
         // superRes->raysAmount
-        for (int i = 0; i < 2; ++i) {
+        for (int i = 0; i < 4; ++i) {
             // superRes->shifts[i].x  superRes->shifts[i].y
             Ray ray = SingleRayCaster::GetRay(vec2(((float)x) + superRes->shifts[i].x, ((float)y)) + superRes->shifts[i].y, item->cam);
+
             backward_one_ray(x, y, gt, ray, item, NULL, NULL, superRes, volume, adam, true, true, i);
         }
     } else {

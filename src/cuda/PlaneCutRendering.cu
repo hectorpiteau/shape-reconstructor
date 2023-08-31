@@ -60,11 +60,13 @@ __global__ void SparsePlaneCutRendering(PlaneCutDescriptor *planeCut, CameraDesc
     vec3 intersection = VectorPlaneIntersection(ray.origin, ray.dir, planeOrigin, planeNormal);
 
     if (all(lessThan(intersection, planeCut->max)) && all(greaterThan(intersection, planeCut->min))) {
-        vec4 res = ReadVolumeNearest(intersection, volume) * 255.0f;
+        vec4 res = ReadVolumeNearest(intersection, volume);
         if(x == cursorPixel->loc.x && (1080 - y) == cursorPixel->loc.y) {
             cursorPixel->value = res;
-
         }
+
+        res *= 255.0f;
+
         if(x > cursorPixel->loc.x - 5
            && x < cursorPixel->loc.x + 5
            && (1080 - y) > cursorPixel->loc.y - 5
