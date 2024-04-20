@@ -34,8 +34,8 @@ IntegrationRange(CameraDescriptor *camera, IntegrationRangeDescriptor *output_ra
 
     /** Write result in the output_ranges data array. */
     if (output_ranges->renderInTexture) {
-        element.x = res ? (unsigned char)float2uint(t_far * 50.0f,cudaRoundNearest) : 0;
-        element.y = res ? (unsigned char)float2uint(t_near * 50.0f,cudaRoundNearest) : 0;
+        element.x = res ? (unsigned char)__float2uint_rn(t_far * 50.0f) : 0;
+        element.y = res ? (unsigned char)__float2uint_rn(t_near * 50.0f) : 0;
         surf2Dwrite<uchar4>(element, output_ranges->surface, x * sizeof(uchar4), y);
     } else {
         output_ranges->data[x * output_ranges->dim.y + y] = make_float2(t_near, t_far);

@@ -60,9 +60,12 @@ set(CUDA_SOURCE_FILES
         src/view/ImUI/StatsView.cpp
         src/view/ImUI/StatsView.h
         src/model/Statistics/ScrollingBuffer.h
+        src/model/Octree/OctreeStructs.h
+        src/SVO.cpp
+        src/SVO.h
 )
-set(CUDA_ARCH "-arch=sm_75")
-set(CMAKE_CUDA_ARCHITECTURES "75")
+set(CUDA_ARCH "-arch=sm_89")
+set(CMAKE_CUDA_ARCHITECTURES "89")
 
 
 # add the executable

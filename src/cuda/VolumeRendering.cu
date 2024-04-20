@@ -401,7 +401,7 @@ __device__ void sparse_forward_one_ray(unsigned int x, unsigned int y, Ray &ray,
             case RenderMode::PREDICTED_COLOR:
                 pred_color *= 255.0f;
                 pred_color = clamp(pred_color, 0.0f, 255.0f);
-                element = VEC3_255_TO_UCHAR4(pred_color);
+//                element = VEC3_255_TO_UCHAR4(pred_color);
                 break;
             case RenderMode::GROUND_TRUTH:
             default:
@@ -577,8 +577,8 @@ __device__ void backward_one_ray(unsigned int x, unsigned int y,
                 auto alpha_grad = alpha_0_w * dot(dLdC, dCdAlpha) + alpha_reg_0_w * alpha_reg_i;
 
                 if (use_super_res && super_res->active) {
-//                    auto gaussian_weight = GeneralGaussian2D(super_res->shifts[srIndex].x, super_res->shifts[srIndex].y);
-                    auto gaussian_weight = 0.25f;
+                    auto gaussian_weight = GeneralGaussian2D(super_res->shifts[srIndex].x, super_res->shifts[srIndex].y);
+//                    auto gaussian_weight = 0.25f;
                     alpha_grad = alpha_grad * gaussian_weight;
                     color_grad = color_grad * gaussian_weight;
                 }

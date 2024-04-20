@@ -27,6 +27,8 @@
 #include "../../include/stb_image.h"
 #include "../../include/stb_image_write.h"
 #include "utils/filesystem.h"
+#include "view/SkyBox.hpp"
+#include "SVO.h"
 #include <implot.h>
 
 using namespace cv;
@@ -381,20 +383,20 @@ int main(void)
     UnitCube cube(cubePipeline);
 
     // auto meshPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_mesh.glsl", "../src/shaders/f_mesh.glsl");
-    // Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/data/sphere.obj");
-    // Model model(scene, meshPipeline, "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/bust/marble_bust_01_4k.fbx");
+//     Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/data/sphere.obj");
+//     Model model(scene, meshPipeline, "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/bust/marble_bust_01_4k.fbx");
 
-    // auto skyboxPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_skybox.glsl", "../src/shaders/f_skybox.glsl");
+     auto skyboxPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_skybox.glsl", "../src/shaders/f_skybox.glsl");
 
-    // std::vector<std::string> faces{
-    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/px.jpg",
-    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/nx.jpg",
-    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/py.jpg",
-    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/ny.jpg",
-    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/pz.jpg",
-    //     "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/hdri_cm/1/nz.jpg"};
+     std::vector<std::string> faces{
+         "../data/hdri/1/px.png",
+         "../data/hdri/1/nx.png",
+         "../data/hdri/1/py.png",
+         "../data/hdri/1/ny.png",
+         "../data/hdri/1/pz.png",
+         "../data/hdri/1/nz.png"};
 
-    // SkyBox skybox(skyboxPipeline, faces);
+//     SkyBox skybox(skyboxPipeline, faces);
 
     // auto overlayPlanePipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_overlay_plane.glsl", "../src/shaders/f_overlay_plane.glsl");
     // OverlayPlane overlayPlane(overlayPlanePipeline);
@@ -411,7 +413,7 @@ int main(void)
     Lines cameraLines(scene, scene->GetActiveCam()->GetWireframe(), 16 * 3);
     cameraLines.SetColor(1.0, 0.0, 0.0, 0.5);
 
-
+    SVO svo(scene);
     // Image image = Image("../screen1.png");
     // image.LoadPng("../data/nerf/train/r_0.png", true, false);
 
@@ -450,10 +452,10 @@ int main(void)
         scene->GetActiveCam()->ComputeMatricesFromInputs(window);
         
         // cube.Render(projectionMatrix, viewMatrix, camera.GetPosition(), WINDOW_WIDTH, WINDOW_HEIGHT);
-        // skybox.Render(projectionMatrix, viewMatrix);
+//         skybox.Render(scene->GetActiveCam()->GetProjectionMatrix(), scene->GetActiveCam()->GetViewMatrix());
         // model.Render(projectionMatrix, viewMatrix, sceneSettings);
-        // testLines.Render(projectionMatrix, viewMatrix, sceneSettings);
-
+//        testLines.Render(scene->GetActiveCam()->GetProjectionMatrix(), scene->GetActiveCam()->GetViewMatrix(), sceneSettings);
+        svo.Render();
         app->Render();
         // m_imagePlane.Render();
 

@@ -68,9 +68,9 @@ private:
 public:
     explicit NeRFDataset(Scene *scene,
                          const std::string trainJson = "../data/nerf/transforms_train.json",
-                         const std::string trainImages = "../data/nerf400/train",
+                         const std::string trainImages = "../data/nerf200/train",
                          const std::string validJson = "../data/nerf/transforms_val.json",
-                         const std::string validImages = "../data/nerf400/val");
+                         const std::string validImages = "../data/nerf200/val");
 
     ~NeRFDataset() override;
 

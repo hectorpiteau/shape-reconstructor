@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <surface_types.h>
 #include <cuda_surface_types.h>
+#include <cuda_runtime.h>
 #include "CudaLinearVolume3D.cuh"
 #include "CudaSparseVolume3D.cuh"
 
@@ -75,9 +76,9 @@ __uint2float_rn(UCH.w))
 //uint2float(UCH.w, cudaRoundNearest))
 
 #define VEC3_255_TO_UCHAR4(VEC) make_uchar4( \
-(unsigned char)float2uint(VEC.x, cudaRoundNearest), \
-(unsigned char)float2uint(VEC.y, cudaRoundNearest), \
-(unsigned char)float2uint(VEC.z, cudaRoundNearest), 255)
+(unsigned char)__float2uint_rn(VEC.x), \
+(unsigned char)__float2uint_rn(VEC.y), \
+(unsigned char)__float2uint_rn(VEC.z), 255)
 
 
 #define VEC4_TO_UCHAR4(VEC) make_uchar4( \

@@ -269,6 +269,7 @@ VectorPlaneIntersectionT(const vec3 &vecO, const vec3 &vecD, const vec3 &planeO,
 
 CUDA_HOSTDEV inline bool
 BBoxTminTmax(vec3 origin, vec3 dir, vec3 bbox_min, vec3 bbox_max, float* tmin, float* tmax) {
+    //TODO use FMA
     vec3 ray_inv = 1.0f / dir;
     float tx1 = (bbox_min.x - origin.x) * ray_inv.x;
     float tx2 = (bbox_max.x - origin.x) * ray_inv.x;
