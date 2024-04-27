@@ -8,6 +8,7 @@
 #include "view/Lines.hpp"
 #include "view/PointCloud.h"
 
+
 using namespace glm;
 class SVO {
 private:
@@ -28,9 +29,16 @@ private:
     Lines m_lines_b;
     vec3 points[100] = {};
     PointCloud pcd;
+
+    std::vector<int> child_descriptors;
+
 public:
     SVO(Scene* scene);
     SVO(const SVO&) = delete;
+
+    void Init();
+
+    void Print();
 
     void Render();
 

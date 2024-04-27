@@ -42,6 +42,14 @@ void PointCloud::UpdatePoints(glm::vec3 *points, size_t length) {
     glBufferData(GL_ARRAY_BUFFER, m_length * sizeof(glm::vec3), m_points, GL_STREAM_DRAW);
 }
 
+//void PointCloud::AddPoints(glm::vec3 *points, size_t length) {
+//    m_length += length;
+//    m_points = points;
+//
+//    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//    glBufferData(GL_ARRAY_BUFFER, m_length * sizeof(glm::vec3), m_points, GL_STREAM_DRAW);
+//}
+
 void PointCloud::Render() {
 
     glPointSize(8.0f);

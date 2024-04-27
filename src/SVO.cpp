@@ -4,7 +4,9 @@
 
 #include "SVO.h"
 #include "Projection.cuh"
-
+#include <iostream>
+#include <vector>
+#include <bitset>
 
 SVO::SVO(Scene* scene):m_scene(scene), m_lines(scene, lines_data,data_length ), m_lines_b(scene, lines_data_b,data_length_b ), pcd(scene, points, 10) {
     auto step = dim / vec3(maxLOD);
@@ -65,4 +67,17 @@ void SVO::Render() {
     m_lines.Render();
     m_lines_b.Render();
     pcd.Render();
+}
+
+void SVO::Init() {
+
+}
+
+void SVO::Print() {
+    for (size_t i = 0; i < child_descriptors.size(); ++i) {
+        // Convert each integer to a 32-bit binary string
+        std::bitset<32> binary_representation(child_descriptors[i]);
+        // Print the index and the corresponding binary string
+        std::cout << "Descriptor[" << i << "]: " << binary_representation << std::endl;
+    }
 }
