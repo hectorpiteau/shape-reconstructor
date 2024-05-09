@@ -29,3 +29,9 @@
 [submodule "include/implot"]
 	path = include/implot
 	url = https://github.com/epezent/implot.git
+[submodule "external/googletest"]
+	path = external/googletest
+	url = https://github.com/google/googletest.git
+[submodule "external/libmorton"]
+	path = external/libmorton
+	url = https://github.com/Forceflow/libmorton.git

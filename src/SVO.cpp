@@ -8,6 +8,7 @@
 #include <vector>
 #include <bitset>
 
+
 SVO::SVO(Scene* scene):m_scene(scene), m_lines(scene, lines_data,data_length ), m_lines_b(scene, lines_data_b,data_length_b ), pcd(scene, points, 10) {
     auto step = dim / vec3(maxLOD);
     unsigned int fi = 0;
@@ -68,6 +69,39 @@ void SVO::Render() {
     m_lines_b.Render();
     pcd.Render();
 }
+
+
+// Define a structure to initialize the sparse voxel octree (SVO)
+void initialize_svo(std::vector<int>& child_descriptors, int depth, int current_index, int& next_free_index) {
+    // Base case: if we reach the maximum depth, set the leaf mask and valid mask to indicate all leaf children
+    if (depth == 0) {
+        int leaf_mask = 0xFF; // All 8 children are leaves
+        int valid_mask = 0xFF; // All 8 children are valid
+        int child_pointer = 0; // No further children
+
+        int child_descriptor = (leaf_mask << 24) | (valid_mask << 16) | (child_pointer);
+        child_descriptors[current_index] = child_descriptor;
+
+        return;
+    }
+
+    // Otherwise, create a new child descriptor
+    int child_pointer = next_free_index; // Next free index in the array
+    int valid_mask = 0xFF; // All 8 children are valid
+    int leaf_mask = 0x00; // No leaves at this level
+
+    // Store the current child descriptor
+    int child_descriptor = (leaf_mask << 24) | (valid_mask << 16) | (child_pointer);
+    child_descriptors[current_index] = child_descriptor;
+
+    // Now recursively initialize the children
+    for (int i = 0; i < 8; ++i) {
+        int child_index = child_pointer + i;
+        next_free_index++; // Move to the next free index
+        initialize_svo(child_descriptors, depth - 1, child_index, next_free_index);
+    }
+}
+
 
 void SVO::Init() {
 

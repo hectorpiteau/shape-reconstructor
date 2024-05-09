@@ -24,9 +24,12 @@ add_subdirectory(include/assimp)
 add_subdirectory(include/glm)
 #add_subdirectory(include/libraw)
 
-# find_package(glfw3 3.3 REQUIRED)
-# find_package(assimp REQUIRED)
-# find_package(OpenEXR REQUIRED)
+# Add the Google Test submodule directory
+add_subdirectory(external/googletest)
+
+# Include Google Test in the project
+enable_testing()
+include(GoogleTest)
 
 find_package(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -64,13 +67,11 @@ set(CUDA_SOURCE_FILES
         src/SVO.cpp
         src/SVO.h
 )
+
 set(CUDA_ARCH "-arch=sm_89")
 set(CMAKE_CUDA_ARCHITECTURES "89")
 
-
-# add the executable
-cuda_add_executable(DRTMCS
-
+set(SOURCE_FILES
         src/main.cpp
 
         include/imgui/imgui.cpp
@@ -127,8 +128,9 @@ cuda_add_executable(DRTMCS
         src/view/PointCloud.cpp
 
         src/utils/SceneSettings.cpp
-
-        ${CUDA_SOURCE_FILES})
+)
+# add the executable
+cuda_add_executable(DRTMCS ${SOURCE_FILES} ${CUDA_SOURCE_FILES})
 
 target_compile_options(DRTMCS PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
         --generate-line-info
@@ -146,7 +148,7 @@ include_directories("include/imgui/backends")
 include_directories("include/glfw/include")
 include_directories("src/cuda/")
 include_directories("src/utils/")
-
+include_directories("external/libmorton/include")
 
 message("Cuda include dirs: ")
 message(${CUDA_INCLUDE_DIRS})
@@ -158,4 +160,12 @@ include_directories(${CUDA_INCLUDE_DIRS})
 #libraw::libraw
 target_link_libraries(DRTMCS nlohmann_json::nlohmann_json OpenGL::GL GLEW::GLEW glfw glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
 
+
+# Test project
+set(TEST_FILES
+        tests/main.test.cpp
+)
+add_executable(DRTMCSTests ${TEST_FILES})
+target_link_libraries(DRTMCSTests gtest gtest_main)
+gtest_discover_tests(DRTMCSTests)
 
