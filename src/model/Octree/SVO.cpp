@@ -104,6 +104,15 @@ void initialize_svo(std::vector<int>& child_descriptors, int depth, int current_
 
 
 void SVO::Init() {
+    // Allocate child desc vector
+    std::vector<int> v_child_desc(1000, 0);
+    // Allocate data vector
+    std::vector<int> v_data(1000, 0);
+
+    // Set the amount of child per baby block.
+    int childs_per_bblock = 64; // 4x4x4 = 2 levels of divisions.
+    int next_free_index = 0;
+
 
 }
 

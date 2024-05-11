@@ -6,18 +6,14 @@
 #define DRTMCS_OCTREESTRUCTS_H
 
 #include <cstdint>
-
+#include "SVO.h"
 #define BLOCK_SIZE 1024
 
 #define MAX_FAR_POINTER_OFFSET 32768
 #define HEADER_OFFSET 8192
 
 
-#define GET_FAR_BIT(x) (((x) >> 15) & 1)
-#define GET_FAR_BIT_V2(x) (unsigned char)((x) & 0x01000000)
-#define GET_LEAF_MASK(x) (unsigned char)((x) & 0xFF)
-#define GET_VALID_MASK(x) (unsigned char)((x) & 0xFF00)
-#define GET_CHILD_POINTER(x) (unsigned char)((x) & 0xFE000000)
+
 
 struct line {
     uint_fast32_t ptr;

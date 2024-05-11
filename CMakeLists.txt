@@ -64,8 +64,8 @@ set(CUDA_SOURCE_FILES
         src/view/ImUI/StatsView.h
         src/model/Statistics/ScrollingBuffer.h
         src/model/Octree/OctreeStructs.h
-        src/SVO.cpp
-        src/SVO.h
+        src/model/Octree/SVO.cpp
+        src/model/Octree/SVO.h
 )
 
 set(CUDA_ARCH "-arch=sm_89")
@@ -166,6 +166,6 @@ set(TEST_FILES
         tests/main.test.cpp
 )
 add_executable(DRTMCSTests ${TEST_FILES})
-target_link_libraries(DRTMCSTests gtest gtest_main)
+target_link_libraries(DRTMCSTests gtest gtest_main glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
 gtest_discover_tests(DRTMCSTests)
 

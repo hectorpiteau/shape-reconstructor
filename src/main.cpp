@@ -28,7 +28,7 @@
 #include "../../include/stb_image_write.h"
 #include "utils/filesystem.h"
 #include "view/SkyBox.hpp"
-#include "SVO.h"
+#include "model/Octree/SVO.h"
 #include <implot.h>
 
 using namespace cv;
