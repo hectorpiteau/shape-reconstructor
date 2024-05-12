@@ -11,6 +11,7 @@ TEST(MyClassTest, InitializationTest) {
     for(int x=0; x<2; x++){
         for(int y=0; y<2; y++){
             for(int z=0; z<2; z++){
+                std::cout << x << ' ' << y << ' ' << z << ' ' << libmorton::morton3D_32_encode(x, y, z) << std::endl;
                 computed.push_back(libmorton::morton3D_32_encode(x, y, z));
             }
         }
@@ -37,6 +38,25 @@ TEST(SVOLEAF, SetLEAF){
     a = 0x10000;
     std::cout << PRINT_BITS_INT32(a) << std::endl;
 }
+
+TEST(SVOLEAF, CombineChildDescWithLeaf){
+    std::cout << "CombineChildDescWithLeaf" << std::endl;
+    uint32_t a = 0b01010;
+
+    std::cout << PRINT_BITS_INT32(a) << std::endl << "+" << std::endl;
+    std::cout << PRINT_BITS_INT32(LEAF_0) << std::endl << "=" << std::endl;
+
+    std::cout << PRINT_BITS_INT32(COMBINE_CHILD_DESCRIPTOR_WITH_LEAF_MASK(a, LEAF_0)) << std::endl;
+//    std::cout << PRINT_BITS_INT32(LEAF_1) << std::endl;
+//    std::cout << PRINT_BITS_INT32(LEAF_2) << std::endl;
+//    std::cout << PRINT_BITS_INT32(LEAF_3) << std::endl;
+//    std::cout << PRINT_BITS_INT32(LEAF_4) << std::endl;
+//    std::cout << PRINT_BITS_INT32(LEAF_5) << std::endl;
+//    std::cout << PRINT_BITS_INT32(LEAF_6) << std::endl;
+//    std::cout << PRINT_BITS_INT32(LEAF_7) << std::endl;
+
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

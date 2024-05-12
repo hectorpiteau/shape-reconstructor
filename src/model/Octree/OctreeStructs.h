@@ -36,7 +36,7 @@ struct block {
 void CreateStubOctree(){
     struct block b1 {};
     for(int i=0; i<BLOCK_SIZE; ++i){
-        b1.child_desc[i] =
+//        b1.child_desc[i] =
     }
 }
 

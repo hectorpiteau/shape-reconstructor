@@ -27,6 +27,50 @@
      (b & 0x02) ? 3 : \
      (b & 0x01) ? 7 : -1)
 
+#define COMBINE_CHILD_DESCRIPTOR_WITH_LEAF_MASK(descriptor, leaf_mask) \
+    ((descriptor) | ((leaf_mask)))
+
+#define LEAF_0 0b10000000
+#define LEAF_1 0b01000000
+#define LEAF_2 0b00100000
+#define LEAF_3 0b00010000
+#define LEAF_4 0b00001000
+#define LEAF_5 0b00000100
+#define LEAF_6 0b00000010
+#define LEAF_7 0b00000001
+
+#define LEAF_000_0 LEAF_0
+#define LEAF_001_4 LEAF_4
+#define LEAF_010_2 LEAF_2
+#define LEAF_011_6 LEAF_6
+#define LEAF_100_1 LEAF_1
+#define LEAF_101_5 LEAF_5
+#define LEAF_110_3 LEAF_3
+#define LEAF_111_7 LEAF_7
+
+#define VALID_0 0b10000000
+#define VALID_1 0b01000000
+#define VALID_2 0b00100000
+#define VALID_3 0b00010000
+#define VALID_4 0b00001000
+#define VALID_5 0b00000100
+#define VALID_6 0b00000010
+#define VALID_7 0b00000001
+
+#define VALID_000_0 VALID_0
+#define VALID_001_4 VALID_4
+#define VALID_010_2 VALID_2
+#define VALID_011_6 VALID_6
+#define VALID_100_1 VALID_1
+#define VALID_101_5 VALID_5
+#define VALID_110_3 VALID_3
+#define VALID_111_7 VALID_7
+
+glm::vec3 computeVoxelSize(const glm::vec3& initialSize, int depth) {
+    float scale = std::pow(2.0, depth);
+    return initialSize / scale; // Element-wise division
+}
+
 void initialize_svo(int32_t* nodes, size_t length, int current_depth, int target_depth, int& current_index) {
     if (current_depth > target_depth) return; // Base case for recursion
     if (target_depth == 0) return; // SVO of depth 0 does not exist.
