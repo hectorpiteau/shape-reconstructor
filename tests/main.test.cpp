@@ -29,6 +29,15 @@ TEST(LEAF_TO_MORTON, TEST_ALL_MORTON_INDEXES){
     ASSERT_EQ(LEAF_MASK_TO_MORTON_INDEX_2x2x2(0b00000001), 7);
 }
 
+TEST(SVOLEAF, SetLEAF){
+    uint32_t a = 0xFF;
+    std::cout << PRINT_BITS_INT32(a) << std::endl;
+    a = 0xFF00;
+    std::cout << PRINT_BITS_INT32(a) << std::endl;
+    a = 0x10000;
+    std::cout << PRINT_BITS_INT32(a) << std::endl;
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
