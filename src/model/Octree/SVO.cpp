@@ -75,11 +75,11 @@ void SVO::Render() {
 void initialize_svo(std::vector<int>& child_descriptors, int depth, int current_index, int& next_free_index) {
     // Base case: if we reach the maximum depth, set the leaf mask and valid mask to indicate all leaf children
     if (depth == 0) {
-        int leaf_mask = 0xFF; // All 8 children are leaves
-        int valid_mask = 0xFF; // All 8 children are valid
+        int leaf_mask = 0x000000FF; // All 8 children are leaves
+        int valid_mask = 0x0000FF00; // All 8 children are valid
         int child_pointer = 0; // No further children
 
-        int child_descriptor = (leaf_mask << 24) | (valid_mask << 16) | (child_pointer);
+        int child_descriptor = (leaf_mask) | (valid_mask) | (child_pointer);
         child_descriptors[current_index] = child_descriptor;
 
         return;

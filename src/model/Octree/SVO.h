@@ -27,6 +27,8 @@
      (b & 0x02) ? 3 : \
      (b & 0x01) ? 7 : -1)
 
+#define IS_CHILD_POINTER_TOO_LARGE(x) ((x) > 0x00007FFF ? 1 : 0)
+
 void initialize_svo(int32_t* nodes, size_t length, int current_depth, int target_depth, int& current_index) {
     if (current_depth > target_depth) return; // Base case for recursion
     if (target_depth == 0) return; // SVO of depth 0 does not exist.

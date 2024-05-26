@@ -36,6 +36,22 @@ TEST(SVOLEAF, SetLEAF){
     std::cout << PRINT_BITS_INT32(a) << std::endl;
     a = 0x10000;
     std::cout << PRINT_BITS_INT32(a) << std::endl;
+
+    std::cout << "=====" << std::endl;
+
+    std::cout << "full leaf mask: \t\t\t\t" << PRINT_BITS_INT32(0x000000FF) << std::endl;
+    std::cout << "full valid mask: \t\t\t\t" << PRINT_BITS_INT32(0x0000FF00) << std::endl;
+    std::cout << "child pointer max value: \t\t" << PRINT_BITS_INT32(0x00007FFF) << std::endl;
+    std::cout << "=====" << std::endl;
+    std::cout << PRINT_BITS_INT32(12) << " " << IS_CHILD_POINTER_TOO_LARGE(12) << std::endl;
+    std::cout << PRINT_BITS_INT32(213) << " " << IS_CHILD_POINTER_TOO_LARGE(213) << std::endl;
+    std::cout << PRINT_BITS_INT32(32098) << " " << IS_CHILD_POINTER_TOO_LARGE(32098) << std::endl;
+    std::cout << PRINT_BITS_INT32(34980) << " " << IS_CHILD_POINTER_TOO_LARGE(34980) << std::endl;
+    std::cout << "=====" << std::endl;
+
+//    std::cout << PRINT_BITS_INT32((0xFF << 24)) << std::endl;
+//    std::cout << PRINT_BITS_INT32((0xFF << 16)) << std::endl;
+
 }
 
 int main(int argc, char **argv) {
