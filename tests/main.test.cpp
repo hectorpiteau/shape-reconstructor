@@ -57,20 +57,28 @@ TEST(SVOLEAF, SetLEAF){
 
 TEST(SVOLEAF, CombineChildDescWithLeaf){
     std::cout << "CombineChildDescWithLeaf" << std::endl;
-    uint32_t a = 0b01010;
+    uint32_t ptr = 0b01010;
 
-    std::cout << PRINT_BITS_INT32(a) << std::endl << "+" << std::endl;
-    std::cout << PRINT_BITS_INT32(LEAF_0) << std::endl << "=" << std::endl;
+    std::cout << PRINT_BITS_INT32(ptr) << std::endl << "+" << std::endl;
+    std::cout << PRINT_BITS_INT32(LEAF_0) << std::endl << "+" << std::endl;
+    std::cout << PRINT_BITS_INT32(VALID_0) << std::endl << "=" << std::endl;
+    ptr = COMBINE_CHILD_DESCRIPTOR_WITH_LEAF_MASK(ptr, LEAF_0);
+    ptr = COMBINE_CHILD_DESCRIPTOR_WITH_LEAF_MASK(ptr, LEAF_1);
+    ptr = COMBINE_CHILD_DESCRIPTOR_WITH_LEAF_MASK(ptr, LEAF_2);
+    ptr = COMBINE_CHILD_DESCRIPTOR_WITH_LEAF_MASK(ptr, LEAF_6);
+    ptr = COMBINE_CHILD_DESCRIPTOR_WITH_LEAF_MASK(ptr, LEAF_7);
 
-    std::cout << PRINT_BITS_INT32(COMBINE_CHILD_DESCRIPTOR_WITH_LEAF_MASK(a, LEAF_0)) << std::endl;
-//    std::cout << PRINT_BITS_INT32(LEAF_1) << std::endl;
-//    std::cout << PRINT_BITS_INT32(LEAF_2) << std::endl;
-//    std::cout << PRINT_BITS_INT32(LEAF_3) << std::endl;
-//    std::cout << PRINT_BITS_INT32(LEAF_4) << std::endl;
-//    std::cout << PRINT_BITS_INT32(LEAF_5) << std::endl;
-//    std::cout << PRINT_BITS_INT32(LEAF_6) << std::endl;
-//    std::cout << PRINT_BITS_INT32(LEAF_7) << std::endl;
-
+    std::cout << PRINT_BITS_INT32(ptr) << std::endl;
+    ptr = COMBINE_CHILD_DESCRIPTOR_WITH_VALID_MASK(ptr, VALID_3);
+    ptr = COMBINE_CHILD_DESCRIPTOR_WITH_VALID_MASK(ptr, VALID_4);
+    ptr = COMBINE_CHILD_DESCRIPTOR_WITH_VALID_MASK(ptr, VALID_5);
+    ptr = COMBINE_CHILD_DESCRIPTOR_WITH_VALID_MASK(ptr, VALID_6);
+    ptr = COMBINE_CHILD_DESCRIPTOR_WITH_VALID_MASK(ptr, VALID_7);
+    std::cout << PRINT_BITS_INT32(ptr) << std::endl;
+    ptr = SET_FAR_BIT_1(ptr);
+    std::cout << PRINT_BITS_INT32(ptr) << " far bit" << std::endl;
+    std::cout << PRINT_BITS_INT32(GET_LEAF_MASK(ptr)) << " // " << PRINT_BITS_INT32(GET_VALID_MASK(ptr)) << " // " << PRINT_BITS_INT32(
+            GET_CHILD_POINTER(ptr)) << std::endl;
 }
 
 

@@ -11,9 +11,10 @@
 
 #define GET_FAR_BIT(x) (((x) >> 15) & 1)
 #define GET_FAR_BIT_V2(x) (unsigned char)((x) & 0x01000000)
-#define GET_LEAF_MASK(x) (unsigned char)((x) & 0xFF)
-#define GET_VALID_MASK(x) (unsigned char)((x) & 0xFF00)
-#define GET_CHILD_POINTER(x) (unsigned char)((x) & 0xFE000000)
+#define GET_LEAF_MASK(x) (unsigned char)((x) >> 24)
+#define GET_VALID_MASK(x) (unsigned char)((x) >> 16)
+#define GET_CHILD_POINTER(x) (unsigned char)((x) & 0x000000EF)
+#define SET_FAR_BIT_1(x) ((x) | (1 << 15))
 
 #define PRINT_BITS_INT32(x) std::bitset<32>((x))
 
@@ -28,8 +29,12 @@
      (b & 0x01) ? 7 : -1)
 
 #define IS_CHILD_POINTER_TOO_LARGE(x) ((x) > 0x00007FFF ? 1 : 0)
+
 #define COMBINE_CHILD_DESCRIPTOR_WITH_LEAF_MASK(descriptor, leaf_mask) \
-    ((descriptor) | ((leaf_mask)))
+    ((descriptor) | ((leaf_mask) << 24))
+
+#define COMBINE_CHILD_DESCRIPTOR_WITH_VALID_MASK(descriptor, valid_mask) \
+    ((descriptor) | ((valid_mask) << 16))
 
 #define LEAF_0 0b10000000
 #define LEAF_1 0b01000000
