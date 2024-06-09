@@ -72,7 +72,7 @@ void SVO::Render() {
 
 
 // Define a structure to initialize the sparse voxel octree (SVO)
-void initialize_svo(std::vector<int>& child_descriptors, int depth, int current_index, int& next_free_index) {
+void SVO::initialize_svo(std::vector<int>& child_descriptors, int depth, int current_index, int& next_free_index) {
     // Base case: if we reach the maximum depth, set the leaf mask and valid mask to indicate all leaf children
     if (depth == 0) {
         int leaf_mask = 0x000000FF; // All 8 children are leaves
@@ -123,4 +123,54 @@ void SVO::Print() {
         // Print the index and the corresponding binary string
         std::cout << "Descriptor[" << i << "]: " << binary_representation << std::endl;
     }
+}
+
+bool BBTminTmax(const glm::vec3& origin, const glm::vec3& dir, const glm::vec3& bbox_min, const glm::vec3& bbox_max, float* tmin, float* tmax) {
+    //TODO use FMA
+    glm::vec3 ray_inv = 1.0f / dir;
+    float tx1 = (bbox_min.x - origin.x) * ray_inv.x;
+    float tx2 = (bbox_max.x - origin.x) * ray_inv.x;
+    *tmin = min(tx1, tx2);
+    *tmax = max(tx1, tx2);
+    float ty1 = (bbox_min.y - origin.y) * ray_inv.y;
+    float ty2 = (bbox_max.y - origin.y) * ray_inv.y;
+    *tmin = max(*tmin, min(ty1, ty2));
+    *tmax = min(*tmax, max(ty1, ty2));
+    float tz1 = (bbox_min.z - origin.z) * ray_inv.z;
+    float tz2 = (bbox_max.z - origin.z) * ray_inv.z;
+    *tmin = max(*tmin, min(tz1, tz2));
+    *tmax = min(*tmax, max(tz1, tz2));
+    return *tmax >= max(0.0f, *tmin);
+}
+
+
+void SVO::Traverse(const glm::vec3& ray, std::vector<glm::vec3>* out_inter_pts){
+    uint        currentLOD      = 0;
+    int32_t     cdPtr           = 0;
+
+    glm::vec3   SVOWorldDim     = {1.0, 1.0, 1.0};
+    glm::vec3   SVOWorldOrigin  = {1.0, 1.0, 1.0};
+    float       start_time,
+                end_time;
+
+    auto        res             = BBTminTmax(SVOWorldOrigin,
+                                             ray,
+                                             SVOWorldOrigin,
+                                             SVOWorldOrigin + SVOWorldDim,
+                                             &start_time,
+                                             &end_time);
+    // If res is false, the ray does not intersect the SVO.
+    if (res == false) return;
+
+    glm::vec3   start_pos       = ray * start_time;
+    glm::vec3   end_pos         = ray * end_time;
+
+    // Retrieve the starting child descriptor
+    auto currentCD = this->child_descriptors[0];
+
+    // Find the first child entered by the ray.
+
+
+
+
 }
