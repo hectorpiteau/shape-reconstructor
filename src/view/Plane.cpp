@@ -51,8 +51,6 @@ void Plane::SetVertices(const vec3 &top_left, const vec3 &top_right, const vec3 
     WRITE_VEC3(m_vertices, 20, bot_right);
     WRITE_VEC3(m_vertices, 25, bot_left);
 
-
-
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
     glBufferData(GL_ARRAY_BUFFER, (int) (m_size * sizeof(float)), m_vertices, GL_STREAM_DRAW);
 }

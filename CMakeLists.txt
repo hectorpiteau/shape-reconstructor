@@ -128,6 +128,7 @@ set(SOURCE_FILES
         src/view/PointCloud.cpp
 
         src/utils/SceneSettings.cpp
+        src/view/Rectangle/Rectangle.cpp
 )
 # add the executable
 cuda_add_executable(DRTMCS ${SOURCE_FILES} ${CUDA_SOURCE_FILES})

@@ -29,6 +29,7 @@
 #include "utils/filesystem.h"
 #include "view/SkyBox.hpp"
 #include "model/Octree/SVO.h"
+#include "view/Rectangle/Rectangle.hpp"
 #include <implot.h>
 
 using namespace cv;
@@ -324,11 +325,12 @@ void GLInitialization()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // // Enable depth test
-    glEnable(GL_DEPTH_TEST);
+//    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
     // // Accept fragment if it closer to the camera than the former one
     glDepthFunc(GL_LESS);
 
-//    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_MULTISAMPLE);
 
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -339,7 +341,7 @@ void GLInitialization()
     glClearColor(red, green, blue, alpha);
 
     // Cull triangles which normal is not towards the camera
-    glEnable(GL_CULL_FACE);
+//    glEnable(GL_CULL_FACE);
 }
 
 void atexit_handler()
@@ -413,7 +415,35 @@ int main(void)
     Lines cameraLines(scene, scene->GetActiveCam()->GetWireframe(), 16 * 3);
     cameraLines.SetColor(1.0, 0.0, 0.0, 0.5);
 
+    float thickLinesData[] = {
+            1.0, 1.0, 1.0,
+            3.0, 3.0, 3.0
+    };
+//    Lines thickLines(scene, thickLinesData ,6, true);
+
     SVO svo(scene);
+
+//    Rectangle rectangle(scene);
+    Rectangle rectangle(scene, vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0));
+
+    Rectangle rectangle2(scene, vec3(1.0, 1.0, 1.0), vec3(1.5, 1.5, 1.5));
+
+    Rectangle rectangle3(scene, vec3(1.0, 1.0, 1.0), vec3(1.25, 1.25, 1.25));
+    Rectangle rectangle4(scene, vec3(1.25, 1.25, 1.25), vec3(1.5, 1.5, 1.5));
+    Rectangle rectangle5(scene, vec3(1.25, 1.0, 1.0), vec3(1.5, 1.25, 1.25));
+    Rectangle rectangle6(scene, vec3(1.25, 1.25, 1.0), vec3(1.5, 1.5, 1.25));
+    Rectangle rectangle7(scene, vec3(1.0, 1.25, 1.0), vec3(1.25, 1.5, 1.25));
+    Rectangle rectangle8(scene, vec3(1.0, 1.25, 1.25), vec3(1.25, 1.5, 1.5));
+    Rectangle rectangle9(scene, vec3(1.0, 1.0, 1.25), vec3(1.25, 1.25, 1.5));
+    Rectangle rectangle10(scene, vec3(1.25, 1.0, 1.25), vec3(1.5, 1.25, 1.5));
+
+
+//    plane.SetVertices(
+//            {1.0, 1.0, 2.0},
+//            {2.0, 1.0, 2.0},
+//            {1.0, 1.0, 1.0},
+//            {2.0, 1.0, 1.0}
+//            );
     // Image image = Image("../screen1.png");
     // image.LoadPng("../data/nerf/train/r_0.png", true, false);
 
@@ -455,8 +485,19 @@ int main(void)
 //         skybox.Render(scene->GetActiveCam()->GetProjectionMatrix(), scene->GetActiveCam()->GetViewMatrix());
         // model.Render(projectionMatrix, viewMatrix, sceneSettings);
 //        testLines.Render(scene->GetActiveCam()->GetProjectionMatrix(), scene->GetActiveCam()->GetViewMatrix(), sceneSettings);
-        svo.Render();
+//        svo.Render();
+        rectangle.Render();
+        rectangle2.Render();
+        rectangle3.Render();
+        rectangle4.Render();
+        rectangle5.Render();
+        rectangle6.Render();
+        rectangle7.Render();
+        rectangle8.Render();
+        rectangle9.Render();
+        rectangle10.Render();
         app->Render();
+//        thickLines.Render();
         // m_imagePlane.Render();
 
         // lineGrid.Render(projectionMatrix, viewMatrix, sceneSettings);

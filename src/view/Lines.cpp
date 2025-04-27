@@ -36,6 +36,30 @@ Lines::Lines(Scene* scene, const float *data, size_t dataLength)
     m_ready = true;
 }
 
+Lines::Lines(Scene* scene, const float *data, size_t dataLength, bool thick)
+        : SceneObject {std::string("LINES"), SceneObjectTypes::LINES},
+          m_scene(scene),
+          m_pipeline("../src/shaders/v_lines_thick.glsl", "../src/shaders/f_lines.glsl", "../src/shaders/g_lines.glsl"),
+          m_data(data),
+          m_dataLength(dataLength)
+{
+    m_mvpLocation = m_pipeline.AddUniform("mvp");
+    m_colorLocation = m_pipeline.AddUniform("color");
+
+    glGenBuffers(1, &m_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferData(GL_ARRAY_BUFFER,  m_dataLength * sizeof(float), m_data, GL_STREAM_DRAW);
+
+    glGenVertexArrays(1, &m_VAO);
+    glBindVertexArray(m_VAO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    m_model = glm::mat4(1.0f);
+
+    m_ready = true;
+}
+
 Lines::Lines() : SceneObject {std::string("LINES"), SceneObjectTypes::LINES}, m_pipeline("../src/shaders/v_lines.glsl", "../src/shaders/f_lines.glsl"), m_data(nullptr), m_dataLength(0)
 {
     m_mvpLocation = m_pipeline.AddUniform("mvp");
@@ -113,6 +137,9 @@ void Lines::Render()
 {
     if (!m_ready) return;
 //    glPointSize(10.0f);
+//    glLineWidth(10.0f);
+    glDisable(GL_CULL_FACE);
+
 
     m_pipeline.UseShader();
 

@@ -23,6 +23,7 @@ public:
      * @param dataLength : The amount of floats in the data list.
      */
     Lines(Scene* scene, const float *data, size_t dataLength);
+    Lines(Scene* scene, const float *data, size_t dataLength, bool thick);
 
     /**
      * @brief Construct a new Lines SceneObject.

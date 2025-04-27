@@ -14,6 +14,7 @@ public:
      */
     ShaderPipeline(const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename);
     ShaderPipeline(const char* vertexShaderFilename, const char* fragmentShaderFilename);
+    ShaderPipeline(const char* vertexShaderFilename, const char* fragmentShaderFilename, const char* geometryShaderFilename);
 
     /** Delete copy constructor. */
     ShaderPipeline(const ShaderPipeline&) = delete;
@@ -47,9 +48,10 @@ public:
 
     GLuint m_programShader;
 private:
-    std::string m_vertexShaderFilename;
-    std::string m_fragmentShaderFilename;
-    std::map<std::string, GLint> m_uniforms; 
+    std::string m_vertexShaderFilename {};
+    std::string m_fragmentShaderFilename {};
+    std::string m_geometryShaderFilename {};
+    std::map<std::string, GLint> m_uniforms {};
 
     GLuint AddShader(GLuint shaderProgram, const char *shader_str,  std::string filename, GLenum shaderType);
 };

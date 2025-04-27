@@ -7,55 +7,70 @@
 #include "../utils/FileUtils.hpp"
 #include "ShaderPipeline.hpp"
 
-ShaderPipeline::ShaderPipeline(const char* vertexShaderFilename, const char* fragmentShaderFilename)
-: m_vertexShaderFilename(vertexShaderFilename), m_fragmentShaderFilename(fragmentShaderFilename), m_programShader(0)
-{
+ShaderPipeline::ShaderPipeline(const char *vertexShaderFilename, const char *fragmentShaderFilename)
+        : m_vertexShaderFilename(vertexShaderFilename), m_fragmentShaderFilename(fragmentShaderFilename),
+          m_programShader(0) {
     CompileShader();
 }
 
-ShaderPipeline::ShaderPipeline(const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
-: m_vertexShaderFilename(vertexShaderFilename), m_fragmentShaderFilename(fragmentShaderFilename), m_programShader(0)
-{
+ShaderPipeline::ShaderPipeline(const std::string &vertexShaderFilename, const std::string &fragmentShaderFilename)
+        : m_vertexShaderFilename(vertexShaderFilename), m_fragmentShaderFilename(fragmentShaderFilename),
+          m_programShader(0) {
     CompileShader();
 }
 
-ShaderPipeline::~ShaderPipeline()
-{}
+ShaderPipeline::ShaderPipeline(const char *vertexShaderFilename, const char *fragmentShaderFilename,
+                               const char *geometryShaderFilename)
+        : m_vertexShaderFilename(vertexShaderFilename), m_fragmentShaderFilename(fragmentShaderFilename),
+          m_geometryShaderFilename(geometryShaderFilename), m_programShader(0) {
+    CompileShader();
+}
 
-void ShaderPipeline::CompileShader()
-{
+
+ShaderPipeline::~ShaderPipeline() {}
+
+void ShaderPipeline::CompileShader() {
     /** Temporary containers used to store the stringified shaders. */
-    std::string vertexShader, fragmentShader;
+    std::string vertexShader, fragmentShader, geometryShader;
 
     GLenum err = glGetError();
-//    if (err != GL_NO_ERROR)
-//    {
-//        fprintf(stderr, "OpenGL error (at line ShaderPipeline.cpp:%d): %s\n", __LINE__, gluErrorString(err));
-//    }
+    if (err != GL_NO_ERROR)
+    {
+        fprintf(stderr, "OpenGL error (at line ShaderPipeline.cpp:%d): %s\n", __LINE__, gluErrorString(err));
+    }
 
     GLuint shaderProgram = glCreateProgram();
 
-    if (shaderProgram == 0)
-    {
+    if (shaderProgram == 0) {
         std::cerr << "ShaderPipeline: Error creating the shader." << std::endl;
         exit(1);
     }
 
-    if (!FileUtils::ReadFile(m_vertexShaderFilename.c_str(), vertexShader))
-    {
+    if (!FileUtils::ReadFile(m_vertexShaderFilename.c_str(), vertexShader)) {
         std::cerr << "ShaderPipeline: Error reading the vertex file." << std::endl;
         exit(1);
     }
 
     GLuint vertexShaderID = AddShader(shaderProgram, vertexShader.c_str(), m_vertexShaderFilename, GL_VERTEX_SHADER);
 
-    if (!FileUtils::ReadFile(m_fragmentShaderFilename.c_str(), fragmentShader))
-    {
+    if (!FileUtils::ReadFile(m_fragmentShaderFilename.c_str(), fragmentShader)) {
         std::cerr << "ShaderPipeline: Error reading the fragment file." << std::endl;
         exit(1);
     }
 
-    GLuint fragmentShaderID = AddShader(shaderProgram, fragmentShader.c_str(), m_fragmentShaderFilename, GL_FRAGMENT_SHADER);
+    GLuint fragmentShaderID = AddShader(shaderProgram, fragmentShader.c_str(), m_fragmentShaderFilename,
+                                        GL_FRAGMENT_SHADER);
+
+    GLuint geometryShaderID {};
+    if(m_geometryShaderFilename.length() > 0){
+        if (!FileUtils::ReadFile(m_geometryShaderFilename.c_str(), geometryShader)) {
+            std::cerr << "ShaderPipeline: Error reading the fragment file." << std::endl;
+            exit(1);
+        }
+
+        geometryShaderID = AddShader(shaderProgram, geometryShader.c_str(), m_geometryShaderFilename,
+                                            GL_GEOMETRY_SHADER);
+    }
 
     GLint success = 0;
     GLchar errorLog[1024] = {0};
@@ -64,8 +79,7 @@ void ShaderPipeline::CompileShader()
 
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 
-    if (success == 0)
-    {
+    if (success == 0) {
         glGetProgramInfoLog(shaderProgram, sizeof(errorLog), NULL, errorLog);
         std::cerr << "Error linking shader program: " << errorLog << std::endl;
         exit(1);
@@ -73,14 +87,11 @@ void ShaderPipeline::CompileShader()
 
     glValidateProgram(shaderProgram);
     glGetProgramiv(shaderProgram, GL_VALIDATE_STATUS, &success);
-    if (!success)
-    {
+    if (!success) {
         glGetProgramInfoLog(shaderProgram, sizeof(errorLog), NULL, errorLog);
         std::cerr << "Invalid shader program: " << errorLog << std::endl;
         exit(1);
-    }
-    else
-    {
+    } else {
         // std::cout << "ShaderPipeline: Success loading shader: " << m_vertexShaderFilename << std::endl;
         // std::cout << "ShaderPipeline: Success loading shader: " << m_fragmentShaderFilename << std::endl
         //           << "===" << std::endl;
@@ -88,9 +99,11 @@ void ShaderPipeline::CompileShader()
 
     glDetachShader(shaderProgram, vertexShaderID);
     glDetachShader(shaderProgram, fragmentShaderID);
+    if(m_geometryShaderFilename.length() > 0) glDetachShader(shaderProgram, geometryShaderID);
 
     glDeleteShader(vertexShaderID);
     glDeleteShader(fragmentShaderID);
+    if(m_geometryShaderFilename.length() > 0) glDeleteShader(geometryShaderID);
 
     glUseProgram(shaderProgram);
 
@@ -98,10 +111,9 @@ void ShaderPipeline::CompileShader()
     m_programShader = shaderProgram;
 }
 
-GLint ShaderPipeline::AddUniform(const char* name){
+GLint ShaderPipeline::AddUniform(const char *name) {
     GLint res = glGetUniformLocation(m_programShader, name);
-    if (res == -1)
-    {
+    if (res == -1) {
         std::cerr << "Error creating uniform location: " << res << " name: " << name << std::endl;
         exit(1);
     }
@@ -109,39 +121,34 @@ GLint ShaderPipeline::AddUniform(const char* name){
     return res;
 }
 
-GLint ShaderPipeline::AddUniform(const std::string name)
-{
+GLint ShaderPipeline::AddUniform(const std::string name) {
     return AddUniform(name.c_str());
 }
 
-GLint ShaderPipeline::GetUniform(std::string name)
-{
+GLint ShaderPipeline::GetUniform(std::string name) {
     return m_uniforms[name];
 }
 
-void ShaderPipeline::UpdateShader()
-{
+void ShaderPipeline::UpdateShader() {
     CompileShader();
 }
 
-void ShaderPipeline::UseShader()
-{
+void ShaderPipeline::UseShader() {
     glUseProgram(m_programShader);
 }
 
-GLuint ShaderPipeline::AddShader(GLuint shaderProgram, const char *shader_str, std::string filename, GLenum shaderType)
-{
+GLuint
+ShaderPipeline::AddShader(GLuint shaderProgram, const char *shader_str, std::string filename, GLenum shaderType) {
     GLuint shaderObj = glCreateShader(shaderType);
 
-    if (shaderObj == 0)
-    {
+    if (shaderObj == 0) {
         std::cerr << "Error creating a shader type: " << shaderType << std::endl;
         exit(1);
     }
 
     const GLchar *p[1] = {shader_str};
 
-    GLint lengths[1] = {(int)strlen(shader_str)};
+    GLint lengths[1] = {(int) strlen(shader_str)};
 
     glShaderSource(shaderObj, 1, p, lengths);
     glCompileShader(shaderObj);
@@ -149,8 +156,7 @@ GLuint ShaderPipeline::AddShader(GLuint shaderProgram, const char *shader_str, s
     GLint success;
     glGetShaderiv(shaderObj, GL_COMPILE_STATUS, &success);
 
-    if (!success)
-    {
+    if (!success) {
         GLchar infoLog[1024];
         glGetShaderInfoLog(shaderObj, 1024, NULL, infoLog);
         std::cerr << "Error compiling shader type: " << shaderType << " File: " << filename << " Error: " << std::endl
@@ -162,3 +168,4 @@ GLuint ShaderPipeline::AddShader(GLuint shaderProgram, const char *shader_str, s
 
     return shaderObj;
 }
+
