@@ -38,4 +38,6 @@ include/librawcmake/
 .idea/
 cmake-build-debug/
 cmake-build-release/
-docs/
+docs/*
+docs/*.md
+!docs/index.html

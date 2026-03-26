@@ -2,8 +2,8 @@
 // Created by hepiteau on 20/07/23.
 //
 
-#ifndef DRTMCS_UNIFORM_DISTRIBUTION_HPP
-#define DRTMCS_UNIFORM_DISTRIBUTION_HPP
+#ifndef RT3DRS_UNIFORM_DISTRIBUTION_HPP
+#define RT3DRS_UNIFORM_DISTRIBUTION_HPP
 #include <random>
 #include <glm/glm.hpp>
 
@@ -24,4 +24,4 @@ public:
 };
 
 
-#endif //DRTMCS_UNIFORM_DISTRIBUTION_HPP
+#endif //RT3DRS_UNIFORM_DISTRIBUTION_HPP

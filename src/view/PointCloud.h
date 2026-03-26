@@ -2,8 +2,8 @@
 // Created by hepiteau on 18/08/23.
 //
 
-#ifndef DRTMCS_POINTCLOUD_H
-#define DRTMCS_POINTCLOUD_H
+#ifndef RT3DRS_POINTCLOUD_H
+#define RT3DRS_POINTCLOUD_H
 #include <glm/glm.hpp>
 #include "SceneObject/SceneObject.hpp"
 #include "../controllers/Scene/Scene.hpp"
@@ -39,4 +39,4 @@ public:
 };
 
 
-#endif //DRTMCS_POINTCLOUD_H
+#endif //RT3DRS_POINTCLOUD_H

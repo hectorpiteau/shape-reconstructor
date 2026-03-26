@@ -2,8 +2,8 @@
 // Created by hepiteau on 24/07/23.
 //
 
-#ifndef DRTMCS_SPARSE_VOLUME3D_HPP
-#define DRTMCS_SPARSE_VOLUME3D_HPP
+#ifndef RT3DRS_SPARSE_VOLUME3D_HPP
+#define RT3DRS_SPARSE_VOLUME3D_HPP
 
 #include "glm/glm/glm.hpp"
 #include "Common.cuh"
@@ -56,4 +56,4 @@ public:
 };
 
 
-#endif //DRTMCS_SPARSE_VOLUME3D_HPP
+#endif //RT3DRS_SPARSE_VOLUME3D_HPP

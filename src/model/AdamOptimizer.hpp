@@ -2,8 +2,8 @@
 // Created by hpiteau on 07/06/23.
 //
 
-#ifndef DRTMCS_ADAM_OPTIMIZER_HPP
-#define DRTMCS_ADAM_OPTIMIZER_HPP
+#ifndef RT3DRS_ADAM_OPTIMIZER_HPP
+#define RT3DRS_ADAM_OPTIMIZER_HPP
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -242,4 +242,4 @@ public:
 };
 
 
-#endif //DRTMCS_ADAM_OPTIMIZER_HPP
+#endif //RT3DRS_ADAM_OPTIMIZER_HPP

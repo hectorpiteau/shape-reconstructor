@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # set the project name
-project(DRTMCS VERSION 0.1 LANGUAGES CXX CUDA)
+project(RT3DRS VERSION 0.1 LANGUAGES CXX CUDA)
 
 # Cpp standards
 set(CMAKE_CXX_STANDARD 17)
@@ -130,9 +130,9 @@ set(SOURCE_FILES
         src/utils/SceneSettings.cpp
 )
 # add the executable
-cuda_add_executable(DRTMCS ${SOURCE_FILES} ${CUDA_SOURCE_FILES})
+cuda_add_executable(RT3DRS ${SOURCE_FILES} ${CUDA_SOURCE_FILES})
 
-target_compile_options(DRTMCS PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+target_compile_options(RT3DRS PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
         --generate-line-info
         -g
         -G
@@ -158,14 +158,14 @@ include_directories(${CUDA_INCLUDE_DIRS})
 # OpenEXR::OpenEXR
 # target_link_libraries(ProjectName PRIVATE libraw::libraw)
 #libraw::libraw
-target_link_libraries(DRTMCS nlohmann_json::nlohmann_json OpenGL::GL GLEW::GLEW glfw glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
+target_link_libraries(RT3DRS nlohmann_json::nlohmann_json OpenGL::GL GLEW::GLEW glfw glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
 
 
 # Test project
 set(TEST_FILES
         tests/main.test.cpp
 )
-add_executable(DRTMCSTests ${TEST_FILES})
-target_link_libraries(DRTMCSTests gtest gtest_main glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
-gtest_discover_tests(DRTMCSTests)
+add_executable(RT3DRSTests ${TEST_FILES})
+target_link_libraries(RT3DRSTests gtest gtest_main glm assimp ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${OPENGL_LIBRARIES})
+gtest_discover_tests(RT3DRSTests)
 

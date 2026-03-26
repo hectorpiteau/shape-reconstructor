@@ -2,8 +2,8 @@
 // Created by hepiteau on 19/07/23.
 //
 
-#ifndef DRTMCS_NORMAL_DISTRIBUTION_CLAMPED_H
-#define DRTMCS_NORMAL_DISTRIBUTION_CLAMPED_H
+#ifndef RT3DRS_NORMAL_DISTRIBUTION_CLAMPED_H
+#define RT3DRS_NORMAL_DISTRIBUTION_CLAMPED_H
 #include <iostream>
 #include <string>
 #include <random>
@@ -36,4 +36,4 @@ public:
 };
 
 
-#endif //DRTMCS_NORMAL_DISTRIBUTION_CLAMPED_H
+#endif //RT3DRS_NORMAL_DISTRIBUTION_CLAMPED_H

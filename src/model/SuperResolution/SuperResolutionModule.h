@@ -2,8 +2,8 @@
 // Created by hepiteau on 19/07/23.
 //
 
-#ifndef DRTMCS_SUPER_RESOLUTION_MODULE_H
-#define DRTMCS_SUPER_RESOLUTION_MODULE_H
+#ifndef RT3DRS_SUPER_RESOLUTION_MODULE_H
+#define RT3DRS_SUPER_RESOLUTION_MODULE_H
 
 #include "../Distribution/NormalDistributionClamped.hpp"
 #include "Common.cuh"
@@ -63,4 +63,4 @@ public:
 };
 
 
-#endif //DRTMCS_SUPER_RESOLUTION_MODULE_H
+#endif //RT3DRS_SUPER_RESOLUTION_MODULE_H

@@ -2,8 +2,8 @@
 // Created by hpiteau on 09/06/23.
 //
 
-#ifndef DRTMCS_CONVOLUTIONS_CUH
-#define DRTMCS_CONVOLUTIONS_CUH
+#ifndef RT3DRS_CONVOLUTIONS_CUH
+#define RT3DRS_CONVOLUTIONS_CUH
 
 #include <glm/glm.hpp>
 #include "Common.cuh"
@@ -66,4 +66,4 @@ CUDA_DEV inline void
 ////    surf2Dwrite<float4>(result, target->surface, center.x * sizeof(float4), center.y);
 //}
 
-#endif //DRTMCS_CONVOLUTIONS_CUH
+#endif //RT3DRS_CONVOLUTIONS_CUH

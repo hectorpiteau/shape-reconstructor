@@ -2,8 +2,8 @@
 // Created by hepiteau on 30/07/23.
 //
 
-#ifndef DRTMCS_VOLUME3D_H
-#define DRTMCS_VOLUME3D_H
+#ifndef RT3DRS_VOLUME3D_H
+#define RT3DRS_VOLUME3D_H
 #include <glm/glm.hpp>
 #include "Common.cuh"
 #include "GPUData.cuh"
@@ -66,4 +66,4 @@ public:
     virtual GPUData<VolumeDescriptor>* GetGPUData() = 0;
 };
 
-#endif //DRTMCS_VOLUME3D_H
+#endif //RT3DRS_VOLUME3D_H

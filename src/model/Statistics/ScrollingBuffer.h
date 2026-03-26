@@ -2,8 +2,8 @@
 // Created by hepiteau on 23/08/23.
 //
 
-#ifndef DRTMCS_SCROLLINGBUFFER_H
-#define DRTMCS_SCROLLINGBUFFER_H
+#ifndef RT3DRS_SCROLLINGBUFFER_H
+#define RT3DRS_SCROLLINGBUFFER_H
 
 
 #include "imgui.h"
@@ -35,4 +35,4 @@ struct ScrollingBuffer {
 };
 
 
-#endif //DRTMCS_SCROLLINGBUFFER_H
+#endif //RT3DRS_SCROLLINGBUFFER_H

@@ -2,8 +2,8 @@
 // Created by hepiteau on 23/03/24.
 //
 
-#ifndef DRTMCS_OCTREESTRUCTS_H
-#define DRTMCS_OCTREESTRUCTS_H
+#ifndef RT3DRS_OCTREESTRUCTS_H
+#define RT3DRS_OCTREESTRUCTS_H
 
 #include <cstdint>
 #include "SVO.h"
@@ -40,4 +40,4 @@ void CreateStubOctree(){
     }
 }
 
-#endif //DRTMCS_OCTREESTRUCTS_H
+#endif //RT3DRS_OCTREESTRUCTS_H

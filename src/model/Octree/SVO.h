@@ -2,8 +2,8 @@
 // Created by hepiteau on 17/04/24.
 //
 
-#ifndef DRTMCS_SVO_H
-#define DRTMCS_SVO_H
+#ifndef RT3DRS_SVO_H
+#define RT3DRS_SVO_H
 #include "glm/glm/glm.hpp"
 #include "../../view/Lines.hpp"
 #include "../../view/PointCloud.h"
@@ -148,4 +148,4 @@ public:
 };
 
 
-#endif //DRTMCS_SVO_H
+#endif //RT3DRS_SVO_H

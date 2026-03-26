@@ -2,8 +2,8 @@
 // Created by hepiteau on 27/07/23.
 //
 
-#ifndef DRTMCS_STATSTYPE_H
-#define DRTMCS_STATSTYPE_H
+#ifndef RT3DRS_STATSTYPE_H
+#define RT3DRS_STATSTYPE_H
 
 
 enum StatsType {
@@ -13,4 +13,4 @@ enum StatsType {
 };
 
 
-#endif //DRTMCS_STATSTYPE_H
+#endif //RT3DRS_STATSTYPE_H

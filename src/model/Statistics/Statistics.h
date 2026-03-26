@@ -2,8 +2,8 @@
 // Created by hepiteau on 27/07/23.
 //
 
-#ifndef DRTMCS_STATISTICS_H
-#define DRTMCS_STATISTICS_H
+#ifndef RT3DRS_STATISTICS_H
+#define RT3DRS_STATISTICS_H
 
 #include <queue>
 #include "../../view/SceneObject/SceneObject.hpp"
@@ -65,4 +65,4 @@ public:
 };
 
 
-#endif //DRTMCS_STATISTICS_H
+#endif //RT3DRS_STATISTICS_H

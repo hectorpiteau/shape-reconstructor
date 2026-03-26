@@ -2,8 +2,8 @@
 // Created by hepiteau on 09/05/24.
 //
 
-#ifndef DRTMCS_MORTON_H
-#define DRTMCS_MORTON_H
+#ifndef RT3DRS_MORTON_H
+#define RT3DRS_MORTON_H
 
 #include <cstdint> // for uint32_t
 
@@ -28,4 +28,4 @@ namespace Morton {
 };
 
 
-#endif //DRTMCS_MORTON_H
+#endif //RT3DRS_MORTON_H

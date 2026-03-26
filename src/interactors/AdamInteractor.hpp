@@ -2,8 +2,8 @@
 // Created by hpiteau on 08/06/23.
 //
 
-#ifndef DRTMCS_ADAM_INTERACTOR_HPP
-#define DRTMCS_ADAM_INTERACTOR_HPP
+#ifndef RT3DRS_ADAM_INTERACTOR_HPP
+#define RT3DRS_ADAM_INTERACTOR_HPP
 
 #include <memory>
 #include "../model/AdamOptimizer.hpp"
@@ -68,4 +68,4 @@ public:
 };
 
 
-#endif //DRTMCS_ADAM_INTERACTOR_HPP
+#endif //RT3DRS_ADAM_INTERACTOR_HPP

@@ -224,7 +224,7 @@ GLFWwindow *GLFWInitialization()
     glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
 
     /** Create and get the window's pointer. */
-    GLFWwindow *window = glfwCreateWindow(sceneSettings->GetViewportWidth(), sceneSettings->GetViewportHeight(), "DRTMCVFX 3D", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(sceneSettings->GetViewportWidth(), sceneSettings->GetViewportHeight(), "RT3DRS", NULL, NULL);
 
     if (window == NULL)
     {
@@ -383,8 +383,8 @@ int main(void)
     UnitCube cube(cubePipeline);
 
     // auto meshPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_mesh.glsl", "../src/shaders/f_mesh.glsl");
-//     Model model(meshPipeline, "/home/hepiteau/Work/DRTMCVFX/data/sphere.obj");
-//     Model model(scene, meshPipeline, "/home/hepiteau/Work/DRTMCVFX/shape-reconstructor/data/bust/marble_bust_01_4k.fbx");
+//     Model model(meshPipeline, "/home/hepiteau/Work/RT3DRS/data/sphere.obj");
+//     Model model(scene, meshPipeline, "/home/hepiteau/Work/RT3DRS/shape-reconstructor/data/bust/marble_bust_01_4k.fbx");
 
      auto skyboxPipeline = std::make_shared<ShaderPipeline>("../src/shaders/v_skybox.glsl", "../src/shaders/f_skybox.glsl");
 

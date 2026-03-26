@@ -2,8 +2,8 @@
 // Created by hpiteau on 08/06/23.
 //
 
-#ifndef DRTMCS_LOSSES_CUH
-#define DRTMCS_LOSSES_CUH
+#ifndef RT3DRS_LOSSES_CUH
+#define RT3DRS_LOSSES_CUH
 
 #include <glm/glm.hpp>
 #include "Common.cuh"
@@ -22,4 +22,4 @@ CUDA_DEV inline glm::vec4 NeRFLoss(const Ray& ray, AdamOptimizerDescriptor* adam
 
 }
 
-#endif //DRTMCS_LOSSES_CUH
+#endif //RT3DRS_LOSSES_CUH

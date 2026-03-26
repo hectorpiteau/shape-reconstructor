@@ -2,8 +2,8 @@
 // Created by hepiteau on 23/08/23.
 //
 
-#ifndef DRTMCS_STATSVIEW_H
-#define DRTMCS_STATSVIEW_H
+#ifndef RT3DRS_STATSVIEW_H
+#define RT3DRS_STATSVIEW_H
 #include <memory>
 #include "../../model/Statistics/Statistics.h"
 
@@ -15,4 +15,4 @@ public:
     StatsView(const StatsView&) = delete;
     void Render();
 };
-#endif //DRTMCS_STATSVIEW_H
+#endif //RT3DRS_STATSVIEW_H

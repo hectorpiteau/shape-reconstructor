@@ -2,8 +2,8 @@
 // Created by hpiteau on 09/06/23.
 //
 
-#ifndef DRTMCS_GAUSSIAN_KERNEL_HPP
-#define DRTMCS_GAUSSIAN_KERNEL_HPP
+#ifndef RT3DRS_GAUSSIAN_KERNEL_HPP
+#define RT3DRS_GAUSSIAN_KERNEL_HPP
 
 #include <glm/glm.hpp>
 #include "../../cuda/Common.cuh"
@@ -73,4 +73,4 @@ public:
 };
 
 
-#endif //DRTMCS_GAUSSIAN_KERNEL_HPP
+#endif //RT3DRS_GAUSSIAN_KERNEL_HPP

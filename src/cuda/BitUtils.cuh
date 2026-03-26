@@ -2,8 +2,8 @@
 // Created by hepiteau on 25/07/23.
 //
 
-#ifndef DRTMCS_BITUTILS_CUH
-#define DRTMCS_BITUTILS_CUH
+#ifndef RT3DRS_BITUTILS_CUH
+#define RT3DRS_BITUTILS_CUH
 
 #include <cuda.h>
 #include <glm/glm.hpp>
@@ -86,4 +86,4 @@
 
 
 
-#endif //DRTMCS_BITUTILS_CUH
+#endif //RT3DRS_BITUTILS_CUH

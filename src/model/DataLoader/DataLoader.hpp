@@ -2,8 +2,8 @@
 // Created by hpiteau on 12/06/23.
 //
 
-#ifndef DRTMCS_DATALOADER_HPP
-#define DRTMCS_DATALOADER_HPP
+#ifndef RT3DRS_DATALOADER_HPP
+#define RT3DRS_DATALOADER_HPP
 
 
 #include <memory>
@@ -72,4 +72,4 @@ public:
 };
 
 
-#endif //DRTMCS_DATALOADER_HPP
+#endif //RT3DRS_DATALOADER_HPP
